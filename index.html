@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse de performance thermique d'enveloppe</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .section {
+            flex: 1;
+            min-width: 300px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1a252f;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #eef5f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .separator {
+            width: 100%;
+            height: 1px;
+            background-color: #ddd;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Analyse de performance thermique d'enveloppe</h1>
+    <p>Utilisez cet outil pour calculer la résistance thermique totale (RSI) et effective (RSI<sub>E</sub>) de l'enveloppe du bâtiment selon les normes québécoises.</p>
+
+    <div class="container">
+        <div class="section">
+            <h2>Données climatiques</h2>
+            <div class="form-group">
+                <label for="location">Municipalité:</label>
+                <select id="location">
+                    <option value="">Sélectionnez une municipalité</option>
+                    <option value="montreal">Montréal</option>
+                    <option value="quebec">Québec</option>
+                    <option value="gatineau">Gatineau</option>
+                    <option value="sherbrooke">Sherbrooke</option>
+                    <option value="trois-rivieres">Trois-Rivières</option>
+                    <option value="saguenay">Saguenay</option>
+                    <option value="autre">Autre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="degreedays">Degrés-jours sous 18°C:</label>
+                <input type="number" id="degreedays" min="0" placeholder="Ex: 4500">
+            </div>
+            <div class="form-group">
+                <label for="humidity-index">Indice d'humidité:</label>
+                <input type="number" id="humidity-index" step="0.01" min="0" max="2" placeholder="Ex: 0.85">
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Type de bâtiment</h2>
+            <div class="form-group">
+                <label for="building-type">Type de bâtiment:</label>
+                <select id="building-type">
+                    <option value="residence">Habitation résidentielle</option>
+                    <option value="commercial">Bâtiment commercial</option>
+                    <option value="industrial">Bâtiment industriel</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="wall-type">Type de mur:</label>
+                <select id="wall-type">
+                    <option value="above-grade">Mur hors-sol</option>
+                    <option value="foundation">Mur de fondation</option>
+                    <option value="below-grade">Mur sous le niveau du sol</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="container">
+        <div class="section">
+            <h2>Composition du mur</h2>
+            <div class="form-group">
+                <label for="framing-type">Type d'ossature:</label>
+                <select id="framing-type">
+                    <option value="wood">Ossature de bois</option>
+                    <option value="metal">Ossature métallique</option>
+                    <option value="concrete">Construction en béton</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="stud-spacing">Espacement des poteaux:</label>
+                <select id="stud-spacing">
+                    <option value="300">300 mm (12")</option>
+                    <option value="400">400 mm (16")</option>
+                    <option value="600">600 mm (24")</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="stud-size">Dimension des poteaux:</label>
+                <select id="stud-size">
+                    <option value="38x89">38 × 89 mm (2 × 4)</option>
+                    <option value="38x140">38 × 140 mm (2 × 6)</option>
+                    <option value="38x184">38 × 184 mm (2 × 8)</option>
+                    <option value="38x235">38 × 235 mm (2 × 10)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Matériaux d'isolation</h2>
+            <div class="form-group">
+                <label for="cavity-insulation">Isolation entre les poteaux:</label>
+                <select id="cavity-insulation">
+                    <option value="fiberglass">Fibre de verre</option>
+                    <option value="mineral-wool">Laine minérale (Roxul)</option>
+                    <option value="cellulose">Cellulose</option>
+                    <option value="spray-foam">Mousse polyuréthane giclée</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ext-insulation">Isolation extérieure:</label>
+                <select id="ext-insulation">
+                    <option value="none">Aucune</option>
+                    <option value="polystyrene-type1">Polystyrène expansé Type 1</option>
+                    <option value="polystyrene-type2">Polystyrène expansé Type 2</option>
+                    <option value="polystyrene-type3">Polystyrène expansé Type 3</option>
+                    <option value="extruded">Polystyrène extrudé</option>
+                    <option value="polyiso">Polyisocyanurate</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ext-insulation-thickness">Épaisseur de l'isolation extérieure (mm):</label>
+                <input type="number" id="ext-insulation-thickness" min="0" step="5" placeholder="Ex: 25">
+            </div>
+        </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="container">
+        <div class="section">
+            <h2>Revêtements</h2>
+            <div class="form-group">
+                <label for="exterior-cladding">Revêtement extérieur:</label>
+                <select id="exterior-cladding">
+                    <option value="vinyl">Bardage en vinyle</option>
+                    <option value="wood">Bardage en bois</option>
+                    <option value="fiber-cement">Panneau de fibrociment</option>
+                    <option value="brick">Brique</option>
+                    <option value="stucco">Stucco</option>
+                    <option value="metal">Bardage métallique</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sheathing">Revêtement intermédiaire:</label>
+                <select id="sheathing">
+                    <option value="osb">Panneau OSB</option>
+                    <option value="plywood">Contreplaqué</option>
+                    <option value="fiberboard">Panneau de fibres</option>
+                    <option value="gypsum">Panneau de gypse extérieur</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sheathing-thickness">Épaisseur du revêtement intermédiaire (mm):</label>
+                <select id="sheathing-thickness">
+                    <option value="7.5">7,5 mm</option>
+                    <option value="11">11 mm</option>
+                    <option value="12.5">12,5 mm</option>
+                    <option value="15.5">15,5 mm</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Finition intérieure</h2>
+            <div class="form-group">
+                <label for="interior-finish">Finition intérieure:</label>
+                <select id="interior-finish">
+                    <option value="gypsum">Plaque de plâtre (gypse)</option>
+                    <option value="wood-panel">Panneau de bois</option>
+                    <option value="plaster">Enduit au plâtre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="interior-finish-thickness">Épaisseur de la finition intérieure (mm):</label>
+                <select id="interior-finish-thickness">
+                    <option value="12.7">12,7 mm (1/2")</option>
+                    <option value="15.9">15,9 mm (5/8")</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="vapor-barrier">Pare-vapeur:</label>
+                <select id="vapor-barrier">
+                    <option value="polyethylene">Polyéthylène</option>
+                    <option value="smart">Membrane intelligente</option>
+                    <option value="paint">Peinture pare-vapeur</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="container">
+        <div class="section">
+            <h2>Paramètres avancés</h2>
+            <div class="form-group">
+                <label for="air-barrier">Système d'étanchéité à l'air:</label>
+                <select id="air-barrier">
+                    <option value="sheathing">Revêtement intermédiaire</option>
+                    <option value="membrane">Membrane intermédiaire</option>
+                    <option value="spray-foam">Mousse giclée</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="thermal-bridge">Traitement des ponts thermiques:</label>
+                <select id="thermal-bridge">
+                    <option value="none">Aucun traitement spécial</option>
+                    <option value="exterior">Isolation continue extérieure</option>
+                    <option value="interior">Isolation continue intérieure</option>
+                    <option value="both">Isolation continue des deux côtés</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Options de calcul</h2>
+            <div class="form-group">
+                <label for="calculation-type">Méthode de calcul:</label>
+                <select id="calculation-type">
+                    <option value="total">Résistance thermique totale (RSI)</option>
+                    <option value="effective">Résistance thermique effective (RSI<sub>E</sub>)</option>
+                    <option value="both">Les deux méthodes</option>
+                </select>
+            </div>
+            <button id="calculate-btn">Calculer la performance</button>
+        </div>
+    </div>
+
+    <div class="results" id="results" style="display: none;">
+        <h2>Résultats d'analyse</h2>
+        <div id="results-content">
+            <!-- Les résultats seront générés ici par JavaScript -->
+        </div>
+        
+        <h3>Résistance thermique par couche</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Couche</th>
+                    <th>Matériau</th>
+                    <th>Épaisseur (mm)</th>
+                    <th>RSI (m²·K/W)</th>
+                    <th>R (pi²·°F·h/BTU)</th>
+                </tr>
+            </thead>
+            <tbody id="layers-results">
+                <!-- Les données des couches seront générées ici par JavaScript -->
+            </tbody>
+        </table>
+        
+        <h3>Résumé</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mesure</th>
+                    <th>Valeur</th>
+                    <th>Exigence minimale</th>
+                    <th>Conformité</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Résistance thermique totale (RSI<sub>T</sub>)</td>
+                    <td id="total-rsi">--</td>
+                    <td id="min-total-rsi">--</td>
+                    <td id="total-compliance">--</td>
+                </tr>
+                <tr>
+                    <td>Résistance thermique effective (RSI<sub>E</sub>)</td>
+                    <td id="effective-rsi">--</td>
+                    <td id="min-effective-rsi">--</td>
+                    <td id="effective-compliance">--</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Simple demonstration script
+        document.getElementById('calculate-btn').addEventListener('click', function() {
+            // Dans une application réelle, vous effectueriez ici les calculs basés sur les valeurs saisies
+            
+            // Affiche la section des résultats pour cette démonstration
+            document.getElementById('results').style.display = 'block';
+            
+            // Simule des résultats pour la démonstration
+            document.getElementById('total-rsi').textContent = '5.46';
+            document.getElementById('min-total-rsi').textContent = '4.31';
+            document.getElementById('total-compliance').textContent = 'Conforme ✓';
+            document.getElementById('effective-rsi').textContent = '4.52';
+            document.getElementById('min-effective-rsi').textContent = '3.60';
+            document.getElementById('effective-compliance').textContent = 'Conforme ✓';
+            
+            // Simule les données des couches
+            const layersTable = document.getElementById('layers-results');
+            layersTable.innerHTML = `
+                <tr>
+                    <td>Film d'air extérieur</td>
+                    <td>Pellicule d'air de surface</td>
+                    <td>-</td>
+                    <td>0.03</td>
+                    <td>0.17</td>
+                </tr>
+                <tr>
+                    <td>Revêtement extérieur</td>
+                    <td>Bardage en vinyle</td>
+                    <td>-</td>
+                    <td>0.11</td>
+                    <td>0.62</td>
+                </tr>
+                <tr>
+                    <td>Lame d'air</td>
+                    <td>Lame d'air ventilée</td>
+                    <td>25</td>
+                    <td>0.18</td>
+                    <td>1.02</td>
+                </tr>
+                <tr>
+                    <td>Revêtement intermédiaire</td>
+                    <td>Panneau OSB</td>
+                    <td>11</td>
+                    <td>0.11</td>
+                    <td>0.62</td>
+                </tr>
+                <tr>
+                    <td>Isolation extérieure</td>
+                    <td>Polystyrène extrudé</td>
+                    <td>25</td>
+                    <td>0.88</td>
+                    <td>5.00</td>
+                </tr>
+                <tr>
+                    <td>Ossature et isolation</td>
+                    <td>Ossature de bois 38×140 mm avec fibre de verre</td>
+                    <td>140</td>
+                    <td>2.36</td>
+                    <td>13.40</td>
+                </tr>
+                <tr>
+                    <td>Pare-vapeur</td>
+                    <td>Polyéthylène</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Finition intérieure</td>
+                    <td>Plaque de plâtre (gypse)</td>
+                    <td>12.7</td>
+                    <td>0.08</td>
+                    <td>0.45</td>
+                </tr>
+                <tr>
+                    <td>Film d'air intérieur</td>
+                    <td>Air stable, surface verticale</td>
+                    <td>-</td>
+                    <td>0.12</td>
+                    <td>0.68</td>
+                </tr>
+            `;
+            
+            // Génère le contenu des résultats
+            document.getElementById('results-content').innerHTML = `
+                <p>Selon les données fournies, votre assemblage de mur atteint une résistance thermique totale (RSI<sub>T</sub>) de <strong>5.46 m²·K/W (R-31.0)</strong> et une résistance thermique effective (RSI<sub>E</sub>) de <strong>4.52 m²·K/W (R-25.7)</strong>.</p>
+                
+                <p>Ces valeurs surpassent les exigences minimales du Code de construction du Québec pour un mur au-dessus du niveau du sol dans votre zone climatique (Montréal, degrés-jours: 4200).</p>
+                
+                <p>Le rapport entre la résistance thermique extérieure et intérieure est de <strong>0.38</strong>, ce qui est supérieur au minimum requis de 0.20 pour votre zone climatique.</p>
+            `;
+        });
+    </script>
+</body>
+</html>
