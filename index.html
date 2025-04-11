@@ -55,7 +55,7 @@ const minRSITotalValues = {
   }
 };
 
-// Valeurs minimales RSI selon le Code de construction du Québec (Chapitre I.1)
+// Valeurs minimales RSI selon le Code de construction du Québec (Partie 11)
 // Pour la résistance thermique effective (RSI_E)
 const minRSIEffectiveValues = {
   "< 6000": {
@@ -77,31 +77,140 @@ const minRSIEffectiveValues = {
     "garage_foundation_wall": 2.64
   }
 };
-
-// Constantes pour les degrés-jours et les municipalités
+        // Constantes pour les degrés-jours et les municipalités
 const municipalities = [
-  { id: "montreal", name: "Montréal", degreeDay: 4200, zone: "< 6000" },
-  { id: "laval", name: "Laval", degreeDay: 4500, zone: "< 6000" },
+  // Municipalités avec moins de 6000 degrés-jours
+  { id: "acton-vale", name: "Acton-Vale", degreeDay: 4620, zone: "< 6000" },
+  { id: "aylmer", name: "Aylmer", degreeDay: 4520, zone: "< 6000" },
+  { id: "baie-saint-paul", name: "Baie-Saint-Paul", degreeDay: 5280, zone: "< 6000" },
+  { id: "beauport", name: "Beauport", degreeDay: 5100, zone: "< 6000" },
+  { id: "bedford", name: "Bedford", degreeDay: 4420, zone: "< 6000" },
+  { id: "beloeil", name: "Beloeil", degreeDay: 4500, zone: "< 6000" },
+  { id: "brome", name: "Brome", degreeDay: 4730, zone: "< 6000" },
+  { id: "brossard", name: "Brossard", degreeDay: 4420, zone: "< 6000" },
+  { id: "buckingham", name: "Buckingham", degreeDay: 4880, zone: "< 6000" },
+  { id: "chambly", name: "Chambly", degreeDay: 4450, zone: "< 6000" },
+  { id: "coaticook", name: "Coaticook", degreeDay: 4750, zone: "< 6000" },
+  { id: "contrecoeur", name: "Contrecoeur", degreeDay: 4500, zone: "< 6000" },
+  { id: "cowansville", name: "Cowansville", degreeDay: 4540, zone: "< 6000" },
+  { id: "deux-montagnes", name: "Deux-Montagnes", degreeDay: 4440, zone: "< 6000" },
+  { id: "drummondville", name: "Drummondville", degreeDay: 4700, zone: "< 6000" },
+  { id: "farnham", name: "Farnham", degreeDay: 4500, zone: "< 6000" },
+  { id: "fort-coulonge", name: "Fort-Coulonge", degreeDay: 4950, zone: "< 6000" },
+  { id: "gaspe", name: "Gaspé", degreeDay: 5500, zone: "< 6000" },
   { id: "gatineau", name: "Gatineau", degreeDay: 4600, zone: "< 6000" },
-  { id: "sherbrooke", name: "Sherbrooke", degreeDay: 4700, zone: "< 6000" },
+  { id: "gracefield", name: "Gracefield", degreeDay: 5080, zone: "< 6000" },
+  { id: "granby", name: "Granby", degreeDay: 4500, zone: "< 6000" },
+  { id: "hemmingford", name: "Hemmingford", degreeDay: 4380, zone: "< 6000" },
+  { id: "hull", name: "Hull", degreeDay: 4550, zone: "< 6000" },
+  { id: "iberville", name: "Iberville", degreeDay: 4450, zone: "< 6000" },
   { id: "joliette", name: "Joliette", degreeDay: 4720, zone: "< 6000" },
-  { id: "trois-rivieres", name: "Trois-Rivières", degreeDay: 4900, zone: "< 6000" },
-  { id: "quebec", name: "Québec", degreeDay: 5080, zone: "< 6000" },
-  { id: "rimouski", name: "Rimouski", degreeDay: 5300, zone: "< 6000" },
-  { id: "gaspé", name: "Gaspé", degreeDay: 5500, zone: "< 6000" },
+  { id: "la-malbaie", name: "La Malbaie", degreeDay: 5400, zone: "< 6000" },
+  { id: "la-pocatiere", name: "La Pocatière", degreeDay: 5160, zone: "< 6000" },
+  { id: "la-tuque", name: "La Tuque", degreeDay: 5500, zone: "< 6000" },
+  { id: "lac-megantic", name: "Lac-Mégantic", degreeDay: 5180, zone: "< 6000" },
+  { id: "lachute", name: "Lachute", degreeDay: 4640, zone: "< 6000" },
+  { id: "lennoxville", name: "Lennoxville", degreeDay: 4700, zone: "< 6000" },
+  { id: "lery", name: "Léry", degreeDay: 4420, zone: "< 6000" },
+  { id: "loretteville", name: "Loretteville", degreeDay: 5200, zone: "< 6000" },
+  { id: "louiseville", name: "Louiseville", degreeDay: 4900, zone: "< 6000" },
+  { id: "magog", name: "Magog", degreeDay: 4730, zone: "< 6000" },
+  { id: "maniwaki", name: "Maniwaki", degreeDay: 5280, zone: "< 6000" },
+  { id: "masson", name: "Masson", degreeDay: 4610, zone: "< 6000" },
   { id: "matane", name: "Matane", degreeDay: 5510, zone: "< 6000" },
-  { id: "rouyn", name: "Rouyn", degreeDay: 6050, zone: ">= 6000" },
-  { id: "baie-comeau", name: "Baie-Comeau", degreeDay: 6020, zone: ">= 6000" },
-  { id: "port-cartier", name: "Port-Cartier", degreeDay: 6060, zone: ">= 6000" },
+  { id: "mont-joli", name: "Mont-Joli", degreeDay: 5370, zone: "< 6000" },
+  { id: "mont-laurier", name: "Mont-Laurier", degreeDay: 5320, zone: "< 6000" },
+  { id: "montmagny", name: "Montmagny", degreeDay: 5090, zone: "< 6000" },
+  // Région de Montréal
+  { id: "montreal", name: "Montréal (Hôtel de Ville)", degreeDay: 4200, zone: "< 6000" },
+  { id: "beaconsfield", name: "Beaconsfield", degreeDay: 4440, zone: "< 6000" },
+  { id: "dorval", name: "Dorval", degreeDay: 4400, zone: "< 6000" },
+  { id: "laval", name: "Laval", degreeDay: 4500, zone: "< 6000" },
+  { id: "montreal-est", name: "Montréal-Est", degreeDay: 4470, zone: "< 6000" },
+  { id: "montreal-nord", name: "Montréal-Nord", degreeDay: 4470, zone: "< 6000" },
+  { id: "outremont", name: "Outremont", degreeDay: 4300, zone: "< 6000" },
+  { id: "pierrefonds", name: "Pierrefonds", degreeDay: 4430, zone: "< 6000" },
+  { id: "st-lambert", name: "St-Lambert", degreeDay: 4400, zone: "< 6000" },
+  { id: "st-laurent", name: "St-Laurent", degreeDay: 4270, zone: "< 6000" },
+  { id: "ste-anne-de-bellevue", name: "Ste-Anne-de-Bellevue", degreeDay: 4460, zone: "< 6000" },
+  { id: "verdun", name: "Verdun", degreeDay: 4200, zone: "< 6000" },
+  // Autres municipalités (moins de 6000 DJ)
+  { id: "nicolet", name: "Nicolet (Gentilly)", degreeDay: 4900, zone: "< 6000" },
+  { id: "perce", name: "Percé", degreeDay: 5400, zone: "< 6000" },
+  { id: "pincourt", name: "Pincourt", degreeDay: 4480, zone: "< 6000" },
+  { id: "plessisville", name: "Plessisville", degreeDay: 5100, zone: "< 6000" },
+  // Région de Québec
+  { id: "quebec", name: "Québec", degreeDay: 5080, zone: "< 6000" },
+  { id: "ancienne-lorette", name: "Ancienne-Lorette", degreeDay: 5130, zone: "< 6000" },
+  { id: "levis", name: "Lévis", degreeDay: 5050, zone: "< 6000" },
+  { id: "sillery", name: "Sillery", degreeDay: 5070, zone: "< 6000" },
+  { id: "ste-foy", name: "Ste-Foy", degreeDay: 5100, zone: "< 6000" },
+  // Autres municipalités (moins de 6000 DJ)
+  { id: "richmond", name: "Richmond", degreeDay: 4700, zone: "< 6000" },
+  { id: "rimouski", name: "Rimouski", degreeDay: 5300, zone: "< 6000" },
+  { id: "riviere-du-loup", name: "Rivière-du-Loup", degreeDay: 5380, zone: "< 6000" },
+  { id: "rock-island", name: "Rock-Island", degreeDay: 4850, zone: "< 6000" },
+  { id: "rosemere", name: "Rosemère", degreeDay: 4550, zone: "< 6000" },
+  { id: "saguenay", name: "Saguenay", degreeDay: 5700, zone: "< 6000" },
+  { id: "saguenay-bagotville", name: "Saguenay (Bagotville)", degreeDay: 5700, zone: "< 6000" },
+  { id: "saguenay-jonquiere", name: "Saguenay (Jonquière)", degreeDay: 5650, zone: "< 6000" },
+  { id: "saguenay-kenogami", name: "Saguenay (Kenogami)", degreeDay: 5650, zone: "< 6000" },
+  { id: "saint-eustache", name: "Saint-Eustache", degreeDay: 4500, zone: "< 6000" },
+  { id: "saint-jean-sur-richelieu", name: "Saint-Jean-sur-Richelieu", degreeDay: 4450, zone: "< 6000" },
+  { id: "salaberry-de-valleyfield", name: "Salaberry-de-Valleyfield", degreeDay: 4400, zone: "< 6000" },
+  { id: "shawinigan", name: "Shawinigan", degreeDay: 5050, zone: "< 6000" },
+  { id: "shawville", name: "Shawville", degreeDay: 4880, zone: "< 6000" },
+  { id: "sherbrooke", name: "Sherbrooke", degreeDay: 4700, zone: "< 6000" },
+  { id: "sorel", name: "Sorel", degreeDay: 4550, zone: "< 6000" },
+  { id: "st-georges-de-cacouna", name: "St-Georges-de-Cacouna", degreeDay: 5400, zone: "< 6000" },
+  { id: "st-hubert", name: "St-Hubert", degreeDay: 4490, zone: "< 6000" },
+  { id: "st-hyacinthe", name: "St-Hyacinthe", degreeDay: 4500, zone: "< 6000" },
+  { id: "st-jerome", name: "St-Jérôme", degreeDay: 4820, zone: "< 6000" },
+  { id: "st-jovite", name: "St-Jovite", degreeDay: 5250, zone: "< 6000" },
+  { id: "st-lazare-hudson", name: "St-Lazare-Hudson", degreeDay: 4520, zone: "< 6000" },
+  { id: "st-nicolas", name: "St-Nicolas", degreeDay: 4990, zone: "< 6000" },
+  { id: "ste-agathe-des-monts", name: "Ste-Agathe-des-Monts", degreeDay: 5390, zone: "< 6000" },
+  { id: "sutton", name: "Sutton", degreeDay: 4600, zone: "< 6000" },
+  { id: "tadoussac", name: "Tadoussac", degreeDay: 5450, zone: "< 6000" },
+  { id: "temiscaming", name: "Témiscaming", degreeDay: 5020, zone: "< 6000" },
+  { id: "terrebonne", name: "Terrebonne", degreeDay: 4500, zone: "< 6000" },
+  { id: "thetford-mines", name: "Thetford Mines", degreeDay: 5120, zone: "< 6000" },
+  { id: "thurso", name: "Thurso", degreeDay: 4820, zone: "< 6000" },
+  { id: "trois-rivieres", name: "Trois-Rivières", degreeDay: 4900, zone: "< 6000" },
+  { id: "varennes", name: "Varennes", degreeDay: 4500, zone: "< 6000" },
+  { id: "vercheres", name: "Verchères", degreeDay: 4450, zone: "< 6000" },
+  { id: "victoriaville", name: "Victoriaville", degreeDay: 4900, zone: "< 6000" },
+  { id: "wakefield", name: "Wakefield", degreeDay: 4820, zone: "< 6000" },
+  { id: "waterloo", name: "Waterloo", degreeDay: 4650, zone: "< 6000" },
+  { id: "windsor", name: "Windsor", degreeDay: 4700, zone: "< 6000" },
+  
+  // Municipalités avec 6000 degrés-jours ou plus
+  { id: "alma", name: "Alma", degreeDay: 5800, zone: ">= 6000" },
   { id: "amos", name: "Amos", degreeDay: 6160, zone: ">= 6000" },
-  { id: "val-dor", name: "Val-d'Or", degreeDay: 6180, zone: ">= 6000" },
-  { id: "sept-iles", name: "Sept-Îles", degreeDay: 6200, zone: ">= 6000" },
+  { id: "baie-comeau", name: "Baie-Comeau", degreeDay: 6020, zone: ">= 6000" },
+  { id: "dolbeau", name: "Dolbeau", degreeDay: 6250, zone: ">= 6000" },
+  { id: "gagnon", name: "Gagnon", degreeDay: 7600, zone: ">= 6000" },
+  { id: "harrington-harbour", name: "Harrington-Harbour", degreeDay: 6150, zone: ">= 6000" },
   { id: "havre-st-pierre", name: "Havre-St-Pierre", degreeDay: 6100, zone: ">= 6000" },
-  { id: "noranda", name: "Noranda", degreeDay: 6050, zone: ">= 6000" },
+  { id: "inukjuak", name: "Inukjuak", degreeDay: 9150, zone: ">= 6000" },
   { id: "kuujjuaq", name: "Kuujjuaq", degreeDay: 8550, zone: ">= 6000" },
-  { id: "schefferville", name: "Schefferville", degreeDay: 8550, zone: ">= 6000" }
+  { id: "kuujjuarapik", name: "Kuujjuarapik", degreeDay: 7990, zone: ">= 6000" },
+  { id: "malartic", name: "Malartic", degreeDay: 6200, zone: ">= 6000" },
+  { id: "nitchequon", name: "Nitchequon", degreeDay: 8100, zone: ">= 6000" },
+  { id: "noranda", name: "Noranda", degreeDay: 6050, zone: ">= 6000" },
+  { id: "port-cartier", name: "Port-Cartier", degreeDay: 6060, zone: ">= 6000" },
+  { id: "puvirnituq", name: "Puvirnituq", degreeDay: 9200, zone: ">= 6000" },
+  { id: "roberval", name: "Roberval", degreeDay: 5750, zone: ">= 6000" },
+  { id: "rouyn", name: "Rouyn", degreeDay: 6050, zone: ">= 6000" },
+  { id: "schefferville", name: "Schefferville", degreeDay: 8550, zone: ">= 6000" },
+  { id: "senneterre", name: "Senneterre", degreeDay: 6180, zone: ">= 6000" },
+  { id: "sept-iles", name: "Sept-Îles", degreeDay: 6200, zone: ">= 6000" },
+  { id: "st-felicien", name: "St-Félicien", degreeDay: 5850, zone: ">= 6000" },
+  { id: "st-hubert-de-riviere-du-loup", name: "St-Hubert-de-Rivière-du-Loup", degreeDay: 5520, zone: ">= 6000" },
+  { id: "val-dor", name: "Val-d'Or", degreeDay: 6180, zone: ">= 6000" },
+  { id: "ville-marie", name: "Ville-Marie", degreeDay: 5550, zone: ">= 6000" }
 ];
-        // Base de données des matériaux avec leurs valeurs RSI
+// Base de données des matériaux avec leurs valeurs RSI
 const materials = {
   // Films d'air
   airFilms: [
@@ -249,61 +358,61 @@ const materials = {
   // Autres parements
   otherCladding: [
     { id: "fibercement_6.35mm", name: "Panneaux de fibro-ciment, épaisseur 6.35mm", rsi: 0.003, description: "Panneaux de fibro-ciment, épaisseur 6.35mm" },
-{ id: "fibercement_8mm", name: "Panneaux de fibro-ciment, épaisseur 8mm", rsi: 0.003, description: "Panneaux de fibro-ciment, épaisseur 8mm" }
- ],
+    { id: "fibercement_8mm", name: "Panneaux de fibro-ciment, épaisseur 8mm", rsi: 0.003, description: "Panneaux de fibro-ciment, épaisseur 8mm" }
+  ],
  
- // Maçonnerie
- masonry: [
-   { id: "brick_90mm", name: "Brique d'argile ou schiste - 90mm", rsi: 0.07, description: "Brique d'argile ou schiste - 90mm (4''nominal, 2400 kg/m³)" },
-   { id: "brick_concrete_90mm", name: "Brique de béton ou silico-calcaire - 90mm", rsi: 0.053, description: "Brique de béton ou silico-calcaire - 90mm (4'' nominal)" },
-   { id: "stone_quartzite", name: "Quartzite et grès", rsiPerMm: 0.0003, description: "Quartzite et grès (2240 kg/m³)" },
-   { id: "stone_calcite", name: "Calcite, dolomite, calcaire, marbre et granite", rsiPerMm: 0.0004, description: "Calcite, dolomite, calcaire, marbre et granite (2240 kg/m³)" }
- ],
+  // Maçonnerie
+  masonry: [
+    { id: "brick_90mm", name: "Brique d'argile ou schiste - 90mm", rsi: 0.07, description: "Brique d'argile ou schiste - 90mm (4''nominal, 2400 kg/m³)" },
+    { id: "brick_concrete_90mm", name: "Brique de béton ou silico-calcaire - 90mm", rsi: 0.053, description: "Brique de béton ou silico-calcaire - 90mm (4'' nominal)" },
+    { id: "stone_quartzite", name: "Quartzite et grès", rsiPerMm: 0.0003, description: "Quartzite et grès (2240 kg/m³)" },
+    { id: "stone_calcite", name: "Calcite, dolomite, calcaire, marbre et granite", rsiPerMm: 0.0004, description: "Calcite, dolomite, calcaire, marbre et granite (2240 kg/m³)" }
+  ],
  
- // Enduits
- plaster: [
-   { id: "mortar", name: "Mortier, stucco, ciment, chaux", rsiPerMm: 0.0009, description: "Mortier, stucco, ciment, chaux" }
- ],
+  // Enduits
+  plaster: [
+    { id: "mortar", name: "Mortier, stucco, ciment, chaux", rsiPerMm: 0.0009, description: "Mortier, stucco, ciment, chaux" }
+  ],
  
- // Bardage métallique et de vinyle
- metalVinylCladding: [
-   { id: "vinyl_siding", name: "Planche à clin, sans endos", rsi: 0.11, description: "Planche à clin, sans endos" },
-   { id: "vinyl_siding_insulated", name: "Planche à clin avec endos isolé, épaisseur 9,5mm", rsi: 0.32, description: "Planche à clin avec endos isolé, épaisseur 9,5mm" },
-   { id: "vinyl_siding_insulated_foil", name: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm", rsi: 0.52, description: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm" }
- ],
+  // Bardage métallique et de vinyle
+  metalVinylCladding: [
+    { id: "vinyl_siding", name: "Planche à clin, sans endos", rsi: 0.11, description: "Planche à clin, sans endos" },
+    { id: "vinyl_siding_insulated", name: "Planche à clin avec endos isolé, épaisseur 9,5mm", rsi: 0.32, description: "Planche à clin avec endos isolé, épaisseur 9,5mm" },
+    { id: "vinyl_siding_insulated_foil", name: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm", rsi: 0.52, description: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm" }
+  ],
  
- // Matériaux de toiture
- roofingMaterials: [
-   { id: "roll_roofing", name: "Recouvrement de toiture enduit de bitume (en rouleau)", rsi: 0.03, description: "Recouvrement de toiture enduit de bitume (en rouleau)" },
-   { id: "asphalt", name: "Bitume asphaltique", rsiPerMm: 0.0014, description: "Bitume asphaltique" },
-   { id: "asphalt_shingles", name: "Bardeaux bitumés", rsi: 0.078, description: "Bardeaux bitumés" },
-   { id: "built_up_roofing", name: "Couverture multicouche (5 plis) de 10mm d'épaisseur", rsi: 0.06, description: "Couverture multicouche (5 plis) de 10mm d'épaisseur" },
-   { id: "wood_shingles_roof", name: "Bardeaux de bois", rsi: 0.17, description: "Bardeaux de bois" },
-   { id: "crushed_stone", name: "Pierre concassée", rsiPerMm: 0.0006, description: "Pierre concassée" },
-   { id: "steel_deck", name: "Platelage d'acier", rsi: 0, description: "Platelage d'acier - négligeable" },
-   { id: "slate", name: "Ardoise, épaisseur 13mm", rsi: 0.01, description: "Ardoise, épaisseur 13mm" }
- ],
+  // Matériaux de toiture
+  roofingMaterials: [
+    { id: "roll_roofing", name: "Recouvrement de toiture enduit de bitume (en rouleau)", rsi: 0.03, description: "Recouvrement de toiture enduit de bitume (en rouleau)" },
+    { id: "asphalt", name: "Bitume asphaltique", rsiPerMm: 0.0014, description: "Bitume asphaltique" },
+    { id: "asphalt_shingles", name: "Bardeaux bitumés", rsi: 0.078, description: "Bardeaux bitumés" },
+    { id: "built_up_roofing", name: "Couverture multicouche (5 plis) de 10mm d'épaisseur", rsi: 0.06, description: "Couverture multicouche (5 plis) de 10mm d'épaisseur" },
+    { id: "wood_shingles_roof", name: "Bardeaux de bois", rsi: 0.17, description: "Bardeaux de bois" },
+    { id: "crushed_stone", name: "Pierre concassée", rsiPerMm: 0.0006, description: "Pierre concassée" },
+    { id: "steel_deck", name: "Platelage d'acier", rsi: 0, description: "Platelage d'acier - négligeable" },
+    { id: "slate", name: "Ardoise, épaisseur 13mm", rsi: 0.01, description: "Ardoise, épaisseur 13mm" }
+  ],
  
- // Matériaux de finition intérieure
- interiorFinish: [
-   { id: "gypsum_interior", name: "Plaque de plâtre (gypse)", rsiPerMm: 0.0061, description: "Plaque de plâtre (panneaux de gypse)" },
-   { id: "hardboard_interior", name: "Panneaux de fibres dures", rsiPerMm: 0.0095, description: "Panneaux de fibres dures (800 kg/m³)" },
-   { id: "cement_interior", name: "Ciment, granulat de sable", rsiPerMm: 0.0014, description: "Ciment, granulat de sable" },
-   { id: "plaster_sand", name: "Enduit au plâtre - agrégat de sable", rsiPerMm: 0.0012, description: "Enduit au plâtre - agrégat de sable" },
-   { id: "plaster_light", name: "Enduit au plâtre - agrégat léger", rsiPerMm: 0.0044, description: "Enduit au plâtre - agrégat léger" },
-   { id: "plywood_interior", name: "Contreplaqué", rsiPerMm: 0.0087, description: "Contreplaqué" },
-   { id: "particleboard_590", name: "Panneaux de particules, faible masse volumique (590 kg/m³)", rsiPerMm: 0.0098, description: "Panneaux de particules, faible masse volumique (590 kg/m³)" },
-   { id: "particleboard_800", name: "Panneaux de particules, faible masse volumique (800 kg/m³)", rsiPerMm: 0.0074, description: "Panneaux de particules, faible masse volumique (800 kg/m³)" },
-   { id: "particleboard_1000", name: "Panneaux de particules, faible masse volumique (1000 kg/m³)", rsiPerMm: 0.0059, description: "Panneaux de particules, faible masse volumique (1000 kg/m³)" },
-   { id: "carpet_fiber", name: "Moquette et thibaude fibreuse", rsi: 0.37, description: "Moquette et thibaude fibreuse" },
-   { id: "carpet_rubber", name: "Moquette et thibaude caoutchoutée", rsi: 0.22, description: "Moquette et thibaude caoutchoutée" },
-   { id: "cork_tile", name: "Carreaux de liège, épaisseur 3,2mm", rsi: 0.049, description: "Carreaux de liège, épaisseur 3,2mm" },
-   { id: "terrazzo", name: "Terrazzo", rsiPerMm: 0.0006, description: "Terrazzo" },
-   { id: "hardwood_floor", name: "Couvre-plancher en bois dur, épaisseur 19mm", rsi: 0.12, description: "Couvre-plancher en bois dur, épaisseur 19mm" },
-   { id: "vinyl_floor", name: "Linoléum, vinyle, caoutchouc", rsi: 0.009, description: "Linoléum, vinyle, caoutchouc" }
- ]
+  // Matériaux de finition intérieure
+  interiorFinish: [
+    { id: "gypsum_interior", name: "Plaque de plâtre (gypse)", rsiPerMm: 0.0061, description: "Plaque de plâtre (panneaux de gypse)" },
+    { id: "hardboard_interior", name: "Panneaux de fibres dures", rsiPerMm: 0.0095, description: "Panneaux de fibres dures (800 kg/m³)" },
+    { id: "cement_interior", name: "Ciment, granulat de sable", rsiPerMm: 0.0014, description: "Ciment, granulat de sable" },
+    { id: "plaster_sand", name: "Enduit au plâtre - agrégat de sable", rsiPerMm: 0.0012, description: "Enduit au plâtre - agrégat de sable" },
+    { id: "plaster_light", name: "Enduit au plâtre - agrégat léger", rsiPerMm: 0.0044, description: "Enduit au plâtre - agrégat léger" },
+    { id: "plywood_interior", name: "Contreplaqué", rsiPerMm: 0.0087, description: "Contreplaqué" },
+    { id: "particleboard_590", name: "Panneaux de particules, faible masse volumique (590 kg/m³)", rsiPerMm: 0.0098, description: "Panneaux de particules, faible masse volumique (590 kg/m³)" },
+    { id: "particleboard_800", name: "Panneaux de particules, faible masse volumique (800 kg/m³)", rsiPerMm: 0.0074, description: "Panneaux de particules, faible masse volumique (800 kg/m³)" },
+    { id: "particleboard_1000", name: "Panneaux de particules, faible masse volumique (1000 kg/m³)", rsiPerMm: 0.0059, description: "Panneaux de particules, faible masse volumique (1000 kg/m³)" },
+    { id: "carpet_fiber", name: "Moquette et thibaude fibreuse", rsi: 0.37, description: "Moquette et thibaude fibreuse" },
+    { id: "carpet_rubber", name: "Moquette et thibaude caoutchoutée", rsi: 0.22, description: "Moquette et thibaude caoutchoutée" },
+    { id: "cork_tile", name: "Carreaux de liège, épaisseur 3,2mm", rsi: 0.049, description: "Carreaux de liège, épaisseur 3,2mm" },
+    { id: "terrazzo", name: "Terrazzo", rsiPerMm: 0.0006, description: "Terrazzo" },
+    { id: "hardwood_floor", name: "Couvre-plancher en bois dur, épaisseur 19mm", rsi: 0.12, description: "Couvre-plancher en bois dur, épaisseur 19mm" },
+    { id: "vinyl_floor", name: "Linoléum, vinyle, caoutchouc", rsi: 0.009, description: "Linoléum, vinyle, caoutchouc" }
+  ]
 };
-        // Composant pour sélectionner un matériau avec épaisseur si nécessaire
+// Composant pour sélectionner un matériau avec épaisseur si nécessaire
 const MaterialSelector = ({ 
   categoryOptions, 
   onChange, 
@@ -474,6 +583,7 @@ const MaterialSelector = ({
   );
 };
 
+
 // Composant d'accordéon pour les sections
 const Accordion = ({ title, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
@@ -499,7 +609,7 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
     </div>
   );
 };
-        const Calculator = () => {
+const Calculator = () => {
   // État pour les données générales
   const [location, setLocation] = React.useState("");
   const [degreeDays, setDegreeDays] = React.useState("");
@@ -701,7 +811,7 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
         return 'cet élément';
     }
   };
-            return (
+return (
     <div className="max-w-6xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4 text-center">Calculateur de Résistance Thermique</h1>
       <p className="mb-6 text-center text-gray-700">
@@ -716,7 +826,6 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
           </p>
           <ul className="list-disc pl-6 space-y-2">
             <li><strong>Partie 11 du Code de construction du Québec (2015)</strong> - S'applique aux habitations d'au plus 3 étages et d'au plus 600 m² n'abritant que des logements.</li>
-            <li><strong>Chapitre I.1 - Efficacité énergétique du bâtiment (2020)</strong> - S'applique aux bâtiments de plus grande taille et aux bâtiments comportant d'autres usages.</li>
           </ul>
           <p>
             <strong>Deux notions importantes à comprendre:</strong>
@@ -726,7 +835,6 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
             <li><strong>Résistance thermique effective (RSI<sub>E</sub>)</strong> - Tient compte de l'effet des ponts thermiques créés par les éléments de structure (poteaux, solives, linteaux, etc.).</li>
           </ul>
           <p>
-            Pour les bâtiments soumis au Chapitre I.1, la résistance thermique effective (RSI<sub>E</sub>) est la valeur déterminante pour la conformité.
             Pour les bâtiments soumis à la Partie 11, la résistance thermique totale (RSI<sub>T</sub>) est la valeur principalement utilisée, mais la RBQ reconnaît l'équivalence des valeurs RSI<sub>E</sub>.
           </p>
         </div>
@@ -797,7 +905,6 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
               className="w-full p-2 border rounded"
            >
              <option value="part11">Partie 11 - Code de construction du Québec (2015)</option>
-             <option value="chapter1.1">Chapitre I.1 - Efficacité énergétique du bâtiment (2020)</option>
            </select>
          </div>
          
@@ -843,8 +950,7 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
          </div>
        </div>
      </Accordion>
-     
-     <Accordion title="Composition de l'enveloppe" defaultOpen={true}>
+<Accordion title="Composition de l'enveloppe" defaultOpen={true}>
        <div className="mb-4 flex flex-wrap gap-2">
          <button 
            onClick={() => addLayer('airfilm')} 
@@ -1035,8 +1141,7 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
          Calculer la performance thermique
        </button>
      </Accordion>
-     
-     {results && (
+{results && (
        <div className="mt-6 border rounded p-6 bg-gray-50">
          <h2 className="text-2xl font-bold mb-4">Résultats d'analyse</h2>
          
@@ -1122,14 +1227,6 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
              </thead>
              <tbody>
                <tr>
-                 <td className="border px-4 py-2">Résistance thermique totale (RSI<sub>T</sub>)</td>
-                 <td className="border px-4 py-2">{formatRSIR(results.totalRSI)}</td>
-                 <td className="border px-4 py-2">{formatRSIR(results.totalCompliance.minRSI)}</td>
-                 <td className="border px-4 py-2">
-                   {getComplianceIndicator(results.totalCompliance.compliant)}
-                 </td>
-               </tr>
-               <tr>
                  <td className="border px-4 py-2">Résistance thermique effective (RSI<sub>E</sub>)</td>
                  <td className="border px-4 py-2">{formatRSIR(results.effectiveRSI)}</td>
                  <td className="border px-4 py-2">{formatRSIR(results.effectiveCompliance.minRSI)}</td>
@@ -1167,12 +1264,8 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
                dans l'annexe A-9.36.2.4. 1) du Code national du bâtiment.
              </li>
              <li>
-               Pour les bâtiments soumis au Chapitre I.1 (bâtiments commerciaux, institutionnels, industriels ou habitations de plus de 3 étages 
-               ou plus de 600 m²), la résistance thermique effective (RSI<sub>E</sub>) est la valeur déterminante pour la conformité.
-             </li>
-             <li>
                Les ponts thermiques doivent être couverts de matériaux isolants selon les exigences spécifiques du Code. Consultez la 
-               section 11.2.3 (Partie 11) ou la section 3.2.1.2 (Chapitre I.1) pour plus de détails.
+               section 11.2.3 (Partie 11) pour plus de détails.
              </li>
            </ul>
          </div>
@@ -1184,6 +1277,6 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
 
 // Rendu du composant principal
 ReactDOM.render(<Calculator />, document.getElementById('root'));
-        </script>
+    </script>
 </body>
 </html>
