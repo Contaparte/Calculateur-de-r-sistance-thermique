@@ -322,7 +322,7 @@ const materials = {
     { id: "block_medium_perlite_190mm", name: "Bloc de béton densité moyenne avec perlite - 190mm", rsi: 0.53, description: "Blocs de béton à 2/3 cellules, agrégats de densité moyenne, remplis de perlite - 190mm" },
     { id: "block_medium_vermiculite_190mm", name: "Bloc de béton densité moyenne avec vermiculite - 190mm", rsi: 0.58, description: "Blocs de béton à 2/3 cellules, agrégats de densité moyenne, remplis de vermiculite - 190mm" }
   ],
-  
+
   // Briques creuses
   hollowBricks: [
     // Briques d'argile creuses - plusieurs alvéoles
@@ -517,7 +517,7 @@ const materials = {
     { id: "wood_subfloor", name: "Support de revêtement de sol en bois", rsi: 0.17, description: "Support de revêtement de sol en bois, 19mm" }
   ]
 };
-// Composant pour sélectionner un matériau avec épaisseur si nécessaire
+        // Composant pour sélectionner un matériau avec épaisseur si nécessaire
 const MaterialSelector = ({ 
   categoryOptions, 
   onChange, 
@@ -916,6 +916,88 @@ const Calculator = () => {
         return 'cet élément';
     }
   };
+  
+  // Fonction pour obtenir des recommandations spécifiques en fonction du composant et de la conformité
+  const getPontsThermiqueRecommendations = () => {
+    if (!results) return null;
+    
+    let recommendations = [];
+    
+    if (envelopeComponent === 'wall_above_grade') {
+      recommendations.push({
+        title: "Exigences pour les ponts thermiques des murs",
+        description: "Les éléments du bâtiment constituant un pont thermique doivent être recouverts de matériaux isolants ayant une résistance thermique minimale selon l'article 11.2.3.1. du Code:"
+      });
+      
+      recommendations.push({
+        title: "Pour une ossature de bois",
+        description: "- RSI 0,7 lorsque les éléments d'ossature sont espacés de moins de 600 mm d'entraxe\n- RSI 0,53 dans les autres cas"
+      });
+      
+      recommendations.push({
+        title: "Pour une ossature métallique",
+        description: "- RSI 1,76 lorsque les éléments d'ossature sont espacés de moins de 600 mm d'entraxe\n- RSI 1,32 dans les autres cas"
+      });
+      
+      recommendations.push({
+        title: "Pour une construction en béton",
+        description: "- RSI 0,88 minimum"
+      });
+      
+      recommendations.push({
+        title: "Note importante",
+        description: "Le matériau isolant doit couvrir les éléments du bâtiment constituant un pont thermique par l'extérieur, par l'intérieur ou par une combinaison des deux."
+      });
+    } 
+    else if (envelopeComponent === 'foundation_wall') {
+      recommendations.push({
+        title: "Exigences pour les fondations",
+        description: "Un mur de fondation dont plus de 50% de la surface est exposée à l'air extérieur, ainsi que la partie d'un mur de fondation qui est à ossature de bois, doivent avoir une résistance thermique totale égale à celle exigée pour un mur au-dessus du niveau du sol."
+      });
+      
+      recommendations.push({
+        title: "Bris thermique",
+        description: "L'article 11.2.3.3 exige que le matériau isolant placé entre le mur de fondation et le plancher sur sol ait une résistance thermique d'au moins RSI 1,32 jusqu'à une profondeur de 600 mm sous le niveau du sol."
+      });
+    }
+    else if (envelopeComponent === 'roof') {
+      recommendations.push({
+        title: "Résistance thermique à proximité des avant-toits",
+        description: "Selon l'article 11.2.2.3, la résistance thermique totale exigée pour un toit ou plafond peut être réduite à proximité de l'avant-toit lorsque nécessaire pour la ventilation, à condition de ne pas être inférieure à la valeur exigée pour un mur au-dessus du niveau du sol."
+      });
+      
+      recommendations.push({
+        title: "Toits plats",
+        description: "La résistance thermique totale pour les toits plats peut être réduite d'au plus 20% à son point le plus bas pour créer des pentes de drainage, à condition que la perte de chaleur totale ne soit pas supérieure à celle d'un toit conforme aux exigences."
+      });
+    }
+    else if (envelopeComponent === 'floor') {
+      recommendations.push({
+        title: "Ponts thermiques des planchers",
+        description: "Selon l'article 11.2.3.2, la résistance thermique des matériaux isolants recouvrant les ponts thermiques des planchers doit avoir une valeur d'au moins RSI 1,32 pour les planchers hors sol en porte-à-faux et les planchers situés au-dessus d'un espace non chauffé."
+      });
+    }
+    
+    return recommendations;
+  };
+  
+  // Fonction pour obtenir des recommandations générales sur la continuité de l'isolation
+  const getIsolationContinuityRecommendations = () => {
+    return [
+      {
+        title: "Continuité de l'isolation",
+        description: "Pour assurer la performance énergétique de l'enveloppe, l'isolation thermique doit être continue sur toute la surface de l'élément et les ponts thermiques doivent être minimisés selon les exigences du Code."
+      },
+      {
+        title: "Solive de rive",
+        description: "Selon l'article 11.2.3.1, la solive de rive doit être isolée de manière à posséder une valeur de résistance thermique totale équivalente à celle exigée pour un mur au-dessus du niveau du sol. Pour une construction de béton, une résistance thermique d'au moins RSI 1,76 est requise."
+      },
+      {
+        title: "Murs entre espaces chauffés",
+        description: "Lorsque le mur entre deux espaces chauffés crée un pont thermique, il doit être recouvert de matériaux isolants offrant une résistance thermique d'au moins RSI 2,20 de chaque côté du mur sur une distance minimale de 1,2 m à partir de la face extérieure du mur extérieur."
+      }
+    ];
+  };
 return (
     <div className="max-w-6xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4 text-center">Calculateur de Résistance Thermique</h1>
@@ -1265,7 +1347,7 @@ return (
            
            <p className="mb-2">
              Exigences minimales selon le Code pour {getEnvelopeComponentDescription()} 
-             dans votre zone climatique ({climaticZone}):
+             dans votre zone climatique ({climaticZone === "< 6000" ? "moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}):
            </p>
            <ul className="list-disc pl-6">
              <li className="mb-1">
@@ -1332,6 +1414,14 @@ return (
              </thead>
              <tbody>
                <tr>
+                 <td className="border px-4 py-2">Résistance thermique totale (RSI<sub>T</sub>)</td>
+                 <td className="border px-4 py-2">{formatRSIR(results.totalRSI)}</td>
+                 <td className="border px-4 py-2">{formatRSIR(results.totalCompliance.minRSI)}</td>
+                 <td className="border px-4 py-2">
+                   {getComplianceIndicator(results.totalCompliance.compliant)}
+                 </td>
+               </tr>
+               <tr>
                  <td className="border px-4 py-2">Résistance thermique effective (RSI<sub>E</sub>)</td>
                  <td className="border px-4 py-2">{formatRSIR(results.effectiveRSI)}</td>
                  <td className="border px-4 py-2">{formatRSIR(results.effectiveCompliance.minRSI)}</td>
@@ -1355,6 +1445,31 @@ return (
            </table>
          </div>
          
+         {/* Nouvelle section: Exigences spécifiques du Code */}
+         <h3 className="text-xl font-bold my-3">Exigences spécifiques du Code</h3>
+         
+         {/* Recommandations pour les ponts thermiques selon le type d'élément */}
+         {getPontsThermiqueRecommendations() && (
+           <div className="mb-4 bg-white rounded border p-4">
+             {getPontsThermiqueRecommendations().map((recommendation, index) => (
+               <div key={index} className="mb-3">
+                 <h4 className="font-bold text-blue-800">{recommendation.title}</h4>
+                 <p className="text-sm whitespace-pre-line">{recommendation.description}</p>
+               </div>
+             ))}
+           </div>
+         )}
+         
+         {/* Recommandations générales pour la continuité de l'isolation */}
+         <div className="mb-4 bg-white rounded border p-4">
+           {getIsolationContinuityRecommendations().map((recommendation, index) => (
+             <div key={index} className="mb-3">
+               <h4 className="font-bold text-blue-800">{recommendation.title}</h4>
+               <p className="text-sm">{recommendation.description}</p>
+             </div>
+           ))}
+         </div>
+         
          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
            <h4 className="font-bold mb-2">Notes importantes:</h4>
            <ul className="list-disc pl-6 text-sm space-y-2">
@@ -1369,8 +1484,14 @@ return (
                dans l'annexe A-9.36.2.4. 1) du Code national du bâtiment.
              </li>
              <li>
-               Les ponts thermiques doivent être couverts de matériaux isolants selon les exigences spécifiques du Code. Consultez la 
-               section 11.2.3 (Partie 11) pour plus de détails.
+               <strong>Exigences de la Partie 11:</strong> Les bâtiments doivent se conformer aux exigences prescriptives de 
+               résistance thermique totale (RSI<sub>T</sub>) ou utiliser la méthode alternative de résistance thermique effective (RSI<sub>E</sub>). 
+               La réduction des ponts thermiques est obligatoire selon la section 11.2.3 du Code.
+             </li>
+             <li>
+               <strong>Conformité par méthode alternative:</strong> Selon l'article 11.2.2.1. 3), une résistance thermique inférieure 
+               aux exigences peut être acceptable si une analyse énergétique démontre que la consommation annuelle d'énergie de la 
+               construction proposée ne dépasse pas celle d'une construction de référence conforme.
              </li>
            </ul>
          </div>
