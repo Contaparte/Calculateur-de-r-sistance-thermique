@@ -210,11 +210,12 @@ const municipalities = [
   { id: "val-dor", name: "Val-d'Or", degreeDay: 6180, zone: ">= 6000" },
   { id: "ville-marie", name: "Ville-Marie", degreeDay: 5550, zone: ">= 6000" }
 ];
+        
 // Base de données des matériaux avec leurs valeurs RSI
 const materials = {
   // Films d'air
   airFilms: [
-    { id: "exterior", name: "Film d'air extérieur", rsi: 0.03, description: "Pellicule d'air de surface (vent hivernal de 24 Km/h)" },
+    { id: "exterior", name: "Film d'air extérieur", rsi: 0.03, description: "Film d'air extérieur (air instable)" },
     { id: "interior_vertical", name: "Film d'air intérieur (mur)", rsi: 0.12, description: "Air stable, surface verticale, flux thermique horizontal" },
     { id: "interior_ceiling", name: "Film d'air intérieur (plafond)", rsi: 0.11, description: "Air stable, surface horizontale, flux thermique ascendant" },
     { id: "interior_floor", name: "Film d'air intérieur (plancher)", rsi: 0.16, description: "Air stable, surface horizontale, flux thermique descendant" }
@@ -271,34 +272,102 @@ const materials = {
     { id: "wood_hemlock", name: "Pruche", rsiPerMm: 0.0084, description: "Pruche" },
     { id: "wood_hemlock_western", name: "Pruche de l'ouest", rsiPerMm: 0.0074, description: "Pruche de l'ouest" },
     { id: "wood_doug_fir", name: "Sapin de Douglas ou mélèze", rsiPerMm: 0.0069, description: "Sapin de Douglas ou mélèze" },
-    { id: "wood_fir", name: "Sapin gracieux", rsiPerMm: 0.008, description: "Sapin gracieux" }
+    { id: "wood_fir", name: "Sapin gracieux", rsiPerMm: 0.008, description: "Sapin gracieux" },
+    { id: "wood_redwood", name: "Séquoia de Californie", rsiPerMm: 0.0089, description: "Séquoia de Californie (nouveau)" },
+    { id: "wood_cedar_western", name: "Thuya géant", rsiPerMm: 0.0102, description: "Thuya géant (nouveau)" }
   ],
   
   // Béton
   concrete: [
     { id: "concrete_2400", name: "Béton 2400 kg/m³", rsiPerMm: 0.0004, description: "Béton coulé sur place, 2400 kg/m³ (150lbs/pi³)" },
-    { id: "concrete_1600", name: "Béton léger 1600 kg/m³", rsiPerMm: 0.0013, description: "Béton léger, 1600 kg/m³ (100lbs/pi³) (schiste, argile ou ardoise expansés, laitier expansé, cendre)" }
+    { id: "concrete_1600", name: "Béton léger 1600 kg/m³", rsiPerMm: 0.0013, description:{ id: "concrete_1600", name: "Béton léger 1600 kg/m³", rsiPerMm: 0.0013, description: "Béton léger, 1600 kg/m³ (100lbs/pi³) (schiste, argile ou ardoise expansés, laitier expansé, cendre)" },
+    { id: "concrete_480", name: "Béton très léger 480 kg/m³", rsiPerMm: 0.0069, description: "Béton très léger, 480 kg/m³ (perlite, vermiculite et billes de polystyrène) (nouveau)" }
   ],
   
   // Blocs de béton
   concreteBlocks: [
+    // Granulats de pierres calcaires
+    { id: "block_limestone_perlite_190mm", name: "Bloc calcaire avec perlite - 190mm", rsi: 0.37, description: "Granulats de pierres calcaires - 2 alvéoles - Alvéoles remplies de perlite - 190mm (nouveau)" },
+    { id: "block_limestone_perlite_290mm", name: "Bloc calcaire avec perlite - 290mm", rsi: 0.65, description: "Granulats de pierres calcaires - 2 alvéoles - Alvéoles remplies de perlite - 290mm (nouveau)" },
+    
+    // Granulats de faible densité
+    { id: "block_lightweight_90mm", name: "Bloc léger - 90mm", rsi: 0.24, description: "Granulats de faible densité (agrégats de schiste, argile, ardoise ou laitier expansé) - 2 ou 3 alvéoles - Alvéoles sans isolant - 90mm (nouveau)" },
+    { id: "block_lightweight_140mm", name: "Bloc léger - 140mm", rsi: 0.30, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles sans isolant - 140mm (nouveau)" },
+    { id: "block_lightweight_190mm", name: "Bloc léger - 190mm", rsi: 0.32, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles sans isolant - 190mm (nouveau)" },
+    { id: "block_lightweight_240mm", name: "Bloc léger - 240mm", rsi: 0.33, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles sans isolant - 240mm (nouveau)" },
+    { id: "block_lightweight_290mm", name: "Bloc léger - 290mm", rsi: 0.41, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles sans isolant - 290mm (nouveau)" },
+    
+    { id: "block_lightweight_perlite_140mm", name: "Bloc léger avec perlite - 140mm", rsi: 0.74, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de perlite - 140mm (nouveau)" },
+    { id: "block_lightweight_perlite_190mm", name: "Bloc léger avec perlite - 190mm", rsi: 0.99, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de perlite - 190mm (nouveau)" },
+    { id: "block_lightweight_perlite_290mm", name: "Bloc léger avec perlite - 290mm", rsi: 1.35, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de perlite - 290mm (nouveau)" },
+    
+    { id: "block_lightweight_vermiculite_140mm", name: "Bloc léger avec vermiculite - 140mm", rsi: 0.58, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de vermiculite - 140mm (nouveau)" },
+    { id: "block_lightweight_vermiculite_190mm", name: "Bloc léger avec vermiculite - 190mm", rsi: 0.81, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de vermiculite - 190mm (nouveau)" },
+    { id: "block_lightweight_vermiculite_240mm", name: "Bloc léger avec vermiculite - 240mm", rsi: 0.98, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de vermiculite - 240mm (nouveau)" },
+    { id: "block_lightweight_vermiculite_290mm", name: "Bloc léger avec vermiculite - 290mm", rsi: 1.06, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de vermiculite - 290mm (nouveau)" },
+    
+    { id: "block_lightweight_eps_190mm", name: "Bloc léger avec EPS moulé - 190mm", rsi: 0.85, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de billes de polystyrène expansé (EPS) moulé - 190mm (nouveau)" },
+    { id: "block_lightweight_eps_foam_190mm", name: "Bloc léger avec EPS - 190mm", rsi: 0.62, description: "Granulats de faible densité - 2 ou 3 alvéoles - Alvéoles remplies de polystyrène expansé (EPS) moulé - 190mm (nouveau)" },
+    
+    // Granulats de densité moyenne
+    { id: "block_medium_190mm", name: "Bloc densité moyenne - 190mm", rsi: 0.26, description: "Granulats de densité moyenne (combinaison d'agrégats de densités normale et faible) - 2 ou 3 alvéoles - Alvéoles sans isolant - 190mm (nouveau)" },
+    { id: "block_medium_eps_190mm", name: "Bloc densité moyenne avec EPS moulé - 190mm", rsi: 0.56, description: "Granulats de densité moyenne - 2 ou 3 alvéoles - Alvéoles remplies de perles de polystyrène expansé (EPS) moulé - 190mm (nouveau)" },
+    { id: "block_medium_eps_foam_190mm", name: "Bloc densité moyenne avec EPS - 190mm", rsi: 0.47, description: "Granulats de densité moyenne - 2 ou 3 alvéoles - Alvéoles remplies de polystyrène expansé (EPS) moulé - 190mm (nouveau)" },
+    { id: "block_medium_perlite_190mm", name: "Bloc densité moyenne avec perlite - 190mm", rsi: 0.53, description: "Granulats de densité moyenne - 2 ou 3 alvéoles - Alvéoles remplies de perlite - 190mm (nouveau)" },
+    { id: "block_medium_vermiculite_190mm", name: "Bloc densité moyenne avec vermiculite - 190mm", rsi: 0.58, description: "Granulats de densité moyenne - 2 ou 3 alvéoles - Alvéoles remplies de vermiculite - 190mm (nouveau)" },
+    
+    // Béton lourd
     { id: "block_90mm", name: "Bloc de béton - 90mm", rsi: 0.17, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 90mm" },
     { id: "block_140mm", name: "Bloc de béton - 140mm", rsi: 0.19, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 140mm" },
     { id: "block_190mm", name: "Bloc de béton - 190mm", rsi: 0.21, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 190mm" },
     { id: "block_240mm", name: "Bloc de béton - 240mm", rsi: 0.24, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 240mm" },
     { id: "block_290mm", name: "Bloc de béton - 290mm", rsi: 0.26, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 290mm" },
-    { id: "block_perlite_190mm", name: "Bloc de béton avec perlite - 190mm", rsi: 0.53, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de perlite - 190mm" },
+    { id: "block_perlite_190mm", name: "Bloc de béton avec perlite - 190mm", rsi: 0.35, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de perlite - 190mm (nouveau)" },
     { id: "block_vermiculite_140mm", name: "Bloc de béton avec vermiculite - 140mm", rsi: 0.4, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 140mm" },
     { id: "block_vermiculite_190mm", name: "Bloc de béton avec vermiculite - 190mm", rsi: 0.51, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 190mm" },
     { id: "block_vermiculite_240mm", name: "Bloc de béton avec vermiculite - 240mm", rsi: 0.61, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 240mm" },
     { id: "block_vermiculite_290mm", name: "Bloc de béton avec vermiculite - 290mm", rsi: 0.69, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 290mm" }
   ],
   
+  // Briques creuses
+  hollowBricks: [
+    { id: "hollow_brick_90mm", name: "Brique d'argile creuse - 90mm", rsi: 0.27, description: "Brique d'argile creuse - plusieurs alvéoles - alvéoles sans isolant - 90mm (nouveau)" },
+    { id: "hollow_brick_rectangular_140mm", name: "Brique d'argile creuse rectangulaire - 140mm", rsi: 0.39, description: "Brique d'argile creuse rectangulaire - 2 alvéoles - alvéoles sans isolant - 140mm (nouveau)" },
+    { id: "hollow_brick_rectangular_190mm", name: "Brique d'argile creuse rectangulaire - 190mm", rsi: 0.41, description: "Brique d'argile creuse rectangulaire - 2 alvéoles - alvéoles sans isolant - 190mm (nouveau)" },
+    { id: "hollow_brick_rectangular_290mm", name: "Brique d'argile creuse rectangulaire - 290mm", rsi: 0.47, description: "Brique d'argile creuse rectangulaire - 2 alvéoles - alvéoles sans isolant - 290mm (nouveau)" },
+    
+    { id: "hollow_brick_rectangular_vermiculite_140mm", name: "Brique d'argile creuse rectangulaire avec vermiculite - 140mm", rsi: 0.65, description: "Brique d'argile creuse rectangulaire - 2 alvéoles - alvéoles remplies de vermiculite - 140mm (nouveau)" },
+    { id: "hollow_brick_rectangular_vermiculite_190mm", name: "Brique d'argile creuse rectangulaire avec vermiculite - 190mm", rsi: 0.86, description: "Brique d'argile creuse rectangulaire - 2 alvéoles - alvéoles remplies de vermiculite - 190mm (nouveau)" },
+    { id: "hollow_brick_rectangular_vermiculite_290mm", name: "Brique d'argile creuse rectangulaire avec vermiculite - 290mm", rsi: 1.29, description: "Brique d'argile creuse rectangulaire - 2 alvéoles - alvéoles remplies de vermiculite - 290mm (nouveau)" },
+    
+    { id: "hollow_brick_3cells_90mm", name: "Brique d'argile creuse à 3 alvéoles - 90mm", rsi: 0.35, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles sans isolant - 90mm (nouveau)" },
+    { id: "hollow_brick_3cells_140mm", name: "Brique d'argile creuse à 3 alvéoles - 140mm", rsi: 0.38, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles sans isolant - 140mm (nouveau)" },
+    { id: "hollow_brick_3cells_190mm", name: "Brique d'argile creuse à 3 alvéoles - 190mm", rsi: 0.41, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles sans isolant - 190mm (nouveau)" },
+    { id: "hollow_brick_3cells_240mm", name: "Brique d'argile creuse à 3 alvéoles - 240mm", rsi: 0.43, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles sans isolant - 240mm (nouveau)" },
+    { id: "hollow_brick_3cells_290mm", name: "Brique d'argile creuse à 3 alvéoles - 290mm", rsi: 0.45, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles sans isolant - 290mm (nouveau)" },
+    
+    { id: "hollow_brick_3cells_vermiculite_140mm", name: "Brique d'argile creuse à 3 alvéoles avec vermiculite - 140mm", rsi: 0.68, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles remplies de vermiculite - 140mm (nouveau)" },
+    { id: "hollow_brick_3cells_vermiculite_190mm", name: "Brique d'argile creuse à 3 alvéoles avec vermiculite - 190mm", rsi: 0.86, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles remplies de vermiculite - 190mm (nouveau)" },
+    { id: "hollow_brick_3cells_vermiculite_240mm", name: "Brique d'argile creuse à 3 alvéoles avec vermiculite - 240mm", rsi: 1.06, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles remplies de vermiculite - 240mm (nouveau)" },
+    { id: "hollow_brick_3cells_vermiculite_290mm", name: "Brique d'argile creuse à 3 alvéoles avec vermiculite - 290mm", rsi: 1.19, description: "Brique d'argile creuse rectangulaire - 3 alvéoles - alvéoles remplies de vermiculite - 290mm (nouveau)" }
+  ],
+  
   // Revêtements d'ossature
   sheathing: [
+    { id: "gypsum_sheathing", name: "Plaques de plâtre pour revêtement intermédiaire", rsiPerMm: 0.0063, description: "Plaques de plâtre spécialisées pour revêtement intermédiaire (nouveau)" },
+    { id: "fiberboard_insulation", name: "Panneaux de fibres isolantes", rsiPerMm: 0.016, description: "Panneaux de fibres isolantes (nouveau)" },
+    { id: "particleboard_low", name: "Panneaux de particules - faible masse volumique", rsiPerMm: 0.0098, description: "Panneaux de particules - faible masse volumique (593 kg/m³) (nouveau)" },
+    { id: "particleboard_medium", name: "Panneaux de particules - masse volumique moyenne", rsiPerMm: 0.0077, description: "Panneaux de particules - masse volumique moyenne (800 kg/m³) (nouveau)" },
+    { id: "particleboard_high", name: "Panneaux de particules - masse volumique élevée", rsiPerMm: 0.0059, description: "Panneaux de particules - masse volumique élevée (993 kg/m³) (nouveau)" },
+    { id: "plywood_generic", name: "Contreplaqué - bois tendre générique", rsiPerMm: 0.0087, description: "Contreplaqué - bois tendre générique (nouveau)" },
+    { id: "plywood_douglas_fir", name: "Contreplaqué - sapin de Douglas", rsiPerMm: 0.0111, description: "Contreplaqué - sapin de Douglas (nouveau)" },
+    { id: "felt_permeable", name: "Feutre perméable", rsi: 0.011, description: "Feutre perméable (nouveau)" },
+    { id: "felt_bitumen", name: "Feutre avec bitume", rsi: 0.21, description: "2 couches de feutre avec bitume (0,73 kg/m³) (nouveau)" },
+    { id: "plastic_membrane", name: "Membrane plastique", rsi: 0, description: "Membrane plastique - négligeable (nouveau)" },
+    { id: "chipboard", name: "Panneaux de copeaux", rsiPerMm: 0.0095, description: "Panneaux de copeaux (705 kg/m³) (nouveau)" },
+    { id: "osb", name: "Panneaux de copeaux orientés (OSB)", rsiPerMm: 0.0098, description: "Panneaux de copeaux orientés (OSB)" },
     { id: "plywood", name: "Contreplaqué de bois tendre", rsiPerMm: 0.0087, description: "Contreplaqué de bois tendre" },
     { id: "particleboard", name: "Panneau de particules", rsiPerMm: 0.0077, description: "Panneau de particules" },
-    { id: "osb", name: "Panneaux de copeaux (OSB)", rsiPerMm: 0.0098, description: "Panneaux de copeaux orientés (OSB)" },
     { id: "fiberboard_asphalt", name: "Revêtement en carton-fibre asphalté", rsiPerMm: 0.0165, description: "Revêtement en carton-fibre asphalté" },
     { id: "gypsum", name: "Revêtement en plaque de plâtre (gypse)", rsiPerMm: 0.0063, description: "Revêtement en plaque de plâtre (panneaux de gypse)" },
     { id: "paper", name: "Papier de revêtement", rsi: 0.011, description: "Papier de revêtement" },
@@ -310,108 +379,153 @@ const materials = {
 
   // Isolants
   insulation: [
+    // Isolants en nattes
+    { id: "batt_r12", name: "Natte isolante R-12", rsi: 2.11, description: "Nattes: fibre minérale de roche ou de verre, R-12 (89/92 mm) (nouveau)" },
+    { id: "batt_r14", name: "Natte isolante R-14", rsi: 2.46, description: "Nattes: fibre minérale de roche ou de verre, R-14 (89/92 mm) (nouveau)" },
+    { id: "batt_r19", name: "Natte isolante R-19", rsi: 3.34, description: "Nattes: fibre minérale de roche ou de verre, R-19 (R-20 comprimé) (140 mm) (nouveau)" },
+    { id: "batt_r20", name: "Natte isolante R-20", rsi: 3.52, description: "Nattes: fibre minérale de roche ou de verre, R-20 (152 mm) (nouveau)" },
+    { id: "batt_r22", name: "Natte isolante R-22", rsi: 3.87, description: "Nattes: fibre minérale de roche ou de verre, R-22 (140/152 mm) (nouveau)" },
+    { id: "batt_r22_5", name: "Natte isolante R-22.5", rsi: 3.96, description: "Nattes: fibre minérale de roche ou de verre, R-22.5 (152 mm) (nouveau)" },
+    { id: "batt_r24", name: "Natte isolante R-24", rsi: 4.23, description: "Nattes: fibre minérale de roche ou de verre, R-24 (140/152 mm) (nouveau)" },
+    { id: "batt_r28", name: "Natte isolante R-28", rsi: 4.93, description: "Nattes: fibre minérale de roche ou de verre, R-28 (178/216 mm) (nouveau)" },
+    { id: "batt_r31", name: "Natte isolante R-31", rsi: 5.46, description: "Nattes: fibre minérale de roche ou de verre, R-31 (241 mm) (nouveau)" },
+    { id: "batt_r35", name: "Natte isolante R-35", rsi: 6.16, description: "Nattes: fibre minérale de roche ou de verre, R-35 (267 mm) (nouveau)" },
+    { id: "batt_r40", name: "Natte isolante R-40", rsi: 7.04, description: "Nattes: fibre minérale de roche ou de verre, R-40 (279/300 mm) (nouveau)" },
+    
+    // Panneaux isolants
+    { id: "panel_roof", name: "Panneau isolant pour toiture", rsiPerMm: 0.018, description: "Panneaux isolants pour toiture (nouveau)" },
+    { id: "panel_wall", name: "Panneau isolant pour murs ou plafonds", rsiPerMm: 0.016, description: "Panneaux isolants pour murs ou plafonds (carreaux) (nouveau)" },
+    
+    // Polyisocyanurate/polyuréthane
+    { id: "polyiso_permeable", name: "Polyisocyanurate ou polyuréthane - surface perméable", rsiPerMm: 0.03818, description: "Polyisocyanurate ou polyuréthane, revêtus, types 1, 2 et 3 - surface perméable (nouveau)" },
+    { id: "polyiso_impermeable", name: "Polyisocyanurate ou polyuréthane - surface imperméable", rsiPerMm: 0.03937, description: "Polyisocyanurate ou polyuréthane, revêtus, types 1, 2 et 3 - surface imperméable (nouveau)" },
+    
+    // Polystyrène
+    { id: "polystyrene_type1", name: "Polystyrène expansé Type 1", rsiPerMm: 0.026, description: "Polystyrène expansé Type 1 (nouveau)" },
+    { id: "polystyrene_type2", name: "Polystyrène expansé Type 2", rsiPerMm: 0.028, description: "Polystyrène expansé Type 2 (nouveau)" },
+    { id: "polystyrene_type3", name: "Polystyrène expansé Type 3", rsiPerMm: 0.03, description: "Polystyrène expansé Type 3 (nouveau)" },
+    { id: "polystyrene_extruded", name: "Polystyrène extrudé", rsiPerMm: 0.035, description: "Polystyrène extrudé: Types 2, 3 et 4 (nouveau)" },
+    
+    // Fibre minérale semi-rigide
+    { id: "mineral_fiber_semirigid", name: "Fibre minérale semi-rigide", rsiPerMm: 0.0298, description: "Fibre minérale semi-rigide (fibre de verre ou laine de roche) (nouveau)" },
+    
+    // Isolants en vrac
+    { id: "cellulose_loose", name: "Cellulose en vrac", rsiPerMm: 0.025, description: "Cellulose en vrac (nouveau)" },
+    { id: "mineral_fiber_attic", name: "Fibre minérale pour combles", rsiPerMm: 0.01875, description: "Fibre minérale en vrac pour combles (112mm à 565mm) (nouveau)" },
+    { id: "mineral_fiber_wall_89mm", name: "Fibre minérale pour murs - 89mm", rsi: 2.55, description: "Fibre minérale en vrac pour murs - 89mm (nouveau)" },
+    { id: "mineral_fiber_wall_140mm", name: "Fibre minérale pour murs - 140mm", rsi: 4.05, description: "Fibre minérale en vrac pour murs - 140mm (nouveau)" },
+    { id: "loose_fill_attic", name: "Isolant à épandre pour combles", rsiPerMm: 0.02, description: "Isolant à épandre pour combles (nouveau)" },
+    
+    // Isolants sprayés
+    { id: "spray_polyurethane_low", name: "Mousse de polyuréthane pulvérisée - faible densité", rsiPerMm: 0.0255, description: "Mousse de polyuréthane pulvérisée - faible densité (nouveau)" },
+    { id: "spray_polyurethane_medium", name: "Mousse de polyuréthane pulvérisée - densité moyenne", rsiPerMm: 0.036, description: "Mousse de polyuréthane pulvérisée - densité moyenne de type I (nouveau)" },
+    { id: "spray_cellulose", name: "Fibre de cellulose pulvérisée", rsiPerMm: 0.024, description: "Fibre de cellulose pulvérisée (épaisseur tassée) (nouveau)" },
+    { id: "spray_fiberglass_16", name: "Isolant en fibres de verre pulvérisé - 16 kg/m³", rsiPerMm: 0.025, description: "Isolant en fibres de verre pulvérisé - densité: 16 kg/m³ (nouveau)" },
+    { id: "spray_fiberglass_28", name: "Isolant en fibres de verre pulvérisé - 28,8 kg/m³", rsiPerMm: 0.029, description: "Isolant en fibres de verre pulvérisé - densité: 28,8 kg/m³ (nouveau)" },
+    
+    // Autres isolants (existants)
     { id: "fiberglass_thermal", name: "Laine de fibre de verre, usage thermique", rsiPerMm: 0.0208, description: "Laine de fibre de verre, usage thermique (Eco Touch thermique de Owens Corning)" },
     { id: "fiberglass_acoustic", name: "Laine de fibre de verre, usage acoustique", rsiPerMm: 0, description: "Laine de fibre de verre, usage acoustique (Eco Touch Quiétude de Owens Corning) - valeurs non fournies" },
     { id: "mineral_wool", name: "Laine de roche", rsiPerMm: 0.0276, description: "Laine de roche (Roxul Cavity Rock)" },
     { id: "benotherm", name: "BENO-THERM de Benolec", rsiPerMm: 0.025, description: "BENO-THERM de Benolec" },
     { id: "benospray", name: "BENO-SPRAY de Benolec", rsiPerMm: 0.024, description: "BENO-SPRAY de Benolec" },
     { id: "cellulose_blown", name: "Fibre cellulosique épandue (combles)", rsiPerMm: 0.0188, description: "Fibre cellulosique épandue (combles)" },
-    { id: "cellulose_sprayed", name: "Fibre cellulosique pulvérisée", rsiPerMm: 0.019, description: "Fibre cellulosique pulvérisée" },
     { id: "mineral_blown", name: "Fibre minérale épandue (combles)", rsiPerMm: 0.015, description: "Fibre minérale épandue (combles)" },
     { id: "mineral_injected_89mm", name: "Fibre minérale injectée (murs), 89mm", rsi: 2.55, description: "Fibre minérale injectée (murs), 89mm (3 1/2'')" },
     { id: "mineral_injected_140mm", name: "Fibre minérale injectée (murs), 140mm", rsi: 4.05, description: "Fibre minérale injectée (murs), 140mm (5 1/2'')" },
-    { id: "mineral_injected_152mm", name: "Fibre minérale injectée (murs), 152mm", rsi: 4.23, description: "Fibre minérale injectée (murs), 152mm (6'')" },
-    { id: "fibrewood", name: "Fibre de bois", rsiPerMm: 0.023, description: "Fibre de bois" },
-    { id: "asbestos", name: "Amiante pulvérisé", rsiPerMm: 0.0201, description: "Amiante pulvérisé (vieilles constructions)" },
-    { id: "foamular", name: "Foamular C-200 ou Cdebord de Owens Corning", rsiPerMm: 0.0343, description: "Foamular C-200 ou Cdebord de Owens Corning" },
-    { id: "polystyrene_type1", name: "Polystyrène expansé Type 1", rsiPerMm: 0.0257, description: "Polystyrène expansé Type 1" },
-    { id: "polystyrene_type2", name: "Polystyrène expansé Type 2", rsiPerMm: 0.0277, description: "Polystyrène expansé Type 2" },
-    { id: "polystyrene_type3", name: "Polystyrène expansé Type 3", rsiPerMm: 0.0298, description: "Polystyrène expansé Type 3" },
-    { id: "polystyrene_type4", name: "Polystyrène expansé Type 4", rsiPerMm: 0.0347, description: "Polystyrène expansé Type 4" },
-    { id: "rockwool_rigid", name: "Isolant rigide en laine de roche pour toit", rsiPerMm: 0.0277, description: "Isolant rigide en laine de roche pour toit" },
-    { id: "extruded_polystyrene", name: "Polystyrène extrudé", rsiPerMm: 0.0257, description: "Polystyrène extrudé" },
-    { id: "cork", name: "Liège naturel", rsiPerMm: 0.0257, description: "Liège naturel" },
-    { id: "perlite_panel", name: "Panneau de perlite", rsiPerMm: 0.0187, description: "Panneau de perlite" },
-    { id: "perlex", name: "Perlex de Lexcor", rsi: 0.49, description: "Perlex de Lexcor" },
-    { id: "polyiso", name: "Panneau rigide de polyisocyanurate", rsiPerMm: 0.042, description: "Panneau rigide de polyisocyanurate (Sopra-Iso de Soprema)" },
-    { id: "fibercement", name: "Panneau de fibrociment", rsi: 0.109, description: "Panneau de fibrociment (Finex)" },
-    { id: "straw", name: "Panneau de paille comprimée", rsiPerMm: 0.0139, description: "Panneau de paille comprimée" },
-    { id: "fiberboard_dry", name: "Panneau isolant de carton-fibre sec", rsiPerMm: 0.0194, description: "Panneau isolant de carton-fibre sec" },
-    { id: "perlite_loose", name: "Perlite expansée, en vrac", rsiPerMm: 0.0187, description: "Perlite expansée, en vrac" },
-    { id: "phenolic", name: "Panneau de mousse phénolique", rsiPerMm: 0.0304, description: "Panneau de mousse phénolique" },
-    { id: "spray_polyurethane", name: "Polyuréthane giclé", rsiPerMm: 0.0455, description: "Polyuréthane giclé" },
-    { id: "wood_fiber", name: "Matelas de fibre de bois", rsiPerMm: 0.0255, description: "Matelas de fibre de bois (différent des panneaux de carton-fibre)" },
-    { id: "vermiculite", name: "Vermiculite", rsiPerMm: 0.0150, description: "Vermiculite" },
-    { id: "perlite", name: "Perlite", rsiPerMm: 0.0230, description: "Perlite" }
-  ],
-  
-  // Parements de bois
-  woodCladding: [
-    { id: "wood_shingle_190mm", name: "Bardeau de bois 400mm, pureau de 190mm", rsi: 0.15, description: "Bardeau de bois 400mm, pureau de 190mm" },
-    { id: "wood_shingle_300mm", name: "Bardeau de bois 400mm, pureau double de 300mm", rsi: 0.21, description: "Bardeau de bois 400mm, pureau double de 300mm" },
-    { id: "wood_siding_200mm_13mm", name: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm", rsi: 0.14, description: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm" },
-    { id: "wood_siding_250mm_20mm", name: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm", rsi: 0.18, description: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm" },
-    { id: "wood_siding_200mm_20mm", name: "Bardage à mi-bois, 200mm, épaisseur 20mm", rsi: 0.14, description: "Bardage à mi-bois, 200mm, épaisseur 20mm" },
-    { id: "hardboard_11mm", name: "Panneaux de fibres dures, épaisseur 11mm", rsi: 0.12, description: "Panneaux de fibres dures, épaisseur 11mm (ex.: Canexel)" }
-  ],
+    { id: "mineral_injected_152mm", name: "Fibre minérale injectée (murs), 152mm", rsi: 4.23, description: "Fibre minérale injectée (murs), 152mm (6'')" },   { id: "mineral_injected_152mm", name: "Fibre minérale injectée (murs), 152mm", rsi: 4.23, description: "Fibre minérale injectée (murs), 152mm (6'')" },
+   { id: "fibrewood", name: "Fibre de bois", rsiPerMm: 0.023, description: "Fibre de bois" },
+   { id: "asbestos", name: "Amiante pulvérisé", rsiPerMm: 0.0201, description: "Amiante pulvérisé (vieilles constructions)" },
+   { id: "foamular", name: "Foamular C-200 ou Cdebord de Owens Corning", rsiPerMm: 0.0343, description: "Foamular C-200 ou Cdebord de Owens Corning" },
+   { id: "rockwool_rigid", name: "Isolant rigide en laine de roche pour toit", rsiPerMm: 0.0277, description: "Isolant rigide en laine de roche pour toit" },
+   { id: "extruded_polystyrene", name: "Polystyrène extrudé", rsiPerMm: 0.0257, description: "Polystyrène extrudé" },
+   { id: "cork", name: "Liège naturel", rsiPerMm: 0.0257, description: "Liège naturel" },
+   { id: "perlite_panel", name: "Panneau de perlite", rsiPerMm: 0.0187, description: "Panneau de perlite" },
+   { id: "perlex", name: "Perlex de Lexcor", rsi: 0.49, description: "Perlex de Lexcor" },
+   { id: "polyiso", name: "Panneau rigide de polyisocyanurate", rsiPerMm: 0.042, description: "Panneau rigide de polyisocyanurate (Sopra-Iso de Soprema)" },
+   { id: "fibercement", name: "Panneau de fibrociment", rsi: 0.109, description: "Panneau de fibrociment (Finex)" },
+   { id: "straw", name: "Panneau de paille comprimée", rsiPerMm: 0.0139, description: "Panneau de paille comprimée" },
+   { id: "fiberboard_dry", name: "Panneau isolant de carton-fibre sec", rsiPerMm: 0.0194, description: "Panneau isolant de carton-fibre sec" },
+   { id: "perlite_loose", name: "Perlite expansée, en vrac", rsiPerMm: 0.0187, description: "Perlite expansée, en vrac" },
+   { id: "phenolic", name: "Panneau de mousse phénolique", rsiPerMm: 0.0304, description: "Panneau de mousse phénolique" },
+   { id: "spray_polyurethane", name: "Polyuréthane giclé", rsiPerMm: 0.0455, description: "Polyuréthane giclé" },
+   { id: "wood_fiber", name: "Matelas de fibre de bois", rsiPerMm: 0.0255, description: "Matelas de fibre de bois (différent des panneaux de carton-fibre)" },
+   { id: "vermiculite", name: "Vermiculite", rsiPerMm: 0.0150, description: "Vermiculite" },
+   { id: "perlite", name: "Perlite", rsiPerMm: 0.0230, description: "Perlite" }
+ ],
+ 
+ // Parements de bois
+ woodCladding: [
+   { id: "wood_shingle_190mm", name: "Bardeau de bois 400mm, pureau de 190mm", rsi: 0.15, description: "Bardeau de bois 400mm, pureau de 190mm" },
+   { id: "wood_shingle_300mm", name: "Bardeau de bois 400mm, pureau double de 300mm", rsi: 0.21, description: "Bardeau de bois 400mm, pureau double de 300mm" },
+   { id: "wood_siding_200mm_13mm", name: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm", rsi: 0.14, description: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm" },
+   { id: "wood_siding_250mm_20mm", name: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm", rsi: 0.18, description: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm" },
+   { id: "wood_siding_200mm_20mm", name: "Bardage à mi-bois, 200mm, épaisseur 20mm", rsi: 0.14, description: "Bardage à mi-bois, 200mm, épaisseur 20mm" },
+   { id: "hardboard_11mm", name: "Panneaux de fibres dures, épaisseur 11mm", rsi: 0.12, description: "Panneaux de fibres dures, épaisseur 11mm (ex.: Canexel)" },
+   { id: "wood_siding_insulated", name: "Support isolant", rsi: 0.25, description: "Support isolant 8mm (nouveau)" }
+ ],
 
-  // Autres parements
-  otherCladding: [
-    { id: "fibercement_6.35mm", name: "Panneaux de fibro-ciment, épaisseur 6.35mm", rsi: 0.003, description: "Panneaux de fibro-ciment, épaisseur 6.35mm" },
-    { id: "fibercement_8mm", name: "Panneaux de fibro-ciment, épaisseur 8mm", rsi: 0.003, description: "Panneaux de fibro-ciment, épaisseur 8mm" }
-  ],
- 
-  // Maçonnerie
-  masonry: [
-    { id: "brick_90mm", name: "Brique d'argile ou schiste - 90mm", rsi: 0.07, description: "Brique d'argile ou schiste - 90mm (4''nominal, 2400 kg/m³)" },
-    { id: "brick_concrete_90mm", name: "Brique de béton ou silico-calcaire - 90mm", rsi: 0.053, description: "Brique de béton ou silico-calcaire - 90mm (4'' nominal)" },
-    { id: "stone_quartzite", name: "Quartzite et grès", rsiPerMm: 0.0003, description: "Quartzite et grès (2240 kg/m³)" },
-    { id: "stone_calcite", name: "Calcite, dolomite, calcaire, marbre et granite", rsiPerMm: 0.0004, description: "Calcite, dolomite, calcaire, marbre et granite (2240 kg/m³)" }
-  ],
- 
-  // Enduits
-  plaster: [
-    { id: "mortar", name: "Mortier, stucco, ciment, chaux", rsiPerMm: 0.0009, description: "Mortier, stucco, ciment, chaux" }
-  ],
- 
-  // Bardage métallique et de vinyle
-  metalVinylCladding: [
-    { id: "vinyl_siding", name: "Planche à clin, sans endos", rsi: 0.11, description: "Planche à clin, sans endos" },
-    { id: "vinyl_siding_insulated", name: "Planche à clin avec endos isolé, épaisseur 9,5mm", rsi: 0.32, description: "Planche à clin avec endos isolé, épaisseur 9,5mm" },
-    { id: "vinyl_siding_insulated_foil", name: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm", rsi: 0.52, description: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm" }
-  ],
- 
-  // Matériaux de toiture
-  roofingMaterials: [
-    { id: "roll_roofing", name: "Recouvrement de toiture enduit de bitume (en rouleau)", rsi: 0.03, description: "Recouvrement de toiture enduit de bitume (en rouleau)" },
-    { id: "asphalt", name: "Bitume asphaltique", rsiPerMm: 0.0014, description: "Bitume asphaltique" },
-    { id: "asphalt_shingles", name: "Bardeaux bitumés", rsi: 0.078, description: "Bardeaux bitumés" },
-    { id: "built_up_roofing", name: "Couverture multicouche (5 plis) de 10mm d'épaisseur", rsi: 0.06, description: "Couverture multicouche (5 plis) de 10mm d'épaisseur" },
-    { id: "wood_shingles_roof", name: "Bardeaux de bois", rsi: 0.17, description: "Bardeaux de bois" },
-    { id: "crushed_stone", name: "Pierre concassée", rsiPerMm: 0.0006, description: "Pierre concassée" },
-    { id: "steel_deck", name: "Platelage d'acier", rsi: 0, description: "Platelage d'acier - négligeable" },
-    { id: "slate", name: "Ardoise, épaisseur 13mm", rsi: 0.01, description: "Ardoise, épaisseur 13mm" }
-  ],
- 
-  // Matériaux de finition intérieure
-  interiorFinish: [
-    { id: "gypsum_interior", name: "Plaque de plâtre (gypse)", rsiPerMm: 0.0061, description: "Plaque de plâtre (panneaux de gypse)" },
-    { id: "hardboard_interior", name: "Panneaux de fibres dures", rsiPerMm: 0.0095, description: "Panneaux de fibres dures (800 kg/m³)" },
-    { id: "cement_interior", name: "Ciment, granulat de sable", rsiPerMm: 0.0014, description: "Ciment, granulat de sable" },
-    { id: "plaster_sand", name: "Enduit au plâtre - agrégat de sable", rsiPerMm: 0.0012, description: "Enduit au plâtre - agrégat de sable" },
-    { id: "plaster_light", name: "Enduit au plâtre - agrégat léger", rsiPerMm: 0.0044, description: "Enduit au plâtre - agrégat léger" },
-    { id: "plywood_interior", name: "Contreplaqué", rsiPerMm: 0.0087, description: "Contreplaqué" },
-    { id: "particleboard_590", name: "Panneaux de particules, faible masse volumique (590 kg/m³)", rsiPerMm: 0.0098, description: "Panneaux de particules, faible masse volumique (590 kg/m³)" },
-    { id: "particleboard_800", name: "Panneaux de particules, faible masse volumique (800 kg/m³)", rsiPerMm: 0.0074, description: "Panneaux de particules, faible masse volumique (800 kg/m³)" },
-    { id: "particleboard_1000", name: "Panneaux de particules, faible masse volumique (1000 kg/m³)", rsiPerMm: 0.0059, description: "Panneaux de particules, faible masse volumique (1000 kg/m³)" },
-    { id: "carpet_fiber", name: "Moquette et thibaude fibreuse", rsi: 0.37, description: "Moquette et thibaude fibreuse" },
-    { id: "carpet_rubber", name: "Moquette et thibaude caoutchoutée", rsi: 0.22, description: "Moquette et thibaude caoutchoutée" },
-    { id: "cork_tile", name: "Carreaux de liège, épaisseur 3,2mm", rsi: 0.049, description: "Carreaux de liège, épaisseur 3,2mm" },
-    { id: "terrazzo", name: "Terrazzo", rsiPerMm: 0.0006, description: "Terrazzo" },
-    { id: "hardwood_floor", name: "Couvre-plancher en bois dur, épaisseur 19mm", rsi: 0.12, description: "Couvre-plancher en bois dur, épaisseur 19mm" },
-    { id: "vinyl_floor", name: "Linoléum, vinyle, caoutchouc", rsi: 0.009, description: "Linoléum, vinyle, caoutchouc" }
-  ]
+ // Autres parements
+ otherCladding: [
+   { id: "fibercement_6.35mm", name: "Panneaux de fibro-ciment, épaisseur 6.35mm", rsi: 0.003, description: "Panneaux de fibro-ciment, épaisseur 6.35mm" },
+   { id: "fibercement_8mm", name: "Panneaux de fibro-ciment, épaisseur 8mm", rsi: 0.003, description: "Panneaux de fibro-ciment, épaisseur 8mm" }
+ ],
+
+ // Maçonnerie
+ masonry: [
+   { id: "brick_90mm", name: "Brique d'argile ou schiste - 90mm", rsi: 0.07, description: "Brique d'argile ou schiste - 90mm (4''nominal, 2400 kg/m³)" },
+   { id: "brick_concrete_90mm", name: "Brique de béton ou silico-calcaire - 90mm", rsi: 0.053, description: "Brique de béton ou silico-calcaire - 90mm (4'' nominal)" },
+   { id: "stone_quartzite", name: "Quartzite et grès", rsiPerMm: 0.0003, description: "Quartzite et grès (2240 kg/m³)" },
+   { id: "stone_calcite", name: "Calcite, dolomite, calcaire, marbre et granite", rsiPerMm: 0.0004, description: "Calcite, dolomite, calcaire, marbre et granite (2240 kg/m³)" }
+ ],
+
+ // Enduits
+ plaster: [
+   { id: "mortar", name: "Mortier, stucco, ciment, chaux", rsiPerMm: 0.0009, description: "Mortier, stucco, ciment, chaux" }
+ ],
+
+ // Bardage métallique et de vinyle
+ metalVinylCladding: [
+   { id: "vinyl_siding", name: "Planche à clin, sans endos", rsi: 0.11, description: "Planche à clin, sans endos" },
+   { id: "vinyl_siding_insulated", name: "Planche à clin avec endos isolé, épaisseur 9,5mm", rsi: 0.32, description: "Planche à clin avec endos isolé, épaisseur 9,5mm" },
+   { id: "vinyl_siding_insulated_foil", name: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm", rsi: 0.52, description: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm" },
+   { id: "metal_siding", name: "Bardage de métal ou de vinyle", rsi: 0.11, description: "Bardage de métal ou de vinyle sur un revêtement intermédiaire - endos à âme évidée (nouveau)" }
+ ],
+
+ // Matériaux de toiture
+ roofingMaterials: [
+   { id: "roll_roofing", name: "Recouvrement de toiture enduit de bitume (en rouleau)", rsi: 0.03, description: "Recouvrement de toiture enduit de bitume (en rouleau)" },
+   { id: "asphalt", name: "Bitume asphaltique", rsiPerMm: 0.0014, description: "Bitume asphaltique" },
+   { id: "asphalt_shingles", name: "Bardeaux bitumés", rsi: 0.08, description: "Bardeaux bitumés (nouveau)" },
+   { id: "built_up_roofing", name: "Couverture multicouche (5 plis) de 10mm d'épaisseur", rsi: 0.06, description: "Couverture multicouche (5 plis) de 10mm d'épaisseur" },
+   { id: "wood_shingles_roof", name: "Bardeaux de bois", rsi: 0.17, description: "Bardeaux de bois" },
+   { id: "crushed_stone", name: "Pierre concassée", rsiPerMm: 0.0006, description: "Pierre concassée" },
+   { id: "steel_deck", name: "Platelage d'acier", rsi: 0, description: "Platelage d'acier - négligeable" },
+   { id: "slate", name: "Ardoise, épaisseur 13mm", rsi: 0.01, description: "Ardoise, épaisseur 13mm" }
+ ],
+
+ // Matériaux de finition intérieure
+ interiorFinish: [
+   { id: "gypsum_interior", name: "Plaque de plâtre (gypse)", rsiPerMm: 0.0061, description: "Plaque de plâtre (panneaux de gypse)" },
+   { id: "hardboard_interior", name: "Panneaux de fibres dures", rsiPerMm: 0.0095, description: "Panneaux de fibres dures (800 kg/m³)" },
+   { id: "cement_interior", name: "Ciment, granulat de sable", rsiPerMm: 0.0014, description: "Ciment, granulat de sable" },
+   { id: "plaster_sand", name: "Enduit au plâtre - agrégat de sable", rsiPerMm: 0.0012, description: "Enduit au plâtre - agrégat de sable" },
+   { id: "plaster_light", name: "Enduit au plâtre - agrégat léger", rsiPerMm: 0.0044, description: "Enduit au plâtre - agrégat léger" },
+   { id: "plywood_interior", name: "Contreplaqué", rsiPerMm: 0.0087, description: "Contreplaqué" },
+   { id: "particleboard_590", name: "Panneaux de particules, faible masse volumique (590 kg/m³)", rsiPerMm: 0.0098, description: "Panneaux de particules, faible masse volumique (590 kg/m³)" },
+   { id: "particleboard_800", name: "Panneaux de particules, faible masse volumique (800 kg/m³)", rsiPerMm: 0.0074, description: "Panneaux de particules, faible masse volumique (800 kg/m³)" },
+   { id: "particleboard_1000", name: "Panneaux de particules, faible masse volumique (1000 kg/m³)", rsiPerMm: 0.0059, description: "Panneaux de particules, faible masse volumique (1000 kg/m³)" },
+   { id: "carpet_fiber", name: "Moquette et thibaude fibreuse", rsi: 0.37, description: "Moquette et thibaude fibreuse" },
+   { id: "carpet_rubber", name: "Moquette et thibaude caoutchoutée", rsi: 0.22, description: "Moquette et thibaude caoutchoutée" },
+   { id: "cork_tile", name: "Carreaux de liège, épaisseur 3,2mm", rsi: 0.049, description: "Carreaux de liège, épaisseur 3,2mm" },
+   { id: "terrazzo", name: "Terrazzo", rsiPerMm: 0.0006, description: "Terrazzo" },
+   { id: "hardwood_floor", name: "Couvre-plancher en bois dur, épaisseur 19mm", rsi: 0.12, description: "Couvre-plancher en bois dur, épaisseur 19mm" },
+   { id: "vinyl_floor", name: "Linoléum, vinyle, caoutchouc", rsi: 0.009, description: "Linoléum, vinyle, caoutchouc" },
+   { id: "subflooring", name: "Support de revêtement de sol en bois", rsi: 0.17, description: "Support de revêtement de sol en bois, 19mm (nouveau)" },
+   { id: "ceramic_tile", name: "Carreaux - céramique", rsi: 0.005, description: "Carreaux - céramique, 9,5mm (nouveau)" }
+ ]
 };
+        
 // Composant pour sélectionner un matériau avec épaisseur si nécessaire
 const MaterialSelector = ({ 
   categoryOptions, 
