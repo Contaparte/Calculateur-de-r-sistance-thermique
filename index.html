@@ -32,6 +32,62 @@ const formatRSIR = (rsi) => {
   return `RSI ${rsi.toFixed(2)} (R ${r.toFixed(2)})`;
 };
 
+// Table de pression de saturation de vapeur d'eau
+const saturationTable = [
+  { temp: -60, pressure: 0.001 },
+  { temp: -40, pressure: 0.13 },
+  { temp: -20, pressure: 1.03 },
+  { temp: -18, pressure: 1.5 },
+  { temp: -15, pressure: 1.9 },
+  { temp: -12, pressure: 2.4 },
+  { temp: -10, pressure: 2.6 },
+  { temp: -9, pressure: 3.0 },
+  { temp: -7, pressure: 3.7 },
+  { temp: -4, pressure: 4.6 },
+  { temp: -1, pressure: 5.6 },
+  { temp: 0, pressure: 6.11 },
+  { temp: 2, pressure: 7.06 },
+  { temp: 4, pressure: 8.13 },
+  { temp: 6, pressure: 9.35 },
+  { temp: 8, pressure: 10.73 },
+  { temp: 10, pressure: 12.28 },
+  { temp: 11, pressure: 13.12 },
+  { temp: 12, pressure: 14.02 },
+  { temp: 13, pressure: 14.97 },
+  { temp: 14, pressure: 15.98 },
+  { temp: 15, pressure: 17.05 },
+  { temp: 16, pressure: 18.18 },
+  { temp: 17, pressure: 19.37 },
+  { temp: 18, pressure: 20.63 },
+  { temp: 19, pressure: 21.97 },
+  { temp: 20, pressure: 23.38 },
+  { temp: 21, pressure: 24.87 },
+  { temp: 22, pressure: 26.43 },
+  { temp: 23, pressure: 28.09 },
+  { temp: 24, pressure: 29.83 },
+  { temp: 25, pressure: 31.67 },
+  { temp: 26, pressure: 33.6 },
+  { temp: 27, pressure: 35.64 },
+  { temp: 28, pressure: 37.8 },
+  { temp: 29, pressure: 40.05 },
+  { temp: 30, pressure: 42.43 },
+  { temp: 31, pressure: 44.92 },
+  { temp: 32, pressure: 47.55 },
+  { temp: 33, pressure: 50.3 },
+  { temp: 34, pressure: 53.19 },
+  { temp: 35, pressure: 56.23 },
+  { temp: 36, pressure: 59.41 },
+  { temp: 37, pressure: 62.75 },
+  { temp: 38, pressure: 66.25 },
+  { temp: 39, pressure: 69.92 },
+  { temp: 40, pressure: 73.75 },
+  { temp: 45, pressure: 95.83 },
+  { temp: 50, pressure: 123.34 },
+  { temp: 55, pressure: 157.37 },
+  { temp: 60, pressure: 199.16 },
+  { temp: 65, pressure: 250.03 }
+];
+
 // Valeurs minimales RSI selon le Code de construction du Québec (Partie 11)
 // Pour la résistance thermique totale (RSI_T)
 const minRSITotalValues = {
@@ -517,7 +573,100 @@ const materials = {
     { id: "wood_subfloor", name: "Support de revêtement de sol en bois", rsi: 0.17, description: "Support de revêtement de sol en bois, 19mm" }
   ]
 };
-        // Composant pour sélectionner un matériau avec épaisseur si nécessaire
+
+        // Fonction pour calculer le point de rosée
+function calculateDewPoint(temp, rh) {
+  // Calculer la pression de vapeur d'eau
+  function getSaturationPressure(temperature) {
+    // Trouver les deux points les plus proches dans la table
+    let lowerPoint = saturationTable[0];
+    let upperPoint = saturationTable[saturationTable.length - 1];
+    
+    for (let i = 0; i < saturationTable.length; i++) {
+      if (saturationTable[i].temp <= temperature) {
+        lowerPoint = saturationTable[i];
+      }
+      if (saturationTable[i].temp >= temperature && saturationTable[i].temp < upperPoint.temp) {
+        upperPoint = saturationTable[i];
+      }
+    }
+    
+    // Si les températures sont égales (par exemple, température exacte dans la table)
+    if (lowerPoint.temp === upperPoint.temp) {
+      return lowerPoint.pressure;
+    }
+    
+    // Interpolation linéaire
+    const ratio = (temperature - lowerPoint.temp) / (upperPoint.temp - lowerPoint.temp);
+    return lowerPoint.pressure + ratio * (upperPoint.pressure - lowerPoint.pressure);
+  }
+  
+  // Calculer la pression de vapeur d'eau actuelle
+  const saturationPressure = getSaturationPressure(temp);
+  const vaporPressure = (rh / 100) * saturationPressure;
+  
+  // Trouver la température de rosée (température à laquelle la pression de saturation = pression de vapeur actuelle)
+  let dewPoint = -60; // Démarrer avec une valeur basse
+  
+  // Recherche par incréments de 0.1°C
+  while (dewPoint < 65) {
+    const pressureAtDewPoint = getSaturationPressure(dewPoint);
+    if (Math.abs(pressureAtDewPoint - vaporPressure) < 0.01) {
+      break;
+    }
+    if (pressureAtDewPoint > vaporPressure) {
+      // Ajuster pour plus de précision
+      dewPoint -= 0.1;
+      break;
+    }
+    dewPoint += 0.1;
+  }
+  
+  return Math.round(dewPoint * 10) / 10; // Arrondir à 0.1 près
+}
+
+// Fonction pour trouver la position du point de rosée
+function findDewPointPosition(temperatures, positions, dewPoint) {
+  let dewPointFound = false;
+  let dewPointPosition = null;
+  let dewPointMaterialIndex = null;
+  
+  for (let i = 0; i < temperatures.length - 1; i++) {
+    // Si le point de rosée est entre deux températures
+    if ((temperatures[i] <= dewPoint && temperatures[i+1] >= dewPoint) ||
+        (temperatures[i] >= dewPoint && temperatures[i+1] <= dewPoint)) {
+      dewPointFound = true;
+      
+      // Interpolation linéaire pour trouver la position exacte
+      const ratio = Math.abs((dewPoint - temperatures[i]) / (temperatures[i+1] - temperatures[i]));
+      dewPointPosition = positions[i] + ratio * (positions[i+1] - positions[i]);
+      dewPointMaterialIndex = i;
+      break;
+    }
+  }
+  
+  return {
+    found: dewPointFound,
+    position: dewPointPosition,
+    materialIndex: dewPointMaterialIndex
+  };
+}
+
+// Générer une couleur à partir d'une chaîne
+function generateColorFromString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xFF;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+  return color;
+}
+
+// Composant pour sélectionner un matériau avec épaisseur si nécessaire
 const MaterialSelector = ({ 
   categoryOptions, 
   onChange, 
@@ -569,56 +718,7 @@ const MaterialSelector = ({
       
       // Trouver le matériau correspondant à l'id
       const allMaterials = categoryOptions.flatMap(category => category.materials);
-      const material = allMaterials.find(m => m.id === value);
-      
-      if (material) {
-        if (material.rsiPerMm) {
-          // Pour les matériaux avec RSI par mm
-          setRsi(material.rsiPerMm * thickness);
-        } else {
-          // Pour les matériaux avec RSI fixe
-          setRsi(material.rsi);
-        }
-      }
-    }
-  }, [value, categoryOptions, defaultThickness]);
-  
-  const handleMaterialChange = (e) => {
-    const id = e.target.value;
-    setMaterialId(id);
-    
-    // Trouver le matériau correspondant à l'id
-    const allMaterials = categoryOptions.flatMap(category => category.materials);
-    const material = allMaterials.find(m => m.id === id);
-    
-    let newRsi = null;
-    
-    if (material) {
-      if (material.rsiPerMm) {
-        // Pour les matériaux avec RSI par mm
-        newRsi = material.rsiPerMm * thickness;
-      } else {
-        // Pour les matériaux avec RSI fixe
-        newRsi = material.rsi;
-      }
-      setRsi(newRsi);
-    }
-    
-    onChange({
-      id,
-      thickness: thickness,
-      rsi: newRsi,
-      description: material ? material.description : ""
-    });
-  };
-
-  const handleThicknessChange = (e) => {
-    const newThickness = parseInt(e.target.value, 10) || 0;
-    setThickness(newThickness);
-    
-    // Trouver le matériau correspondant à l'id
-    const allMaterials = categoryOptions.flatMap(category => category.materials);
-    const material = allMaterials.find(m => m.id === materialId);
+      const material = allMaterials.find(m => m.id === materialId);
     
     let newRsi = null;
     
@@ -688,7 +788,6 @@ const MaterialSelector = ({
   );
 };
 
-
 // Composant d'accordéon pour les sections
 const Accordion = ({ title, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
@@ -714,6 +813,267 @@ const Accordion = ({ title, children, defaultOpen = false }) => {
     </div>
   );
 };
+
+// Composant pour afficher le graphique du point de rosée
+const DewPointChart = ({ layers, tempExt, tempInt, humidity }) => {
+  const chartRef = React.useRef(null);
+  const [dewPointInfo, setDewPointInfo] = React.useState(null);
+  const [chartInstance, setChartInstance] = React.useState(null);
+  
+  React.useEffect(() => {
+    // Nettoyer le graphique si il existe déjà
+    if (chartInstance) {
+      chartInstance.destroy();
+    }
+    
+    if (!chartRef.current || layers.length === 0) return;
+    
+    // Calculer le point de rosée
+    const dewPointTemp = calculateDewPoint(tempInt, humidity);
+    
+    // Calculer la résistance thermique totale
+    const rsiTotal = layers.reduce((sum, layer) => {
+      return sum + (layer.material?.rsi || 0);
+    }, 0);
+    
+    // Calculer le gradient de température
+    const tempDiff = tempInt - tempExt;
+    const positions = [0];
+    const temps = [tempExt];
+    let cumulPosition = 0;
+    let cumulTemp = tempExt;
+    
+    // Calculer la température à chaque interface
+    layers.forEach((layer) => {
+      if (!layer.material) return;
+      
+      const deltaT = (layer.material.rsi / rsiTotal) * tempDiff;
+      cumulTemp += deltaT;
+      cumulPosition += (layer.material.thickness || 0);
+      
+      positions.push(cumulPosition);
+      temps.push(cumulTemp);
+    });
+    
+    // Vérifier si le point de rosée tombe dans la composition
+    const dewPointPosition = findDewPointPosition(temps, positions, dewPointTemp);
+    setDewPointInfo({
+      temperature: dewPointTemp,
+      position: dewPointPosition
+    });
+    
+    // Initialiser le graphique
+    const ctx = chartRef.current.getContext('2d');
+    const newChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: positions,
+        datasets: [{
+          label: 'Température (°C)',
+          data: temps,
+          borderColor: '#1e88e5',
+          backgroundColor: 'rgba(30, 136, 229, 0.1)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Position (mm)'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Température (°C)'
+            }
+          }
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              title: (tooltipItems) => {
+                return `Position: ${tooltipItems[0].parsed.x} mm`;
+              },
+              label: (tooltipItem) => {
+                return `Température: ${tooltipItem.parsed.y.toFixed(1)} °C`;
+              }
+            }
+          },
+          annotation: {
+            annotations: {
+              dewPointLine: {
+                type: 'line',
+                yMin: dewPointTemp,
+                yMax: dewPointTemp,
+                borderColor: 'red',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                label: {
+                  content: `Point de rosée (${dewPointTemp.toFixed(1)}°C)`,
+                  position: 'right',
+                  color: 'red',
+                  enabled: true
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    // Ajouter la ligne verticale pour la position du point de rosée si trouvée
+    if (dewPointPosition.found) {
+      newChartInstance.options.plugins.annotation.annotations.dewPointPosition = {
+        type: 'line',
+        xMin: dewPointPosition.position,
+        xMax: dewPointPosition.position,
+        borderColor: 'red',
+        borderWidth: 2,
+        borderDash: [5, 5]
+      };
+      newChartInstance.update();
+    }
+    
+    setChartInstance(newChartInstance);
+    
+    // Nettoyage lors du démontage
+    return () => {
+      if (newChartInstance) {
+        newChartInstance.destroy();
+      }
+    };
+  }, [layers, tempExt, tempInt, humidity]);
+  
+  return (
+    <div>
+      <div className="chart-container bg-white p-4 border rounded mb-4" style={{ height: '400px' }}>
+        <canvas ref={chartRef}></canvas>
+      </div>
+      
+      {/* Visualisation des matériaux */}
+      <div className="material-viz flex h-16 border mb-4 relative">
+        {layers.map((layer, index) => {
+          if (!layer.material) return null;
+          
+          const width = layer.material.thickness === 0 ? 20 : layer.material.thickness;
+          const totalWidth = layers.reduce((sum, l) => sum + (l.material?.thickness || 0), 0);
+          const percentage = totalWidth > 0 ? (width / totalWidth) * 100 : 0;
+          const backgroundColor = generateColorFromString(layer.material.name);
+          
+          return (
+            <div 
+              key={index}
+              className="material-segment flex items-center justify-center text-white text-xs text-center overflow-hidden"
+              style={{ 
+                width: `${percentage}%`, 
+                minWidth: '20px',
+                backgroundColor 
+              }}
+              title={`${layer.material.name} - RSI: ${layer.material.rsi.toFixed(2)}`}
+            >
+              <span className="whitespace-nowrap overflow-hidden text-overflow-ellipsis px-1">
+                {layer.material.name}
+              </span>
+            </div>
+          );
+        })}
+        
+        {dewPointInfo?.position?.found && (
+          <div 
+            className="absolute top-0 h-full w-0.5 bg-red-500 z-10 border-l-2 border-dashed border-red-500"
+            style={{ left: `${(dewPointInfo.position.position / layers.reduce((sum, l) => sum + (l.material?.thickness || 0), 0)) * 100}%` }}
+            title="Point de rosée"
+          ></div>
+        )}
+      </div>
+      
+      {/* Avertissement point de rosée */}
+      {dewPointInfo?.position?.found && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4 rounded">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Résistance thermique totale (RSI<sub>T</sub>):</strong> Calculée au droit de la partie isolée de la paroi, 
+             sans tenir compte des ponts thermiques.
+           </li>
+           <li>
+             <strong>Résistance thermique effective (RSI<sub>E</sub>):</strong> Tient compte de l'effet des ponts thermiques. 
+             Pour cette analyse simplifiée, nous avons utilisé une approximation (85% de la résistance thermique totale). 
+             Pour une analyse plus précise, consultez un professionnel ou référez-vous à la méthode de calcul détaillée 
+             dans l'annexe A-9.36.2.4. 1) du Code national du bâtiment.
+           </li>
+           <li>
+             <strong>Exigences de la Partie 11:</strong> Les bâtiments doivent se conformer aux exigences prescriptives de 
+             résistance thermique totale (RSI<sub>T</sub>) ou utiliser la méthode alternative de résistance thermique effective (RSI<sub>E</sub>). 
+             La réduction des ponts thermiques est obligatoire selon la section 11.2.3 du Code.
+           </li>
+           <li>
+             <strong>Point de rosée:</strong> Le point de rosée représente la température à laquelle l'air devient saturé 
+             d'humidité et la condensation commence à se former. Si cette température se situe à l'intérieur de l'enveloppe du bâtiment, 
+             il y a risque de condensation interne qui peut endommager la structure et favoriser le développement de moisissures.
+           </li>
+         </ul>
+       </div>
+     </div>
+   )}
+ </div>
+);
+};
+
+// Rendu du composant principal
+ReactDOM.render(<Calculator />, document.getElementById('root'));Attention:</strong> Point de rosée ({dewPointInfo.temperature.toFixed(1)}°C) détecté dans 
+                le matériau "{layers[dewPointInfo.position.materialIndex]?.material?.name}". 
+                Risque de condensation interne qui peut causer des problèmes d'humidité et de moisissure.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Résumé des informations */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <p><strong>Point de rosée:</strong> {dewPointInfo?.temperature.toFixed(1) || '-'} °C</p>
+          <p>
+            <strong>RSI total:</strong> {layers.reduce((sum, layer) => sum + (layer.material?.rsi || 0), 0).toFixed(2)} 
+            (R-{(layers.reduce((sum, layer) => sum + (layer.material?.rsi || 0), 0) * 5.678).toFixed(1)})
+          </p>
+          <p>
+            <strong>Coefficient U:</strong> {(1 / layers.reduce((sum, layer) => sum + (layer.material?.rsi || 0), 0)).toFixed(3)} W/(m²·K)
+          </p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">
+            {dewPointInfo && (
+              dewPointInfo.position.found ?
+                `La température de part et d'autre de la paroi passe de ${tempExt}°C à ${tempInt}°C. 
+                Le point de rosée calculé est de ${dewPointInfo.temperature.toFixed(1)}°C à ${humidity}% d'humidité relative. 
+                Il y a risque de condensation dans le matériau "${layers[dewPointInfo.position.materialIndex]?.material?.name}".` :
+                `La température de part et d'autre de la paroi passe de ${tempExt}°C à ${tempInt}°C. 
+                Le point de rosée calculé est de ${dewPointInfo.temperature.toFixed(1)}°C à ${humidity}% d'humidité relative. 
+                Aucun risque de condensation détecté dans cette composition.`
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Composant principal
 const Calculator = () => {
   // État pour les données générales
   const [location, setLocation] = React.useState("");
@@ -727,6 +1087,12 @@ const Calculator = () => {
   const [layers, setLayers] = React.useState([]);
   const [results, setResults] = React.useState(null);
   
+  // États pour le point de rosée
+  const [tempExt, setTempExt] = React.useState(-26);
+  const [tempInt, setTempInt] = React.useState(21);
+  const [humidity, setHumidity] = React.useState(40);
+  const [showDewPoint, setShowDewPoint] = React.useState(false);
+  
   // Mise à jour des degrés-jours en fonction de la municipalité
   React.useEffect(() => {
     if (location) {
@@ -734,6 +1100,13 @@ const Calculator = () => {
       if (municipality) {
         setDegreeDays(municipality.degreeDay);
         setClimaticZone(municipality.zone);
+        
+        // Mise à jour automatique de la température extérieure en fonction de la zone climatique
+        if (municipality.zone === "< 6000") {
+          setTempExt(-26); // Température de conception pour zone moins de 6000 DJ
+        } else {
+          setTempExt(-30); // Température de conception pour zone 6000 DJ ou plus
+        }
       }
     }
   }, [location]);
@@ -825,6 +1198,9 @@ const Calculator = () => {
       uValue,
       uValueEffective
     });
+    
+    // Activer l'analyse du point de rosée après le calcul
+    setShowDewPoint(true);
   };
 
   // Préparation des options de matériaux pour les sélecteurs
@@ -868,24 +1244,24 @@ const Calculator = () => {
   ];
   
   const exteriorCladdingOptions = prepareMaterialOptions({
-    "Parements de bois": materials.woodCladding,
-    "Bardage métallique et vinyle": materials.metalVinylCladding,
+    "Parements de bois": materials.woodCladding || [],
+    "Bardage métallique et vinyle": materials.metalVinylCladding || [],
     "Maçonnerie": materials.masonry,
-    "Autres parements": materials.otherCladding
+    "Autres parements": materials.otherCladding || []
   });
   
   const interiorFinishOptions = [
-    { name: "Finitions intérieures", materials: materials.interiorFinish }
+    { name: "Finitions intérieures", materials: materials.interiorFinish || [] }
   ];
   
   const structuralOptions = prepareMaterialOptions({
     "Bois": materials.wood,
     "Béton": materials.concrete,
-    "Blocs de béton": materials.concreteBlocks
+    "Blocs de béton": materials.concreteBlocks || []
   });
   
   const roofingOptions = [
-    { name: "Matériaux de toiture", materials: materials.roofingMaterials }
+    { name: "Matériaux de toiture", materials: materials.roofingMaterials || [] }
   ];
 
   // Éléments UI pour indiquer les conformités
@@ -998,511 +1374,102 @@ const Calculator = () => {
       }
     ];
   };
-return (
-    <div className="max-w-6xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4 text-center">Calculateur de Résistance Thermique</h1>
-      <p className="mb-6 text-center text-gray-700">
-        Calculez la résistance thermique totale (RSI<sub>T</sub>) et effective (RSI<sub>E</sub>) de l'enveloppe du bâtiment 
-        selon les exigences du Code de construction du Québec.
-      </p>
+  
+  // Initialisation d'une composition de mur type (exemple tiré du fichier PDF)
+  const initWallExample = () => {
+    // Créer une composition de mur typique similaire à l'exemple du PDF
+    const exampleWall = [
+      { 
+        id: Date.now() + 1, 
+        type: 'airfilm',
+        material: {
+          id: 'exterior', 
+          name: "Pellicule d'air de surface (vent hivernal de 24 Km/h)", 
+          rsi: 0.03, 
+          thickness: 0,
+          description: "Pellicule d'air de surface (vent hivernal de 24 Km/h)"
+        }
+      },
+      { 
+        id: Date.now() + 2, 
+        type: 'cladding',
+        material: {
+          id: 'brick_90mm', 
+          name: "Brique d'argile ou schiste - 90mm", 
+          rsi: 0.07, 
+          thickness: 90,
+          description: "Brique d'argile ou schiste - 90mm (4''nominal, 2400 kg/m³)"
+        }
+      },
+      { 
+        id: Date.now() + 3, 
+        type: 'airspace',
+        material: {
+          id: 'airspace_wall_20mm', 
+          name: "Pellicule d'air de surface (vent hivernal de 24 Km/h) - 1\" d'épaisseur", 
+          rsi: 0.18, 
+          thickness: 25,aterials.find(m => m.id === value);
       
-      <Accordion title="Informations sur le Code" defaultOpen={false}>
-        <div className="text-sm text-gray-700 space-y-4">
-          <p>
-            Le Code de construction du Québec comprend des exigences spécifiques relatives à l'efficacité énergétique des bâtiments:
-          </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Partie 11 du Code de construction du Québec (2015)</strong> - S'applique aux habitations d'au plus 3 étages et d'au plus 600 m² n'abritant que des logements.</li>
-          </ul>
-          <p>
-            <strong>Deux notions importantes à comprendre:</strong>
-          </p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Résistance thermique totale (RSI<sub>T</sub>)</strong> - Calculée au droit de la partie isolée de la paroi, sans tenir compte des ponts thermiques.</li>
-            <li><strong>Résistance thermique effective (RSI<sub>E</sub>)</strong> - Tient compte de l'effet des ponts thermiques créés par les éléments de structure (poteaux, solives, linteaux, etc.).</li>
-          </ul>
-          <p>
-            Pour les bâtiments soumis à la Partie 11, la résistance thermique totale (RSI<sub>T</sub>) est la valeur principalement utilisée dans le Code. Cependant, la Régie du bâtiment du Québec (RBQ) reconnaît l'équivalence des valeurs de résistance thermique effective (RSI<sub>E</sub>) comme une méthode alternative de conformité. Selon le tableau disponible sur le site de la RBQ, ces valeurs équivalentes sont légèrement inférieures aux valeurs de résistance thermique totale prescrites, car elles tiennent compte de l'impact des ponts thermiques sur la performance réelle de l'enveloppe. Cette approche permet une plus grande flexibilité dans la conception tout en assurant une performance énergétique adéquate.
-          </p>
-        </div>
-      </Accordion>
-      
-      <Accordion title="Données générales du bâtiment" defaultOpen={true}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="form-group">
-            <label className="block text-sm font-medium mb-1">Municipalité:</label>
-            <select 
-              value={location} 
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">Sélectionnez une municipalité</option>
-              {municipalities.map(municipality => (
-                <option key={municipality.id} value={municipality.id}>
-                  {municipality.name} ({municipality.degreeDay} degrés-jours)
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="form-group">
-            <label className="block text-sm font-medium mb-1">Degrés-jours sous 18°C:</label>
-            <input 
-              type="number" 
-              value={degreeDays} 
-              onChange={(e) => {
-                setDegreeDays(e.target.value);
-                // Mettre à jour la zone climatique en fonction des degrés-jours
-                const dj = parseInt(e.target.value);
-                if (!isNaN(dj)) {
-                  setClimaticZone(dj < 6000 ? "< 6000" : ">= 6000");
-                }
-              }}
-              className="w-full p-2 border rounded"
-              placeholder="Ex: 4500"
-            />
-            {climaticZone && (
-              <div className="mt-1 text-sm">
-                Zone climatique: {climaticZone === "< 6000" ? "Moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}
-              </div>
-            )}
-          </div>
-          
-          <div className="form-group">
-            <label className="block text-sm font-medium mb-1">Type de bâtiment:</label>
-            <select 
-              value={buildingType} 
-              onChange={(e) => setBuildingType(e.target.value)}
-              className="w-full p-2 border rounded"
-            >
-              <option value="residential_small">Habitation d'au plus 3 étages et d'au plus 600 m²</option>
-              <option value="residential_large">Habitation de plus de 3 étages ou de plus de 600 m²</option>
-              <option value="mixed">Habitation avec autres usages</option>
-              <option value="commercial">Bâtiment commercial</option>
-              <option value="industrial">Bâtiment industriel</option>
-              <option value="institutional">Bâtiment institutionnel</option>
-            </select>
-          </div>
-          
-          <div className="form-group">
-            <label className="block text-sm font-medium mb-1">Version du Code applicable:</label>
-            <select 
-              value={codeVersion} 
-              onChange={(e) => setCodeVersion(e.target.value)}
-              className="w-full p-2 border rounded"
-           >
-             <option value="part11">Partie 11 - Code de construction du Québec (2015)</option>
-           </select>
-         </div>
-         
-         <div className="form-group">
-           <label className="block text-sm font-medium mb-1">Composante de l'enveloppe à analyser:</label>
-           <select 
-             value={envelopeComponent} 
-             onChange={(e) => setEnvelopeComponent(e.target.value)}
-             className="w-full p-2 border rounded"
-           >
-             <option value="wall_above_grade">Mur hors sol</option>
-             <option value="foundation_wall">Mur de fondation</option>
-             <option value="roof">Toit ou plafond</option>
-             <option value="floor">Plancher séparant un espace chauffé d'un espace non chauffé</option>
-             <option value="garage_ceiling">Plafond de garage chauffé</option>
-             <option value="garage_walls_to_dwelling">Murs de garage chauffé contigus au logement</option>
-             <option value="garage_foundation_wall">Mur de fondation de garage chauffé</option>
-           </select>
-         </div>
-         
-         <div className="col-span-2">
-           <div className="p-4 bg-blue-50 border border-blue-200 rounded">
-             <h4 className="font-bold mb-2">Exigences minimales selon le Code</h4>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div>
-                 <h5 className="font-semibold mb-1">Résistance thermique totale (RSI<sub>T</sub>):</h5>
-                 <p className="text-sm">
-                   {climaticZone && envelopeComponent && 
-                     `${formatRSIR(minRSITotalValues[climaticZone][envelopeComponent])}`
-                   }
-                 </p>
-               </div>
-               <div>
-                 <h5 className="font-semibold mb-1">Résistance thermique effective (RSI<sub>E</sub>):</h5>
-                 <p className="text-sm">
-                   {climaticZone && envelopeComponent && 
-                     `${formatRSIR(minRSIEffectiveValues[climaticZone][envelopeComponent])}`
-                   }
-                 </p>
-               </div>
-             </div>
-           </div>
-         </div>
-       </div>
-     </Accordion>
-<Accordion title="Composition de l'enveloppe" defaultOpen={true}>
-       <div className="mb-4 flex flex-wrap gap-2">
-         <button 
-           onClick={() => addLayer('airfilm')} 
-           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-         >
-           + Film d'air
-         </button>
-         <button 
-           onClick={() => addLayer('airspace')} 
-           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-         >
-           + Lame d'air
-         </button>
-         <button 
-           onClick={() => addLayer('insulation')} 
-           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-         >
-           + Isolant
-         </button>
-         <button 
-           onClick={() => addLayer('sheathening')} 
-           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-         >
-           + Revêtement intermédiaire
-         </button>
-         <button 
-           onClick={() => addLayer('cladding')} 
-           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-         >
-           + Parement extérieur
-         </button>
-         <button 
-           onClick={() => addLayer('interior')} 
-           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-         >
-           + Finition intérieure
-         </button>
-         <button 
-           onClick={() => addLayer('structural')} 
-           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-         >
-           + Élément structural
-         </button>
-         <button 
-           onClick={() => addLayer('roofing')} 
-           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-         >
-           + Matériau de toiture
-         </button>
-       </div>
+      if (material) {
+        if (material.rsiPerMm) {
+          // Pour les matériaux avec RSI par mm
+          setRsi(material.rsiPerMm * thickness);
+        } else {
+          // Pour les matériaux avec RSI fixe
+          setRsi(material.rsi);
+        }
+      }
+    }
+  }, [value, categoryOptions, defaultThickness]);
+  
+  const handleMaterialChange = (e) => {
+    const id = e.target.value;
+    setMaterialId(id);
+    
+    // Trouver le matériau correspondant à l'id
+    const allMaterials = categoryOptions.flatMap(category => category.materials);
+    const material = allMaterials.find(m => m.id === id);
+    
+    let newRsi = null;
+    
+    if (material) {
+      if (material.rsiPerMm) {
+        // Pour les matériaux avec RSI par mm
+        newRsi = material.rsiPerMm * thickness;
+      } else {
+        // Pour les matériaux avec RSI fixe
+        newRsi = material.rsi;
+      }
+      setRsi(newRsi);
+    }
+    
+    onChange({
+      id,
+      thickness: thickness,
+      rsi: newRsi,
+      description: material ? material.description : ""
+    });
+  };
 
-       {layers.length === 0 && (
-         <div className="p-4 border rounded bg-gray-50 text-center">
-           Ajoutez des couches de matériaux pour commencer l'analyse de votre composition d'enveloppe.
-         </div>
-       )}
-       
-       {layers.map((layer, index) => (
-         <div key={layer.id} className="border p-4 rounded mb-3 bg-gray-50">
-           <div className="flex justify-between items-start mb-2">
-             <h4 className="font-bold">
-               Couche {index + 1}: {layer.type === 'airfilm' ? 'Film d\'air' : 
-                                 layer.type === 'airspace' ? 'Lame d\'air' : 
-                                 layer.type === 'insulation' ? 'Isolant' : 
-                                 layer.type === 'sheathening' ? 'Revêtement intermédiaire' : 
-                                 layer.type === 'cladding' ? 'Parement extérieur' : 
-                                 layer.type === 'interior' ? 'Finition intérieure' : 
-                                 layer.type === 'roofing' ? 'Matériau de toiture' : 'Élément structural'}
-             </h4>
-             <div className="flex space-x-2">
-               <button 
-                 onClick={() => moveLayerUp(layer.id)} 
-                 disabled={index === 0}
-                 className={`text-blue-600 hover:text-blue-800 ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                 title="Déplacer vers le haut"
-               >
-                 ↑
-               </button>
-               <button 
-                 onClick={() => moveLayerDown(layer.id)} 
-                 disabled={index === layers.length - 1}
-                 className={`text-blue-600 hover:text-blue-800 ${index === layers.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                 title="Déplacer vers le bas"
-               >
-                 ↓
-               </button>
-               <button 
-                 onClick={() => removeLayer(layer.id)} 
-                 className="text-red-600 hover:text-red-800"
-                 title="Supprimer cette couche"
-               >
-                 ✕
-               </button>
-             </div>
-           </div>
-           
-           {layer.type === 'airfilm' && (
-             <MaterialSelector
-               categoryOptions={airFilmOptions}
-               value={layer.material}
-               onChange={(material) => updateLayer(layer.id, material)}
-               label="Sélectionnez un film d'air:"
-             />
-           )}
-           
-           {layer.type === 'airspace' && (
-             <MaterialSelector
-               categoryOptions={airSpaceOptions}
-               value={layer.material}
-               onChange={(material) => updateLayer(layer.id, material)}
-               label="Sélectionnez une lame d'air:"
-             />
-           )}
-           
-           {layer.type === 'insulation' && (
-             <MaterialSelector
-               categoryOptions={insulationOptions}
-               value={layer.material}
-               onChange={(material) => updateLayer(layer.id, material)}
-               label="Sélectionnez un isolant:"
-               showThickness={true}
-               defaultThickness={89}
-             />
-           )}
-           
-           {layer.type === 'sheathening' && (
-             <MaterialSelector
-               categoryOptions={sheatheningOptions}
-               value={layer.material}
-               onChange={(material) => updateLayer(layer.id, material)}
-               label="Sélectionnez un revêtement intermédiaire:"
-               showThickness={true}
-               defaultThickness={11}
-             />
-           )}
-           
-           {layer.type === 'cladding' && (
-             <MaterialSelector
-               categoryOptions={exteriorCladdingOptions}
-               value={layer.material}
-               onChange={(material) => updateLayer(layer.id, material)}
-               label="Sélectionnez un parement extérieur:"
-               showThickness={true}
-               defaultThickness={20}
-             />
-           )}
-           
-           {layer.type === 'interior' && (
-             <MaterialSelector
-               categoryOptions={interiorFinishOptions}
-               value={layer.material}
-               onChange={(material) => updateLayer(layer.id, material)}
-               label="Sélectionnez une finition intérieure:"
-               showThickness={true}
-               defaultThickness={13}
-             />
-           )}
-           
-           {layer.type === 'structural' && (
-             <MaterialSelector
-               categoryOptions={structuralOptions}
-               value={layer.material}
-               onChange={(material) => updateLayer(layer.id, material)}
-               label="Sélectionnez un élément structural:"
-               showThickness={true}
-               defaultThickness={89}
-             />
-           )}
-           
-           {layer.type === 'roofing' && (
-             <MaterialSelector
-               categoryOptions={roofingOptions}
-               value={layer.material}
-               onChange={(material) => updateLayer(layer.id, material)}
-               label="Sélectionnez un matériau de toiture:"
-               showThickness={true}
-               defaultThickness={10}
-             />
-           )}
-         </div>
-       ))}
-       
-       <button 
-         onClick={calculateResults}
-         className="w-full mt-4 bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700 transition"
-         disabled={layers.length === 0}
-       >
-         Calculer la performance thermique
-       </button>
-     </Accordion>
-{results && (
-       <div className="mt-6 border rounded p-6 bg-gray-50">
-         <h2 className="text-2xl font-bold mb-4">Résultats d'analyse</h2>
-         
-         <div className="mb-6">
-           <p className="mb-2">
-             Selon les données fournies, votre composition d'enveloppe atteint:
-           </p>
-           <ul className="list-disc pl-6 mb-4">
-             <li className="mb-1">
-               <strong>Résistance thermique totale (RSI<sub>T</sub>):</strong> {formatRSIR(results.totalRSI)}
-             </li>
-             <li>
-               <strong>Résistance thermique effective (RSI<sub>E</sub>):</strong> {formatRSIR(results.effectiveRSI)}
-             </li>
-           </ul>
-           
-           <p className="mb-2">
-             Exigences minimales selon le Code pour {getEnvelopeComponentDescription()} 
-             dans votre zone climatique ({climaticZone === "< 6000" ? "moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}):
-           </p>
-           <ul className="list-disc pl-6">
-             <li className="mb-1">
-               <strong>Résistance thermique totale minimale (RSI<sub>T</sub>):</strong> {formatRSIR(results.totalCompliance.minRSI)}
-             </li>
-             <li>
-               <strong>Résistance thermique effective minimale (RSI<sub>E</sub>):</strong> {formatRSIR(results.effectiveCompliance.minRSI)}
-             </li>
-           </ul>
-         </div>
-         
-         <h3 className="text-xl font-bold mb-3">Résistance thermique par couche</h3>
-         <div className="overflow-x-auto">
-           <table className="w-full border-collapse">
-             <thead>
-               <tr className="bg-gray-200">
-                 <th className="border px-4 py-2 text-left">Couche</th>
-                 <th className="border px-4 py-2 text-left">Matériau</th>
-                 <th className="border px-4 py-2 text-left">Épaisseur (mm)</th>
-                 <th className="border px-4 py-2 text-left">RSI (m²·K/W)</th>
-                 <th className="border px-4 py-2 text-left">R (pi²·°F·h/BTU)</th>
-               </tr>
-             </thead>
-             <tbody>
-               {layers.map((layer, index) => (
-                 <tr key={layer.id}>
-                   <td className="border px-4 py-2">{index + 1}. {layer.type === 'airfilm' ? 'Film d\'air' : 
-                                           layer.type === 'airspace' ? 'Lame d\'air' : 
-                                           layer.type === 'insulation' ? 'Isolant' : 
-                                           layer.type === 'sheathening' ? 'Revêtement intermédiaire' : 
-                                           layer.type === 'cladding' ? 'Parement extérieur' : 
-                                           layer.type === 'interior' ? 'Finition intérieure' : 
-                                           layer.type === 'roofing' ? 'Matériau de toiture' : 'Élément structural'}</td>
-                   <td className="border px-4 py-2">{layer.material ? layer.material.description || "—" : "—"}</td>
-                   <td className="border px-4 py-2">{layer.material && layer.material.thickness ? layer.material.thickness : "—"}</td>
-                   <td className="border px-4 py-2">{layer.material && layer.material.rsi ? layer.material.rsi.toFixed(3) : "—"}</td>
-                   <td className="border px-4 py-2">{layer.material && layer.material.rsi ? (layer.material.rsi * 5.678263).toFixed(3) : "—"}</td>
-                 </tr>
-               ))}
-               <tr className="font-bold bg-gray-100">
-                 <td className="border px-4 py-2" colSpan="3">Total</td>
-                 <td className="border px-4 py-2">{results.totalRSI.toFixed(3)}</td>
-                 <td className="border px-4 py-2">{(results.totalRSI * 5.678263).toFixed(3)}</td>
-               </tr>
-               <tr className="font-bold text-gray-600">
-                 <td className="border px-4 py-2" colSpan="3">Total effectif (avec ponts thermiques)</td>
-                 <td className="border px-4 py-2">{results.effectiveRSI.toFixed(3)}</td>
-                 <td className="border px-4 py-2">{(results.effectiveRSI * 5.678263).toFixed(3)}</td>
-               </tr>
-             </tbody>
-           </table>
-         </div>
-         
-         <h3 className="text-xl font-bold my-3">Résumé de conformité</h3>
-         <div className="overflow-x-auto">
-           <table className="w-full border-collapse">
-             <thead>
-               <tr className="bg-gray-200">
-                 <th className="border px-4 py-2 text-left">Mesure</th>
-                 <th className="border px-4 py-2 text-left">Valeur</th>
-                 <th className="border px-4 py-2 text-left">Exigence minimale</th>
-                 <th className="border px-4 py-2 text-left">Conformité</th>
-               </tr>
-             </thead>
-             <tbody>
-               <tr>
-                 <td className="border px-4 py-2">Résistance thermique totale (RSI<sub>T</sub>)</td>
-                 <td className="border px-4 py-2">{formatRSIR(results.totalRSI)}</td>
-                 <td className="border px-4 py-2">{formatRSIR(results.totalCompliance.minRSI)}</td>
-                 <td className="border px-4 py-2">
-                   {getComplianceIndicator(results.totalCompliance.compliant)}
-                 </td>
-               </tr>
-               <tr>
-                 <td className="border px-4 py-2">Résistance thermique effective (RSI<sub>E</sub>)</td>
-                 <td className="border px-4 py-2">{formatRSIR(results.effectiveRSI)}</td>
-                 <td className="border px-4 py-2">{formatRSIR(results.effectiveCompliance.minRSI)}</td>
-                 <td className="border px-4 py-2">
-                   {getComplianceIndicator(results.effectiveCompliance.compliant)}
-                 </td>
-               </tr>
-               <tr>
-                 <td className="border px-4 py-2">Coefficient U total</td>
-                 <td className="border px-4 py-2">{results.uValue !== null ? results.uValue.toFixed(3) + " W/(m²·K)" : "—"}</td>
-                 <td className="border px-4 py-2">—</td>
-                 <td className="border px-4 py-2">—</td>
-               </tr>
-               <tr>
-                 <td className="border px-4 py-2">Coefficient U effectif</td>
-                 <td className="border px-4 py-2">{results.uValueEffective !== null ? results.uValueEffective.toFixed(3) + " W/(m²·K)" : "—"}</td>
-                 <td className="border px-4 py-2">—</td>
-                 <td className="border px-4 py-2">—</td>
-               </tr>
-             </tbody>
-           </table>
-         </div>
-         
-         {/* Nouvelle section: Exigences spécifiques du Code */}
-         <h3 className="text-xl font-bold my-3">Exigences spécifiques du Code</h3>
-         
-         {/* Recommandations pour les ponts thermiques selon le type d'élément */}
-         {getPontsThermiqueRecommendations() && (
-           <div className="mb-4 bg-white rounded border p-4">
-             {getPontsThermiqueRecommendations().map((recommendation, index) => (
-               <div key={index} className="mb-3">
-                 <h4 className="font-bold text-blue-800">{recommendation.title}</h4>
-                 <p className="text-sm whitespace-pre-line">{recommendation.description}</p>
-               </div>
-             ))}
-           </div>
-         )}
-         
-         {/* Recommandations générales pour la continuité de l'isolation */}
-         <div className="mb-4 bg-white rounded border p-4">
-           {getIsolationContinuityRecommendations().map((recommendation, index) => (
-             <div key={index} className="mb-3">
-               <h4 className="font-bold text-blue-800">{recommendation.title}</h4>
-               <p className="text-sm">{recommendation.description}</p>
-             </div>
-           ))}
-         </div>
-         
-         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
-           <h4 className="font-bold mb-2">Notes importantes:</h4>
-           <ul className="list-disc pl-6 text-sm space-y-2">
-             <li>
-               <strong>Résistance thermique totale (RSI<sub>T</sub>):</strong> Calculée au droit de la partie isolée de la paroi, 
-               sans tenir compte des ponts thermiques.
-             </li>
-             <li>
-               <strong>Résistance thermique effective (RSI<sub>E</sub>):</strong> Tient compte de l'effet des ponts thermiques. 
-               Pour cette analyse simplifiée, nous avons utilisé une approximation (85% de la résistance thermique totale). 
-               Pour une analyse plus précise, consultez un professionnel ou référez-vous à la méthode de calcul détaillée 
-               dans l'annexe A-9.36.2.4. 1) du Code national du bâtiment.
-             </li>
-             <li>
-               <strong>Exigences de la Partie 11:</strong> Les bâtiments doivent se conformer aux exigences prescriptives de 
-               résistance thermique totale (RSI<sub>T</sub>) ou utiliser la méthode alternative de résistance thermique effective (RSI<sub>E</sub>). 
-               La réduction des ponts thermiques est obligatoire selon la section 11.2.3 du Code.
-             </li>
-             <li>
-               <strong>Conformité par méthode alternative:</strong> Selon l'article 11.2.2.1. 3), une résistance thermique inférieure 
-               aux exigences peut être acceptable si une analyse énergétique démontre que la consommation annuelle d'énergie de la 
-               construction proposée ne dépasse pas celle d'une construction de référence conforme.
-             </li>
-           </ul>
-         </div>
-       </div>
-     )}
-   </div>
- );
-};
+  const handleThicknessChange = (e) => {
+    const newThickness = parseInt(e.target.value, 10) || 0;
+    setThickness(newThickness);
+    
+    // Trouver le matériau correspondant à l'id
+    const allMaterials = categoryOptions.flatMap(category => category.materials);
+    const allMaterials = categoryOptions.flatMap(category => category.materials);
+const material = allMaterials.find(m => m.id === materialId);
 
-// Rendu du composant principal
-ReactDOM.render(<Calculator />, document.getElementById('root'));
-    </script>
-</body>
-</html>
+let newRsi = null;
+
+if (material && material.rsiPerMm) {
+  newRsi = material.rsiPerMm * newThickness;
+  setRsi(newRsi);
+  
+  onChange({
+    id: materialId,
+    thickness: newThickness,
+    rsi: newRsi,
+    description: material.description
+  });
+}
