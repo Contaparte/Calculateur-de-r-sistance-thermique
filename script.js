@@ -488,18 +488,32 @@ let chart = null;
 
 // Fonctions d'initialisation et de gestion de l'interface
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser les sélecteurs
   initializeMunicipalitySelect();
+  
+  // Initialiser le graphique
   initializeChart();
   
-  // Mettre à jour les affichages initiaux
+  // Ajouter quelques couches par défaut pour démonstration
+  addDefaultLayers();
+  
+  // Mettre à jour les affichages
+  updateLayersDisplay();
+  updateMaterialsSummary();
   updateMinRSIDisplay();
   
-  // Ajouter les gestionnaires d'événements
+  // Connecter les événements
+  document.getElementById('calculate-btn').addEventListener('click', calculateResults);
+  document.getElementById('location').addEventListener('change', updateLocation);
+  document.getElementById('degree-days').addEventListener('change', updateDegreeDays);
+  document.getElementById('building-type').addEventListener('change', updateBuildingType);
+  document.getElementById('code-version').addEventListener('change', updateCodeVersion);
+  document.getElementById('envelope-component').addEventListener('change', updateEnvelopeComponent);
   document.getElementById('temp-ext').addEventListener('change', calculateGradient);
   document.getElementById('temp-int').addEventListener('change', calculateGradient);
   document.getElementById('humidity').addEventListener('change', calculateGradient);
   
-  // Ouvrir les sections nécessaires par défaut
+  // S'assurer que les accordéons importants sont ouverts
   document.getElementById('params-section').classList.remove('hidden');
   document.getElementById('composition-section').classList.remove('hidden');
 });
@@ -537,6 +551,11 @@ function initializeChart() {
             display: true,
             text: 'Température (°C)'
           }
+        }
+      },
+      plugins: {
+        annotation: {
+          annotations: {}
         }
       }
     }
@@ -1599,26 +1618,6 @@ function generateIsolationContinuityRecommendations() {
     container.appendChild(div);
   });
 }
-
-// Initialisation de l'application
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialiser les sélecteurs
-  initializeMunicipalitySelect();
-  
-  // Initialiser le graphique
-  initializeChart();
-  
-  // Ajouter quelques couches par défaut pour démonstration
-  addDefaultLayers();
-  
-  // Mettre à jour les affichages
-  updateLayersDisplay();
-  updateMaterialsSummary();
-  
-  // Événements du sélecteur d'épaisseur
-  document.getElementById('thickness-select').addEventListener('change', handleThicknessChange);
-  document.getElementById('custom-thickness-input').addEventListener('change', handleCustomThicknessChange);
-});
 
 // Ajouter des couches par défaut pour démonstration
 function addDefaultLayers() {
