@@ -6,7 +6,7 @@
     <title>Calculateur de Résistance Thermique et Point de Rosée</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
         .material-viz {
             display: flex;
@@ -244,56 +244,65 @@
                 <svg id="composition-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"></polyline></svg>
             </div>
             <div id="composition-section" class="p-4 border-t">
-                <!-- Boutons pour ajouter des couches -->
-                <div class="mb-4 flex flex-wrap gap-2">
-                    <button 
-                      onclick="addLayer('airfilm')" 
-                      class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      + Film d'air
-                    </button>
-                    <button 
-                      onclick="addLayer('airspace')" 
-                      class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      + Lame d'air
-                    </button>
-                    <button 
-                      onclick="addLayer('insulation')" 
-                      class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      + Isolant
-                    </button>
-                    <button 
-                      onclick="addLayer('sheathening')" 
-                      class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      + Revêtement intermédiaire
-                    </button>
-                    <button 
-                      onclick="addLayer('cladding')" 
-                      class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      + Parement extérieur
-                    </button>
-                    <button 
-                      onclick="addLayer('interior')" 
-                      class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      + Finition intérieure
-                    </button>
-                    <button 
-                      onclick="addLayer('structural')" 
-                      class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      + Élément structural
-                    </button>
-                    <button 
-                      onclick="addLayer('roofing')" 
-                      class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                    >
-                      + Matériau de toiture
-                    </button>
+                <!-- Catégories de matériaux -->
+                <div class="mb-4">
+                    <h4 class="font-bold mb-2">Ajouter des matériaux par catégorie</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="material-categories">
+                        <div class="border p-2 rounded">
+                            <h5 class="font-semibold mb-2 text-sm">Films d'air</h5>
+                            <div class="space-y-1">
+                                <button onclick="addLayer('airfilm')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                    + Films d'air
+                                </button>
+                            </div>
+                        </div>
+                        <div class="border p-2 rounded">
+                            <h5 class="font-semibold mb-2 text-sm">Espaces d'air</h5>
+                            <div class="space-y-1">
+                                <button onclick="addLayer('airspace')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                    + Lames d'air
+                                </button>
+                            </div>
+                        </div>
+                        <div class="border p-2 rounded">
+                            <h5 class="font-semibold mb-2 text-sm">Isolants</h5>
+                            <div class="space-y-1">
+                                <button onclick="addLayer('insulation')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                    + Isolants
+                                </button>
+                            </div>
+                        </div>
+                        <div class="border p-2 rounded">
+                            <h5 class="font-semibold mb-2 text-sm">Structure</h5>
+                            <div class="space-y-1">
+                                <button onclick="addLayer('structural')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                    + Éléments structuraux
+                                </button>
+                            </div>
+                        </div>
+                        <div class="border p-2 rounded">
+                            <h5 class="font-semibold mb-2 text-sm">Revêtements</h5>
+                            <div class="space-y-1">
+                                <button onclick="addLayer('cladding')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                    + Parements extérieurs
+                                </button>
+                                <button onclick="addLayer('sheathening')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                    + Revêtements intermédiaires
+                                </button>
+                            </div>
+                        </div>
+                        <div class="border p-2 rounded">
+                            <h5 class="font-semibold mb-2 text-sm">Autres</h5>
+                            <div class="space-y-1">
+                                <button onclick="addLayer('interior')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                    + Finition intérieure
+                                </button>
+                                <button onclick="addLayer('roofing')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                    + Matériau de toiture
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Message quand aucune couche n'est ajoutée -->
@@ -310,7 +319,7 @@
                         <h4 class="font-bold mb-2" id="material-selector-title">Sélectionner un matériau</h4>
                         
                         <!-- Catégories de matériaux (généré par JavaScript) -->
-                        <div id="material-categories" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"></div>
+                        <div id="material-categories-selector" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"></div>
                         
                         <!-- Options d'épaisseur pour les matériaux qui le supportent -->
                         <div id="thickness-selector" class="hidden">
