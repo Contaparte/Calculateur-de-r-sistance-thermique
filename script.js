@@ -1,0 +1,1496 @@
+// Fonction pour convertir RSI en R
+const rsiToR = (rsi) => {
+  if (rsi === null || rsi === undefined || isNaN(rsi)) return null;
+  return rsi * 5.678263;
+};
+
+// Fonction pour convertir R en RSI
+const rToRsi = (r) => {
+  if (r === null || r === undefined || isNaN(r)) return null;
+  return r / 5.678263;
+};
+
+// Fonction pour formater les valeurs RSI et R
+const formatRSIR = (rsi) => {
+  if (rsi === null || rsi === undefined || isNaN(rsi)) return "—";
+  const r = rsiToR(rsi);
+  return `RSI ${rsi.toFixed(2)} (R ${r.toFixed(2)})`;
+};
+
+// Valeurs minimales RSI selon le Code de construction du Québec (Partie 11)
+// Pour la résistance thermique totale (RSI_T)
+const minRSITotalValues = {
+  "< 6000": {
+    "roof": 7.22,              // Toit ou plafond
+    "wall_above_grade": 4.31,  // Mur hors sol
+    "foundation_wall": 2.99,   // Mur de fondation
+    "floor": 5.20,             // Plancher séparant un espace chauffé d'un espace non chauffé
+    "garage_ceiling": 5.20,    // Plafond de garage chauffé
+    "garage_walls_to_dwelling": 3.50, // Murs de garage chauffé contigus au logement
+    "garage_foundation_wall": 2.99 // Mur de fondation pour garage chauffé
+  },
+  ">= 6000": {
+    "roof": 9.00,
+    "wall_above_grade": 5.11,
+    "foundation_wall": 2.99,
+    "floor": 5.20,
+    "garage_ceiling": 5.20,
+    "garage_walls_to_dwelling": 3.50,
+    "garage_foundation_wall": 2.99
+  }
+};
+
+// Valeurs minimales RSI selon le Code de construction du Québec (Partie 11)
+// Pour la résistance thermique effective (RSI_E)
+const minRSIEffectiveValues = {
+  "< 6000": {
+    "roof": 5.46,              // Toit ou plafond
+    "wall_above_grade": 3.60,  // Mur hors sol
+    "foundation_wall": 2.64,   // Mur de fondation
+    "floor": 5.46,             // Plancher exposé
+    "garage_ceiling": 5.46,    // Plafond de garage chauffé (valeur estimée)
+    "garage_walls_to_dwelling": 3.60, // Murs de garage (même valeur que mur hors sol)
+    "garage_foundation_wall": 2.64 // Mur de fondation pour garage chauffé
+  },
+  ">= 6000": {
+    "roof": 6.17,
+    "wall_above_grade": 4.05,
+    "foundation_wall": 2.64,
+    "floor": 6.17,
+    "garage_ceiling": 6.17,
+    "garage_walls_to_dwelling": 4.05,
+    "garage_foundation_wall": 2.64
+  }
+};
+
+// Constantes pour les degrés-jours et les municipalités
+const municipalities = [
+  // Municipalités avec moins de 6000 degrés-jours
+  { id: "acton-vale", name: "Acton-Vale", degreeDay: 4620, zone: "< 6000" },
+  { id: "aylmer", name: "Aylmer", degreeDay: 4520, zone: "< 6000" },
+  { id: "baie-saint-paul", name: "Baie-Saint-Paul", degreeDay: 5280, zone: "< 6000" },
+  { id: "beauport", name: "Beauport", degreeDay: 5100, zone: "< 6000" },
+  { id: "bedford", name: "Bedford", degreeDay: 4420, zone: "< 6000" },
+  { id: "beloeil", name: "Beloeil", degreeDay: 4500, zone: "< 6000" },
+  { id: "brome", name: "Brome", degreeDay: 4730, zone: "< 6000" },
+  { id: "brossard", name: "Brossard", degreeDay: 4420, zone: "< 6000" },
+  { id: "buckingham", name: "Buckingham", degreeDay: 4880, zone: "< 6000" },
+  { id: "chambly", name: "Chambly", degreeDay: 4450, zone: "< 6000" },
+  { id: "coaticook", name: "Coaticook", degreeDay: 4750, zone: "< 6000" },
+  { id: "contrecoeur", name: "Contrecoeur", degreeDay: 4500, zone: "< 6000" },
+  { id: "cowansville", name: "Cowansville", degreeDay: 4540, zone: "< 6000" },
+  { id: "deux-montagnes", name: "Deux-Montagnes", degreeDay: 4440, zone: "< 6000" },
+  { id: "drummondville", name: "Drummondville", degreeDay: 4700, zone: "< 6000" },
+  { id: "farnham", name: "Farnham", degreeDay: 4500, zone: "< 6000" },
+  { id: "fort-coulonge", name: "Fort-Coulonge", degreeDay: 4950, zone: "< 6000" },
+  { id: "gaspe", name: "Gaspé", degreeDay: 5500, zone: "< 6000" },
+  { id: "gatineau", name: "Gatineau", degreeDay: 4600, zone: "< 6000" },
+  { id: "gracefield", name: "Gracefield", degreeDay: 5080, zone: "< 6000" },
+  { id: "granby", name: "Granby", degreeDay: 4500, zone: "< 6000" },
+  { id: "hemmingford", name: "Hemmingford", degreeDay: 4380, zone: "< 6000" },
+  { id: "hull", name: "Hull", degreeDay: 4550, zone: "< 6000" },
+  { id: "iberville", name: "Iberville", degreeDay: 4450, zone: "< 6000" },
+  { id: "joliette", name: "Joliette", degreeDay: 4720, zone: "< 6000" },
+  { id: "la-malbaie", name: "La Malbaie", degreeDay: 5400, zone: "< 6000" },
+  { id: "la-pocatiere", name: "La Pocatière", degreeDay: 5160, zone: "< 6000" },
+  { id: "la-tuque", name: "La Tuque", degreeDay: 5500, zone: "< 6000" },
+  { id: "lac-megantic", name: "Lac-Mégantic", degreeDay: 5180, zone: "< 6000" },
+  { id: "lachute", name: "Lachute", degreeDay: 4640, zone: "< 6000" },
+  { id: "lennoxville", name: "Lennoxville", degreeDay: 4700, zone: "< 6000" },
+  { id: "lery", name: "Léry", degreeDay: 4420, zone: "< 6000" },
+  { id: "loretteville", name: "Loretteville", degreeDay: 5200, zone: "< 6000" },
+  { id: "louiseville", name: "Louiseville", degreeDay: 4900, zone: "< 6000" },
+  { id: "magog", name: "Magog", degreeDay: 4730, zone: "< 6000" },
+  { id: "maniwaki", name: "Maniwaki", degreeDay: 5280, zone: "< 6000" },
+  { id: "masson", name: "Masson", degreeDay: 4610, zone: "< 6000" },
+  { id: "matane", name: "Matane", degreeDay: 5510, zone: "< 6000" },
+  { id: "mont-joli", name: "Mont-Joli", degreeDay: 5370, zone: "< 6000" },
+  { id: "mont-laurier", name: "Mont-Laurier", degreeDay: 5320, zone: "< 6000" },
+  { id: "montmagny", name: "Montmagny", degreeDay: 5090, zone: "< 6000" },
+  // Région de Montréal
+  { id: "montreal", name: "Montréal (Hôtel de Ville)", degreeDay: 4200, zone: "< 6000" },
+  { id: "beaconsfield", name: "Beaconsfield", degreeDay: 4440, zone: "< 6000" },
+  { id: "dorval", name: "Dorval", degreeDay: 4400, zone: "< 6000" },
+  { id: "laval", name: "Laval", degreeDay: 4500, zone: "< 6000" },
+  { id: "montreal-est", name: "Montréal-Est", degreeDay: 4470, zone: "< 6000" },
+  { id: "montreal-nord", name: "Montréal-Nord", degreeDay: 4470, zone: "< 6000" },
+  { id: "outremont", name: "Outremont", degreeDay: 4300, zone: "< 6000" },
+  { id: "pierrefonds", name: "Pierrefonds", degreeDay: 4430, zone: "< 6000" },
+  { id: "st-lambert", name: "St-Lambert", degreeDay: 4400, zone: "< 6000" },
+  { id: "st-laurent", name: "St-Laurent", degreeDay: 4270, zone: "< 6000" },
+  { id: "ste-anne-de-bellevue", name: "Ste-Anne-de-Bellevue", degreeDay: 4460, zone: "< 6000" },
+  { id: "verdun", name: "Verdun", degreeDay: 4200, zone: "< 6000" },
+  // Autres municipalités (moins de 6000 DJ)
+  { id: "nicolet", name: "Nicolet (Gentilly)", degreeDay: 4900, zone: "< 6000" },
+  { id: "perce", name: "Percé", degreeDay: 5400, zone: "< 6000" },
+  { id: "pincourt", name: "Pincourt", degreeDay: 4480, zone: "< 6000" },
+  { id: "plessisville", name: "Plessisville", degreeDay: 5100, zone: "< 6000" },
+  // Région de Québec
+  { id: "quebec", name: "Québec", degreeDay: 5080, zone: "< 6000" },
+  { id: "ancienne-lorette", name: "Ancienne-Lorette", degreeDay: 5130, zone: "< 6000" },
+  { id: "levis", name: "Lévis", degreeDay: 5050, zone: "< 6000" },
+  { id: "sillery", name: "Sillery", degreeDay: 5070, zone: "< 6000" },
+  { id: "ste-foy", name: "Ste-Foy", degreeDay: 5100, zone: "< 6000" },
+  // Autres municipalités (moins de 6000 DJ)
+  { id: "richmond", name: "Richmond", degreeDay: 4700, zone: "< 6000" },
+  { id: "rimouski", name: "Rimouski", degreeDay: 5300, zone: "< 6000" },
+  { id: "riviere-du-loup", name: "Rivière-du-Loup", degreeDay: 5380, zone: "< 6000" },
+  { id: "rock-island", name: "Rock-Island", degreeDay: 4850, zone: "< 6000" },
+  { id: "rosemere", name: "Rosemère", degreeDay: 4550, zone: "< 6000" },
+  { id: "saguenay", name: "Saguenay", degreeDay: 5700, zone: "< 6000" },
+  { id: "saguenay-bagotville", name: "Saguenay (Bagotville)", degreeDay: 5700, zone: "< 6000" },
+  { id: "saguenay-jonquiere", name: "Saguenay (Jonquière)", degreeDay: 5650, zone: "< 6000" },
+  { id: "saguenay-kenogami", name: "Saguenay (Kenogami)", degreeDay: 5650, zone: "< 6000" },
+  { id: "saint-eustache", name: "Saint-Eustache", degreeDay: 4500, zone: "< 6000" },
+  { id: "saint-jean-sur-richelieu", name: "Saint-Jean-sur-Richelieu", degreeDay: 4450, zone: "< 6000" },
+  { id: "salaberry-de-valleyfield", name: "Salaberry-de-Valleyfield", degreeDay: 4400, zone: "< 6000" },
+  { id: "shawinigan", name: "Shawinigan", degreeDay: 5050, zone: "< 6000" },
+  { id: "shawville", name: "Shawville", degreeDay: 4880, zone: "< 6000" },
+  { id: "sherbrooke", name: "Sherbrooke", degreeDay: 4700, zone: "< 6000" },
+  { id: "sorel", name: "Sorel", degreeDay: 4550, zone: "< 6000" },
+  { id: "st-georges-de-cacouna", name: "St-Georges-de-Cacouna", degreeDay: 5400, zone: "< 6000" },
+  { id: "st-hubert", name: "St-Hubert", degreeDay: 4490, zone: "< 6000" },
+  { id: "st-hyacinthe", name: "St-Hyacinthe", degreeDay: 4500, zone: "< 6000" },
+  { id: "st-jerome", name: "St-Jérôme", degreeDay: 4820, zone: "< 6000" },
+  { id: "st-jovite", name: "St-Jovite", degreeDay: 5250, zone: "< 6000" },
+  { id: "st-lazare-hudson", name: "St-Lazare-Hudson", degreeDay: 4520, zone: "< 6000" },
+  { id: "st-nicolas", name: "St-Nicolas", degreeDay: 4990, zone: "< 6000" },
+  { id: "ste-agathe-des-monts", name: "Ste-Agathe-des-Monts", degreeDay: 5390, zone: "< 6000" },
+  { id: "sutton", name: "Sutton", degreeDay: 4600, zone: "< 6000" },
+  { id: "tadoussac", name: "Tadoussac", degreeDay: 5450, zone: "< 6000" },
+  { id: "temiscaming", name: "Témiscaming", degreeDay: 5020, zone: "< 6000" },
+  { id: "terrebonne", name: "Terrebonne", degreeDay: 4500, zone: "< 6000" },
+  { id: "thetford-mines", name: "Thetford Mines", degreeDay: 5120, zone: "< 6000" },
+  { id: "thurso", name: "Thurso", degreeDay: 4820, zone: "< 6000" },
+  { id: "trois-rivieres", name: "Trois-Rivières", degreeDay: 4900, zone: "< 6000" },
+  { id: "varennes", name: "Varennes", degreeDay: 4500, zone: "< 6000" },
+  { id: "vercheres", name: "Verchères", degreeDay: 4450, zone: "< 6000" },
+  { id: "victoriaville", name: "Victoriaville", degreeDay: 4900, zone: "< 6000" },
+  { id: "wakefield", name: "Wakefield", degreeDay: 4820, zone: "< 6000" },
+  { id: "waterloo", name: "Waterloo", degreeDay: 4650, zone: "< 6000" },
+  { id: "windsor", name: "Windsor", degreeDay: 4700, zone: "< 6000" },
+  
+  // Municipalités avec 6000 degrés-jours ou plus
+  { id: "alma", name: "Alma", degreeDay: 5800, zone: ">= 6000" },
+  { id: "amos", name: "Amos", degreeDay: 6160, zone: ">= 6000" },
+  { id: "baie-comeau", name: "Baie-Comeau", degreeDay: 6020, zone: ">= 6000" },
+  { id: "dolbeau", name: "Dolbeau", degreeDay: 6250, zone: ">= 6000" },
+  { id: "gagnon", name: "Gagnon", degreeDay: 7600, zone: ">= 6000" },
+  { id: "harrington-harbour", name: "Harrington-Harbour", degreeDay: 6150, zone: ">= 6000" },
+  { id: "havre-st-pierre", name: "Havre-St-Pierre", degreeDay: 6100, zone: ">= 6000" },
+  { id: "inukjuak", name: "Inukjuak", degreeDay: 9150, zone: ">= 6000" },
+  { id: "kuujjuaq", name: "Kuujjuaq", degreeDay: 8550, zone: ">= 6000" },
+  { id: "kuujjuarapik", name: "Kuujjuarapik", degreeDay: 7990, zone: ">= 6000" },
+  { id: "malartic", name: "Malartic", degreeDay: 6200, zone: ">= 6000" },
+  { id: "nitchequon", name: "Nitchequon", degreeDay: 8100, zone: ">= 6000" },
+  { id: "noranda", name: "Noranda", degreeDay: 6050, zone: ">= 6000" },
+  { id: "port-cartier", name: "Port-Cartier", degreeDay: 6060, zone: ">= 6000" },
+  { id: "puvirnituq", name: "Puvirnituq", degreeDay: 9200, zone: ">= 6000" },
+  { id: "roberval", name: "Roberval", degreeDay: 5750, zone: ">= 6000" },
+  { id: "rouyn", name: "Rouyn", degreeDay: 6050, zone: ">= 6000" },
+  { id: "schefferville", name: "Schefferville", degreeDay: 8550, zone: ">= 6000" },
+  { id: "senneterre", name: "Senneterre", degreeDay: 6180, zone: ">= 6000" },
+  { id: "sept-iles", name: "Sept-Îles", degreeDay: 6200, zone: ">= 6000" },
+  { id: "st-felicien", name: "St-Félicien", degreeDay: 5850, zone: ">= 6000" },
+  { id: "st-hubert-de-riviere-du-loup", name: "St-Hubert-de-Rivière-du-Loup", degreeDay: 5520, zone: ">= 6000" },
+  { id: "val-dor", name: "Val-d'Or", degreeDay: 6180, zone: ">= 6000" },
+  { id: "ville-marie", name: "Ville-Marie", degreeDay: 5550, zone: ">= 6000" }
+];
+
+// Base de données des matériaux avec leurs valeurs RSI
+const materials = {
+  // Films d'air
+  airFilms: [
+    { id: "exterior", name: "Film d'air extérieur", rsi: 0.03, description: "Pellicule d'air de surface (vent hivernal de 24 Km/h)" },
+    { id: "interior_vertical", name: "Film d'air intérieur (mur)", rsi: 0.12, description: "Air stable, surface verticale, flux thermique horizontal" },
+    { id: "interior_ceiling", name: "Film d'air intérieur (plafond)", rsi: 0.11, description: "Air stable, surface horizontale, flux thermique ascendant" },
+    { id: "interior_floor", name: "Film d'air intérieur (plancher)", rsi: 0.16, description: "Air stable, surface horizontale, flux thermique descendant" }
+  ],
+  
+  // Lames d'air non réfléchissantes
+  airSpaces: [
+    // Murs (flux thermique horizontal)
+    { id: "airspace_wall_13mm", name: "Lame d'air dans un mur - 13mm", rsi: 0.16, description: "min. 13mm (1/2'')" },
+    { id: "airspace_wall_20mm", name: "Lame d'air dans un mur - 20mm+", rsi: 0.18, description: "20mm (3/4'') et +" },
+    { id: "airspace_wall_40mm", name: "Lame d'air dans un mur - 40mm+", rsi: 0.18, description: "40mm (1 1/2'') et +" },
+    { id: "airspace_wall_90mm", name: "Lame d'air dans un mur - 90mm+", rsi: 0.18, description: "90mm (3 1/2'') et +" },
+    
+    // Plafonds (flux thermique ascendant)
+    { id: "airspace_ceiling_13mm", name: "Lame d'air dans un plafond - 13mm", rsi: 0.15, description: "min. 13mm (1/2'')" },
+    { id: "airspace_ceiling_20mm", name: "Lame d'air dans un plafond - 20mm+", rsi: 0.15, description: "20mm (3/4'') et +" },
+    { id: "airspace_ceiling_40mm", name: "Lame d'air dans un plafond - 40mm+", rsi: 0.16, description: "40mm (1 1/2'') et +" },
+    { id: "airspace_ceiling_90mm", name: "Lame d'air dans un plafond - 90mm+", rsi: 0.16, description: "90mm (3 1/2'') et +" },
+    
+    // Planchers (flux thermique descendant)
+    { id: "airspace_floor_13mm", name: "Lame d'air dans un plancher - 13mm", rsi: 0.16, description: "min. 13mm (1/2'')" },
+    { id: "airspace_floor_20mm", name: "Lame d'air dans un plancher - 20mm+", rsi: 0.18, description: "20mm (3/4'') et +" },
+    { id: "airspace_floor_40mm", name: "Lame d'air dans un plancher - 40mm+", rsi: 0.2, description: "40mm (1 1/2'') et +" },
+    { id: "airspace_floor_90mm", name: "Lame d'air dans un plancher - 90mm+", rsi: 0.22, description: "90mm (3 1/2'') et +" }
+  ],
+  
+  // Lames d'air réfléchissantes
+  reflectiveAirSpaces: [
+    // Murs (flux thermique horizontal)
+    { id: "reflective_wall_oneside", name: "Lame d'air réfléchissante dans un mur - parée d'un côté", rsi: 0.465, description: "Lame verticale parée d'un côté, flux thermique horizontal entre 13 et 19mm" },
+    { id: "reflective_wall_bothsides", name: "Lame d'air réfléchissante dans un mur - parée de deux côtés", rsi: 0.48, description: "Lame verticale parée de deux côtés, flux thermique horizontal entre 13 et 19mm" },
+    
+    // Plafonds (flux thermique ascendant)
+    { id: "reflective_ceiling_oneside", name: "Lame d'air réfléchissante dans un plafond - parée d'un côté", rsi: 0.324, description: "Lame horizontale parée d'un côté, flux thermique ascendant entre 13 et 19mm" },
+    { id: "reflective_ceiling_bothsides", name: "Lame d'air réfléchissante dans un plafond - parée de deux côtés", rsi: 0.332, description: "Lame horizontale parée de deux côtés, flux thermique ascendant entre 13 et 19mm" },
+    
+    // Planchers (flux thermique descendant)
+    { id: "reflective_floor_oneside", name: "Lame d'air réfléchissante dans un plancher - parée d'un côté", rsi: 0.98, description: "Lame horizontale parée d'un côté, flux thermique descendant entre 13 et 19mm" },
+    { id: "reflective_floor_bothsides", name: "Lame d'air réfléchissante dans un plancher - parée de deux côtés", rsi: 1.034, description: "Lame horizontale parée de deux côtés, flux thermique descendant entre 13 et 19mm" }
+  ],
+
+  // Matériaux de charpente - Bois
+  wood: [
+    { id: "wood_spf", name: "Bois de construction courant (S-P-F)", rsiPerMm: 0.0085, description: "Bois de construction courant (Épinette-Pin-Sapin)" },
+    { id: "wood_birch", name: "Bouleau", rsiPerMm: 0.0055, description: "Bouleau" },
+    { id: "wood_oak", name: "Chêne", rsiPerMm: 0.0056, description: "Chêne" },
+    { id: "wood_maple", name: "Érable", rsiPerMm: 0.0063, description: "Érable et frêne" },
+    { id: "wood_cedar", name: "Cèdre blanc", rsiPerMm: 0.0099, description: "Cèdre blanc" },
+    { id: "wood_cypress", name: "Cyprès jaune", rsiPerMm: 0.0077, description: "Cyprès jaune" },
+    { id: "wood_spruce", name: "Épinette blanche", rsiPerMm: 0.0097, description: "Épinette blanche" },
+    { id: "wood_pine_white", name: "Pin blanc", rsiPerMm: 0.0092, description: "Pin blanc" },
+    { id: "wood_pine_lodgepole", name: "Pin lodgepole", rsiPerMm: 0.0082, description: "Pin lodgepole" },
+    { id: "wood_pine_red", name: "Pin rouge", rsiPerMm: 0.0077, description: "Pin rouge" },
+    { id: "wood_hemlock", name: "Pruche", rsiPerMm: 0.0084, description: "Pruche" },
+    { id: "wood_hemlock_western", name: "Pruche de l'ouest", rsiPerMm: 0.0074, description: "Pruche de l'ouest" },
+    { id: "wood_doug_fir", name: "Sapin de Douglas ou mélèze", rsiPerMm: 0.0069, description: "Sapin de Douglas ou mélèze" },
+    { id: "wood_fir", name: "Sapin gracieux", rsiPerMm: 0.008, description: "Sapin gracieux" },
+    { id: "wood_sequoia", name: "Séquoia de Californie", rsiPerMm: 0.0089, description: "Séquoia de Californie" },
+    { id: "wood_cedarwood", name: "Thuya géant", rsiPerMm: 0.0102, description: "Thuya géant" }
+  ],
+  
+  // Béton
+  concrete: [
+    { id: "concrete_2400", name: "Béton 2400 kg/m³", rsiPerMm: 0.0004, description: "Béton coulé sur place, 2400 kg/m³ (150lbs/pi³)" },
+    { id: "concrete_1600", name: "Béton léger 1600 kg/m³", rsiPerMm: 0.0013, description: "Béton léger, 1600 kg/m³ (100lbs/pi³) (schiste, argile ou ardoise expansés, laitier expansé, cendre)" },
+    { id: "concrete_480", name: "Béton léger 480 kg/m³", rsiPerMm: 0.0069, description: "Béton léger, 480 kg/m³ (30lbs/pi³) (perlite, vermiculite et billes de polystyrène)" }
+  ],
+  
+  // Blocs de béton
+  concreteBlocks: [
+    // Blocs de béton à 2 cellules rectangulaires - agrégats de densité normale
+    { id: "block_90mm", name: "Bloc de béton - 90mm", rsi: 0.17, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 90mm" },
+    { id: "block_140mm", name: "Bloc de béton - 140mm", rsi: 0.19, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 140mm" },
+    { id: "block_190mm", name: "Bloc de béton - 190mm", rsi: 0.21, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 190mm" },
+    { id: "block_240mm", name: "Bloc de béton - 240mm", rsi: 0.24, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 240mm" },
+    { id: "block_290mm", name: "Bloc de béton - 290mm", rsi: 0.26, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 290mm" },
+    { id: "block_vermiculite_140mm", name: "Bloc de béton avec vermiculite - 140mm", rsi: 0.4, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 140mm" },
+    { id: "block_vermiculite_190mm", name: "Bloc de béton avec vermiculite - 190mm", rsi: 0.51, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 190mm" },
+    { id: "block_vermiculite_240mm", name: "Bloc de béton avec vermiculite - 240mm", rsi: 0.61, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 240mm" },
+    { id: "block_vermiculite_290mm", name: "Bloc de béton avec vermiculite - 290mm", rsi: 0.69, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 290mm" },
+    { id: "block_perlite_190mm", name: "Bloc de béton avec perlite - 190mm", rsi: 0.53, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de perlite - 190mm" },
+    
+    // Blocs de béton - agrégats de faible densité
+    { id: "block_light_90mm", name: "Bloc de béton léger - 90mm", rsi: 0.24, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 90mm" },
+    { id: "block_light_140mm", name: "Bloc de béton léger - 140mm", rsi: 0.30, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 140mm" },
+    { id: "block_light_190mm", name: "Bloc de béton léger - 190mm", rsi: 0.32, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 190mm" },
+    { id: "block_light_240mm", name: "Bloc de béton léger - 240mm", rsi: 0.33, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 240mm" },
+    { id: "block_light_290mm", name: "Bloc de béton léger - 290mm", rsi: 0.41, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 290mm" },
+    
+    // Blocs de béton avec isolants - agrégats de faible densité
+    { id: "block_light_perlite_140mm", name: "Bloc de béton léger avec perlite - 140mm", rsi: 0.74, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de perlite - 140mm" },
+    { id: "block_light_perlite_190mm", name: "Bloc de béton léger avec perlite - 190mm", rsi: 0.99, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de perlite - 190mm" },
+    { id: "block_light_perlite_290mm", name: "Bloc de béton léger avec perlite - 290mm", rsi: 1.35, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de perlite - 290mm" },
+    { id: "block_light_vermiculite_140mm", name: "Bloc de béton léger avec vermiculite - 140mm", rsi: 0.58, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de vermiculite - 140mm" },
+    { id: "block_light_vermiculite_190mm", name: "Bloc de béton léger avec vermiculite - 190mm", rsi: 0.81, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de vermiculite - 190mm" },
+    { id: "block_light_vermiculite_240mm", name: "Bloc de béton léger avec vermiculite - 240mm", rsi: 0.98, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de vermiculite - 240mm" },
+    { id: "block_light_vermiculite_290mm", name: "Bloc de béton léger avec vermiculite - 290mm", rsi: 1.06, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de vermiculite - 290mm" },
+    { id: "block_light_eps_190mm", name: "Bloc de béton léger avec polystyrène expansé - 190mm", rsi: 0.85, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de billes de polystyrène expansé - 190mm" },
+    { id: "block_light_eps_moulded_190mm", name: "Bloc de béton léger avec polystyrène expansé moulé - 190mm", rsi: 0.62, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité, remplis de polystyrène expansé moulé - 190mm" },
+    
+    // Blocs de béton - agrégats de densité moyenne
+    { id: "block_medium_190mm", name: "Bloc de béton densité moyenne - 190mm", rsi: 0.26, description: "Blocs de béton à 2/3 cellules, agrégats de densité moyenne - 190mm" },
+    { id: "block_medium_eps_190mm", name: "Bloc de béton densité moyenne avec EPS - 190mm", rsi: 0.56, description: "Blocs de béton à 2/3 cellules, agrégats de densité moyenne, remplis de perles de polystyrène expansé - 190mm" },
+    { id: "block_medium_eps_moulded_190mm", name: "Bloc de béton densité moyenne avec EPS moulé - 190mm", rsi: 0.47, description: "Blocs de béton à 2/3 cellules, agrégats de densité moyenne, remplis de polystyrène expansé moulé - 190mm" },
+    { id: "block_medium_perlite_190mm", name: "Bloc de béton densité moyenne avec perlite - 190mm", rsi: 0.53, description: "Blocs de béton à 2/3 cellules, agrégats de densité moyenne, remplis de perlite - 190mm" },
+    { id: "block_medium_vermiculite_190mm", name: "Bloc de béton densité moyenne avec vermiculite - 190mm", rsi: 0.58, description: "Blocs de béton à 2/3 cellules, agrégats de densité moyenne, remplis de vermiculite - 190mm" }
+  ],
+
+  // Briques creuses
+  hollowBricks: [
+    // Briques d'argile creuses - plusieurs alvéoles
+    { id: "hollow_brick_90mm", name: "Brique d'argile creuse - 90mm", rsi: 0.27, description: "Brique d'argile creuse - plusieurs alvéoles, 90mm" },
+    
+    // Briques d'argile creuses rectangulaires - 2 alvéoles
+    { id: "hollow_brick_rect2_140mm", name: "Brique d'argile creuse rectangulaire - 140mm", rsi: 0.39, description: "Brique d'argile creuse rectangulaire - 2 alvéoles, 140mm" },
+    { id: "hollow_brick_rect2_190mm", name: "Brique d'argile creuse rectangulaire - 190mm", rsi: 0.41, description: "Brique d'argile creuse rectangulaire - 2 alvéoles, 190mm" },
+    { id: "hollow_brick_rect2_290mm", name: "Brique d'argile creuse rectangulaire - 290mm", rsi: 0.47, description: "Brique d'argile creuse rectangulaire - 2 alvéoles, 290mm" },
+    { id: "hollow_brick_rect2_vermiculite_140mm", name: "Brique d'argile creuse rectangulaire avec vermiculite - 140mm", rsi: 0.65, description: "Brique d'argile creuse rectangulaire - 2 alvéoles, remplie de vermiculite, 140mm" },
+    { id: "hollow_brick_rect2_vermiculite_190mm", name: "Brique d'argile creuse rectangulaire avec vermiculite - 190mm", rsi: 0.86, description: "Brique d'argile creuse rectangulaire - 2 alvéoles, remplie de vermiculite, 190mm" },
+    { id: "hollow_brick_rect2_vermiculite_290mm", name: "Brique d'argile creuse rectangulaire avec vermiculite - 290mm", rsi: 1.29, description: "Brique d'argile creuse rectangulaire - 2 alvéoles, remplie de vermiculite, 290mm" },
+    
+    // Briques d'argile creuses rectangulaires - 3 alvéoles
+    { id: "hollow_brick_rect3_90mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) - 90mm", rsi: 0.35, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, 90mm" },
+    { id: "hollow_brick_rect3_140mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) - 140mm", rsi: 0.38, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, 140mm" },
+    { id: "hollow_brick_rect3_190mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) - 190mm", rsi: 0.41, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, 190mm" },
+    { id: "hollow_brick_rect3_240mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) - 240mm", rsi: 0.43, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, 240mm" },
+    { id: "hollow_brick_rect3_290mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) - 290mm", rsi: 0.45, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, 290mm" },
+    { id: "hollow_brick_rect3_vermiculite_140mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) avec vermiculite - 140mm", rsi: 0.68, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, remplie de vermiculite, 140mm" },
+    { id: "hollow_brick_rect3_vermiculite_190mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) avec vermiculite - 190mm", rsi: 0.86, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, remplie de vermiculite, 190mm" },
+    { id: "hollow_brick_rect3_vermiculite_240mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) avec vermiculite - 240mm", rsi: 1.06, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, remplie de vermiculite, 240mm" },
+    { id: "hollow_brick_rect3_vermiculite_290mm", name: "Brique d'argile creuse rectangulaire (3 alvéoles) avec vermiculite - 290mm", rsi: 1.19, description: "Brique d'argile creuse rectangulaire - 3 alvéoles, remplie de vermiculite, 290mm" }
+  ],
+  
+  // Revêtements d'ossature
+  sheathing: [
+    { id: "plywood", name: "Contreplaqué de bois tendre", rsiPerMm: 0.0087, description: "Contreplaqué de bois tendre" },
+    { id: "plywood_douglas_fir", name: "Contreplaqué de sapin de Douglas", rsiPerMm: 0.0111, description: "Contreplaqué de sapin de Douglas" },
+    { id: "particleboard", name: "Panneau de particules", rsiPerMm: 0.0077, description: "Panneau de particules" },
+    { id: "osb", name: "Panneaux de copeaux (OSB)", rsiPerMm: 0.0098, description: "Panneaux de copeaux orientés (OSB)" },
+    { id: "fiberboard_asphalt", name: "Revêtement en carton-fibre asphalté", rsiPerMm: 0.0165, description: "Revêtement en carton-fibre asphalté" },
+    { id: "gypsum", name: "Revêtement en plaque de plâtre (gypse)", rsiPerMm: 0.0063, description: "Revêtement en plaque de plâtre (panneaux de gypse)" },
+    { id: "paper", name: "Papier de revêtement", rsi: 0.011, description: "Papier de revêtement" },
+    { id: "felt_permeable", name: "Feutre perméable", rsi: 0.011, description: "Feutre perméable" },
+    { id: "felt_2layers_bitumen", name: "2 couches de feutre avec bitume", rsi: 0.210, description: "2 couches de feutre avec bitume (0,73 kg/m³)" },
+    { id: "plastic_membrane", name: "Membrane plastique", rsi: 0, description: "Membrane plastique - négligeable" },
+    { id: "kraft_paper", name: "Papier vaporifuge kraft enduit d'asphalte", rsi: 0, description: "Papier vaporifuge kraft enduit d'asphalte - négligeable" },
+    { id: "polyethylene", name: "Pare-vapeur en polyéthylène", rsi: 0, description: "Pare-vapeur en polyéthylène - négligeable" },
+    { id: "reflective_fiberboard", name: "Panneau de fibre de bois avec pellicule réfléchissante", rsiPerMm: 0.0194, description: "Panneau de fibre de bois avec pellicule réfléchissante" },
+    { id: "light_concrete", name: "Panneau de béton léger", rsiPerMm: 0.0069, description: "Panneau de béton léger (ex.: Permabase DEK de Unifix)" },
+    { id: "flakeboard", name: "Panneau de copeaux", rsiPerMm: 0.0095, description: "Panneau de copeaux (705 kg/m³)" }
+  ],
+
+  // Isolants
+  insulation: [
+    // Isolants en nattes
+    { id: "mineral_wool_batt_r12", name: "Laine minérale en nattes R-12", rsi: 2.11, description: "Nattes de fibre minérale de roche ou de verre R-12 (89/92mm)" },
+    { id: "mineral_wool_batt_r14", name: "Laine minérale en nattes R-14", rsi: 2.46, description: "Nattes de fibre minérale de roche ou de verre R-14 (89/92mm)" },
+    { id: "mineral_wool_batt_r19", name: "Laine minérale en nattes R-19", rsi: 3.34, description: "Nattes de fibre minérale de roche ou de verre R-19 (140mm)" },
+    { id: "mineral_wool_batt_r20", name: "Laine minérale en nattes R-20", rsi: 3.52, description: "Nattes de fibre minérale de roche ou de verre R-20 (152mm)" },
+    { id: "mineral_wool_batt_r22", name: "Laine minérale en nattes R-22", rsi: 3.87, description: "Nattes de fibre minérale de roche ou de verre R-22 (140/152mm)" },
+    { id: "mineral_wool_batt_r22_5", name: "Laine minérale en nattes R-22.5", rsi: 3.96, description: "Nattes de fibre minérale de roche ou de verre R-22.5 (152mm)" },
+    { id: "mineral_wool_batt_r24", name: "Laine minérale en nattes R-24", rsi: 4.23, description: "Nattes de fibre minérale de roche ou de verre R-24 (140/152mm)" },
+    { id: "mineral_wool_batt_r28", name: "Laine minérale en nattes R-28", rsi: 4.93, description: "Nattes de fibre minérale de roche ou de verre R-28 (178/216mm)" },
+    { id: "mineral_wool_batt_r31", name: "Laine minérale en nattes R-31", rsi: 5.46, description: "Nattes de fibre minérale de roche ou de verre R-31 (241mm)" },
+    { id: "mineral_wool_batt_r35", name: "Laine minérale en nattes R-35", rsi: 6.16, description: "Nattes de fibre minérale de roche ou de verre R-35 (267mm)" },
+    { id: "mineral_wool_batt_r40", name: "Laine minérale en nattes R-40", rsi: 7.04, description: "Nattes de fibre minérale de roche ou de verre R-40 (279/300mm)" },
+    
+    // Panneaux isolants
+    { id: "insulation_panel_roof", name: "Panneau isolant pour toiture", rsiPerMm: 0.018, description: "Panneau isolant pour toiture" },
+    { id: "insulation_panel_wall", name: "Panneau isolant pour murs ou plafonds", rsiPerMm: 0.016, description: "Panneau isolant pour murs ou plafonds (carreaux)" },
+    { id: "fiberglass_thermal", name: "Laine de fibre de verre, usage thermique", rsiPerMm: 0.0208, description: "Laine de fibre de verre, usage thermique (Eco Touch thermique de Owens Corning)" },
+    { id: "fiberglass_acoustic", name: "Laine de fibre de verre, usage acoustique", rsiPerMm: 0, description: "Laine de fibre de verre, usage acoustique (Eco Touch Quiétude de Owens Corning) - valeurs non fournies" },
+    { id: "mineral_wool", name: "Laine de roche", rsiPerMm: 0.0276, description: "Laine de roche (Roxul Cavity Rock)" },
+    { id: "benotherm", name: "BENO-THERM de Benolec", rsiPerMm: 0.025, description: "BENO-THERM de Benolec" },
+    { id: "benospray", name: "BENO-SPRAY de Benolec", rsiPerMm: 0.024, description: "BENO-SPRAY de Benolec" },
+    
+    // Panneaux de polyisocyanurate ou polyuréthane
+    { id: "polyiso_permeable", name: "Polyisocyanurate revêtu perméable", rsiPerMm: 0.03818, description: "Polyisocyanurate ou polyuréthane, revêtus, types 1, 2 et 3, surface perméable" },
+    { id: "polyiso_impermeable", name: "Polyisocyanurate revêtu imperméable", rsiPerMm: 0.03937, description: "Polyisocyanurate ou polyuréthane, revêtus, types 1, 2 et 3, surface imperméable" },
+    
+    // Polystyrène expansé
+    { id: "polystyrene_type1", name: "Polystyrène expansé Type 1", rsiPerMm: 0.026, description: "Polystyrène expansé Type 1" },
+    { id: "polystyrene_type2", name: "Polystyrène expansé Type 2", rsiPerMm: 0.028, description: "Polystyrène expansé Type 2" },
+    { id: "polystyrene_type3", name: "Polystyrène expansé Type 3", rsiPerMm: 0.030, description: "Polystyrène expansé Type 3" },
+    { id: "polystyrene_type4", name: "Polystyrène expansé Type 4", rsiPerMm: 0.0347, description: "Polystyrène expansé Type 4" },
+    
+    // Polystyrène extrudé
+    { id: "extruded_polystyrene", name: "Polystyrène extrudé", rsiPerMm: 0.035, description: "Polystyrène extrudé: Types 2, 3 et 4" },
+    
+    // Fibre minérale semi-rigide
+    { id: "semirigid_mineral_fiber", name: "Fibre minérale semi-rigide", rsiPerMm: 0.0298, description: "Fibre minérale semi-rigide (fibre de verre ou laine de roche)" },
+    
+    // Isolants en vrac
+    { id: "cellulose_blown", name: "Fibre cellulosique épandue (combles)", rsiPerMm: 0.025, description: "Cellulose en vrac pour combles" },
+    { id: "mineral_blown_attic", name: "Fibre minérale épandue (combles)", rsiPerMm: 0.01875, description: "Fibre minérale en vrac pour combles (112mm à 565mm)" },
+    { id: "mineral_injected_89mm", name: "Fibre minérale injectée (murs), 89mm", rsi: 2.55, description: "Fibre minérale injectée (murs), 89mm", rsiPerMm: 0.02865 },
+    { id: "mineral_injected_140mm", name: "Fibre minérale injectée (murs), 140mm", rsi: 4.05, description: "Fibre minérale injectée (murs), 140mm", rsiPerMm: 0.0289 },
+    { id: "mineral_injected_152mm", name: "Fibre minérale injectée (murs), 152mm", rsi: 4.23, description: "Fibre minérale injectée (murs), 152mm (6'')" },
+    { id: "loose_fill_attic", name: "Isolant à épandre pour combles", rsiPerMm: 0.020, description: "Isolant à épandre pour combles" },
+    { id: "perlite_loose", name: "Perlite expansée, en vrac", rsiPerMm: 0.019, description: "Perlite en vrac" },
+    { id: "vermiculite", name: "Vermiculite", rsiPerMm: 0.015, description: "Vermiculite en vrac" },
+    
+    // Isolants pulvérisés
+    { id: "spray_foam_low", name: "Mousse polyuréthane pulvérisée (faible densité)", rsiPerMm: 0.0255, description: "Mousse de polyuréthane pulvérisée, faible densité" },
+    { id: "spray_foam_medium", name: "Mousse polyuréthane pulvérisée (densité moyenne)", rsiPerMm: 0.036, description: "Mousse de polyuréthane pulvérisée, densité moyenne de type I" },
+    { id: "cellulose_sprayed", name: "Fibre cellulosique pulvérisée", rsiPerMm: 0.024, description: "Fibre de cellulose pulvérisée (épaisseur tassée)" },
+    { id: "spray_fiberglass_16", name: "Fibre de verre pulvérisée (16kg/m³)", rsiPerMm: 0.025, description: "Isolant en fibres de verre pulvérisé, densité: 16 kg/m³" },
+    { id: "spray_fiberglass_28", name: "Fibre de verre pulvérisée (28,8kg/m³)", rsiPerMm: 0.029, description: "Isolant en fibres de verre pulvérisé, densité: 28,8 kg/m³" },
+    
+    // Autres isolants
+    { id: "fibrewood", name: "Fibre de bois", rsiPerMm: 0.023, description: "Fibre de bois" },
+    { id: "asbestos", name: "Amiante pulvérisé", rsiPerMm: 0.0201, description: "Amiante pulvérisé (vieilles constructions)" },
+    { id: "foamular", name: "Foamular C-200 ou Cdebord de Owens Corning", rsiPerMm: 0.0343, description: "Foamular C-200 ou Cdebord de Owens Corning" },
+    { id: "rockwool_rigid", name: "Isolant rigide en laine de roche pour toit", rsiPerMm: 0.0277, description: "Isolant rigide en laine de roche pour toit" },
+    { id: "cork", name: "Liège naturel", rsiPerMm: 0.0257, description: "Liège naturel" },
+    { id: "perlite_panel", name: "Panneau de perlite", rsiPerMm: 0.0187, description: "Panneau de perlite" },
+    { id: "perlex", name: "Perlex de Lexcor", rsi: 0.49, description: "Perlex de Lexcor" },
+    { id: "polyiso", name: "Panneau rigide de polyisocyanurate", rsiPerMm: 0.042, description: "Panneau rigide de polyisocyanurate (Sopra-Iso de Soprema)" },
+    { id: "fibercement", name: "Panneau de fibrociment", rsi: 0.109, description: "Panneau de fibrociment (Finex)" },
+    { id: "straw", name: "Panneau de paille comprimée", rsiPerMm: 0.0139, description: "Panneau de paille comprimée" },
+    { id: "fiberboard_dry", name: "Panneau isolant de carton-fibre sec", rsiPerMm: 0.0194, description: "Panneau isolant de carton-fibre sec" },
+    { id: "phenolic", name: "Panneau de mousse phénolique", rsiPerMm: 0.0304, description: "Panneau de mousse phénolique" },
+    { id: "spray_polyurethane", name: "Polyuréthane giclé", rsiPerMm: 0.0455, description: "Polyuréthane giclé" },
+    { id: "wood_fiber", name: "Matelas de fibre de bois", rsiPerMm: 0.0255, description: "Matelas de fibre de bois (différent des panneaux de carton-fibre)" },
+    { id: "perlite", name: "Perlite", rsiPerMm: 0.0230, description: "Perlite" }
+  ],
+  
+  // Parements de bois
+  woodCladding: [
+    { id: "wood_shingle_190mm", name: "Bardeau de bois 400mm, pureau de 190mm", rsi: 0.15, description: "Bardeau de bois 400mm, pureau de 190mm" },
+    { id: "wood_shingle_300mm", name: "Bardeau de bois 400mm, pureau double de 300mm", rsi: 0.21, description: "Bardeau de bois 400mm, pureau double de 300mm" },
+    { id: "wood_siding_200mm_13mm", name: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm", rsi: 0.14, description: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm" },
+    { id: "wood_siding_250mm_20mm", name: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm", rsi: 0.18, description: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm" },
+    { id: "wood_siding_200mm_20mm", name: "Bardage à mi-bois, 200mm, épaisseur 20mm", rsi: 0.14, description: "Bardage à mi-bois, 200mm, épaisseur 20mm" },
+    { id: "hardboard_11mm", name: "Panneaux de fibres dures, épaisseur 11mm", rsi: 0.12, description: "Panneaux de fibres dures, épaisseur 11mm (ex.: Canexel)" },
+    { id: "plywood_siding", name: "Contreplaqué, joints à recouvrement", rsi: 0.10, description: "Contreplaqué, joints à recouvrement, 9,5mm" }
+  ],
+
+  // Autres parements
+  otherCladding: [
+    { id: "fibercement_6.35mm", name: "Panneaux de fibro-ciment, épaisseur 6.35mm", rsi: 0.019, description: "Panneaux de fibro-ciment, épaisseur 6.35mm" },
+    { id: "fibercement_8mm", name: "Panneaux de fibro-ciment, épaisseur 8mm", rsi: 0.024, description: "Panneaux de fibro-ciment, épaisseur 8mm" },
+    { id: "insul_backing", name: "Support isolant", rsi: 0.25, description: "Support isolant, 8mm" }
+  ],
+ 
+  // Maçonnerie
+  masonry: [
+    { id: "brick_90mm", name: "Brique d'argile ou schiste - 90mm", rsi: 0.07, description: "Brique d'argile ou schiste - 90mm (4''nominal, 2400 kg/m³)" },
+    { id: "brick_concrete_90mm", name: "Brique de béton ou silico-calcaire - 90mm", rsi: 0.053, description: "Brique de béton ou silico-calcaire - 90mm (4'' nominal)" },
+    { id: "stone_quartzite", name: "Quartzite et grès", rsiPerMm: 0.0003, description: "Quartzite et grès (2240 kg/m³)" },
+    { id: "stone_calcite", name: "Calcite, dolomite, calcaire, marbre et granite", rsiPerMm: 0.0004, description: "Calcite, dolomite, calcaire, marbre et granite (2240 kg/m³)" }
+  ],
+ 
+  // Enduits
+  plaster: [
+    { id: "mortar", name: "Mortier, stucco, ciment, chaux", rsiPerMm: 0.0009, description: "Mortier, stucco, ciment, chaux" }
+  ],
+ 
+  // Bardage métallique et de vinyle
+  metalVinylCladding: [
+    { id: "vinyl_siding", name: "Planche à clin, sans endos", rsi: 0.11, description: "Planche à clin, sans endos" },
+    { id: "vinyl_siding_insulated", name: "Planche à clin avec endos isolé, épaisseur 9,5mm", rsi: 0.32, description: "Planche à clin avec endos isolé, épaisseur 9,5mm" },
+    { id: "vinyl_siding_insulated_foil", name: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm", rsi: 0.52, description: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm" }
+  ],
+ 
+  // Matériaux de toiture
+  roofingMaterials: [
+    { id: "roll_roofing", name: "Recouvrement de toiture enduit de bitume (en rouleau)", rsi: 0.03, description: "Recouvrement de toiture enduit de bitume (en rouleau)" },
+    { id: "asphalt", name: "Bitume asphaltique", rsiPerMm: 0.0014, description: "Bitume asphaltique" },
+    { id: "asphalt_shingles", name: "Bardeaux bitumés", rsi: 0.08, description: "Bardeaux bitumés" },
+    { id: "built_up_roofing", name: "Couverture multicouche (5 plis) de 10mm d'épaisseur", rsi: 0.06, description: "Couverture multicouche (5 plis) de 10mm d'épaisseur" },
+    { id: "wood_shingles_roof", name: "Bardeaux de bois", rsi: 0.17, description: "Bardeaux de bois" },
+    { id: "crushed_stone", name: "Pierre concassée", rsiPerMm: 0.0006, description: "Pierre concassée" },
+    { id: "steel_deck", name: "Platelage d'acier", rsi: 0, description: "Platelage d'acier - négligeable" },
+    { id: "slate", name: "Ardoise, épaisseur 13mm", rsi: 0.01, description: "Ardoise, épaisseur 13mm" }
+  ],
+ 
+  // Matériaux de finition intérieure
+  interiorFinish: [
+    { id: "gypsum_interior", name: "Plaque de plâtre (gypse)", rsiPerMm: 0.0061, description: "Plaque de plâtre (panneaux de gypse)" },
+    { id: "hardboard_interior", name: "Panneaux de fibres dures", rsiPerMm: 0.0095, description: "Panneaux de fibres dures (800 kg/m³)" },
+    { id: "interior_finishboard", name: "Panneaux intérieurs de finition", rsiPerMm: 0.0198, description: "Panneaux intérieurs de finition (carreaux ou planches)" },
+    { id: "cement_interior", name: "Ciment, granulat de sable", rsiPerMm: 0.0014, description: "Ciment, granulat de sable" },
+    { id: "plaster_sand", name: "Enduit au plâtre - agrégat de sable", rsiPerMm: 0.0012, description: "Enduit au plâtre - agrégat de sable" },
+    { id: "plaster_light", name: "Enduit au plâtre - agrégat léger", rsiPerMm: 0.0044, description: "Enduit au plâtre - agrégat léger" },
+    { id: "plywood_interior", name: "Contreplaqué", rsiPerMm: 0.0087, description: "Contreplaqué" },
+    { id: "particleboard_590", name: "Panneaux de particules, faible masse volumique (590 kg/m³)", rsiPerMm: 0.0098, description: "Panneaux de particules, faible masse volumique (590 kg/m³)" },
+    { id: "particleboard_800", name: "Panneaux de particules, masse volumique moyenne (800 kg/m³)", rsiPerMm: 0.0074, description: "Panneaux de particules, masse volumique moyenne (800 kg/m³)" },
+    { id: "particleboard_1000", name: "Panneaux de particules, haute masse volumique (1000 kg/m³)", rsiPerMm: 0.0059, description: "Panneaux de particules, haute masse volumique (1000 kg/m³)" },
+    { id: "underlayment", name: "Sous-couche", rsi: 0.14, description: "Sous-couche, 15,9mm" },
+    
+    // Revêtements de sol
+    { id: "carpet_fiber", name: "Tapis avec thibaude de fibres", rsi: 0.37, description: "Moquette et thibaude fibreuse" },
+    { id: "carpet_rubber", name: "Tapis avec thibaude de caoutchouc", rsi: 0.22, description: "Moquette et thibaude caoutchoutée" },
+    { id: "cork_tile", name: "Carreaux de liège, épaisseur 3,2mm", rsi: 0.049, description: "Carreaux de liège, épaisseur 3,2mm" },
+    { id: "terrazzo", name: "Terrazzo", rsiPerMm: 0.0006, description: "Terrazzo" },
+    { id: "hardwood_floor", name: "Couvre-plancher en bois dur, épaisseur 19mm", rsi: 0.12, description: "Couvre-plancher en bois dur, épaisseur 19mm" },
+    { id: "vinyl_floor", name: "Linoléum, vinyle, caoutchouc", rsi: 0.009, description: "Linoléum, vinyle, caoutchouc" },
+    { id: "ceramic_tile", name: "Carreaux de céramique", rsi: 0.005, description: "Carreaux de céramique, 9,5mm" },
+    { id: "wood_subfloor", name: "Support de revêtement de sol en bois", rsi: 0.17, description: "Support de revêtement de sol en bois, 19mm" }
+  ]
+};
+
+// Composant pour sélectionner un matériau avec épaisseur si nécessaire
+const MaterialSelector = ({ 
+  categoryOptions, 
+  onChange, 
+  value, 
+  label, 
+  showThickness = false,
+  defaultThickness = 25,
+  description = ""
+}) => {
+  const [materialId, setMaterialId] = React.useState("");
+  const [thickness, setThickness] = React.useState(defaultThickness);
+  const [rsi, setRsi] = React.useState(null);
+  
+  // Options d'épaisseur communes
+  const thicknessOptions = [
+    { value: 3, label: "3 mm" },
+    { value: 6, label: "6 mm" },
+    { value: 9, label: "9 mm" },
+    { value: 11, label: "11 mm (7/16\")" },
+    { value: 12, label: "12.5 mm (1/2\")" },
+    { value: 16, label: "15.9 mm (5/8\")" },
+    { value: 19, label: "19 mm (3/4\")" },
+    { value: 25, label: "25 mm (1\")" },
+    { value: 38, label: "38 mm (1-1/2\")" },
+    { value: 50, label: "50 mm (2\")" },
+    { value: 64, label: "64 mm (2-1/2\")" },
+    { value: 75, label: "75 mm (3\")" },
+    { value: 89, label: "89 mm (3-1/2\")" },
+    { value: 100, label: "100 mm (4\")" },
+    { value: 140, label: "140 mm (5-1/2\")" },
+    { value: 150, label: "150 mm (6\")" },
+    { value: 190, label: "190 mm (7-1/2\")" },
+    { value: 200, label: "200 mm (8\")" },
+    { value: 250, label: "250 mm (10\")" },
+    { value: 300, label: "300 mm (12\")" }
+  ];
+  
+  React.useEffect(() => {
+    if (!value) return;
+    
+    // Si value est un objet complet, on récupère les valeurs
+    if (typeof value === 'object' && value !== null) {
+      setMaterialId(value.id || "");
+      setThickness(value.thickness || defaultThickness);
+      setRsi(value.rsi || null);
+    } else {
+      // Sinon on considère que c'est juste l'id
+      setMaterialId(value);
+      
+      // Trouver le matériau correspondant à l'id
+      const allMaterials = categoryOptions.flatMap(category => category.materials);
+      const material = allMaterials.find(m => m.id === value);
+      
+      if (material) {
+        if (material.rsiPerMm) {
+          // Pour les matériaux avec RSI par mm
+          setRsi(material.rsiPerMm * thickness);
+        } else {
+          // Pour les matériaux avec RSI fixe
+          setRsi(material.rsi);
+        }
+      }
+    }
+  }, [value, categoryOptions, defaultThickness]);
+  
+  const handleMaterialChange = (e) => {
+    const id = e.target.value;
+    setMaterialId(id);
+    
+    // Trouver le matériau correspondant à l'id
+    const allMaterials = categoryOptions.flatMap(category => category.materials);
+    const material = allMaterials.find(m => m.id === id);
+    
+    let newRsi = null;
+    
+    if (material) {
+      if (material.rsiPerMm) {
+        // Pour les matériaux avec RSI par mm
+        newRsi = material.rsiPerMm * thickness;
+      } else {
+        // Pour les matériaux avec RSI fixe
+        newRsi = material.rsi;
+      }
+      setRsi(newRsi);
+    }
+    
+    onChange({
+      id,
+      thickness: thickness,
+      rsi: newRsi,
+      description: material ? material.description : ""
+    });
+  };
+
+  const handleThicknessChange = (e) => {
+    const newThickness = parseInt(e.target.value, 10) || 0;
+    setThickness(newThickness);
+    
+    // Trouver le matériau correspondant à l'id
+    const allMaterials = categoryOptions.flatMap(category => category.materials);
+    const material = allMaterials.find(m => m.id === materialId);
+    
+    let newRsi = null;
+    
+    if (material && material.rsiPerMm) {
+      newRsi = material.rsiPerMm * newThickness;
+      setRsi(newRsi);
+      
+      onChange({
+        id: materialId,
+        thickness: newThickness,
+        rsi: newRsi,
+        description: material.description
+      });
+    }
+  };
+  
+  return (
+    <div className="form-group mb-4">
+      <label className="block text-sm font-medium mb-1">{label}</label>
+      <select value={materialId} onChange={handleMaterialChange} className="w-full p-2 mb-2 border rounded">
+        <option value="">Sélectionnez un matériau</option>
+        {categoryOptions.map(category => (
+          <optgroup key={category.name} label={category.name}>
+            {category.materials.map(material => (
+              <option key={material.id} value={material.id}>{material.name}</option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+      
+      {materialId && showThickness && (
+        <div className="mt-2">
+          <label className="block text-sm font-medium mb-1">Épaisseur:</label>
+          <select 
+            value={thickness} 
+            onChange={handleThicknessChange}
+            className="w-full p-2 border rounded"
+          >
+            {thicknessOptions.map(option => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+            <option value="custom">Personnalisée...</option>
+          </select>
+          
+          {thickness === 'custom' && (
+            <div className="mt-2">
+              <label className="block text-sm font-medium mb-1">Épaisseur personnalisée (mm):</label>
+              <input 
+                type="number" 
+                value={thickness} 
+                onChange={(e) => handleThicknessChange({ target: { value: e.target.value } })} 
+                min="1" 
+                className="w-full p-2 border rounded"
+              />
+            </div>
+          )}
+        </div>
+      )}
+      
+      {rsi !== null && (
+        <div className="mt-2 text-sm">
+          <div><strong>Résistance thermique:</strong> {formatRSIR(rsi)}</div>
+          {description && <div className="text-gray-600">{description}</div>}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Composant d'accordéon pour les sections
+const Accordion = ({ title, children, defaultOpen = false }) => {
+  const [isOpen, setIsOpen] = React.useState(defaultOpen);
+  
+  return (
+    <div className="border rounded mb-4 overflow-hidden">
+      <div 
+        className="p-3 bg-gray-100 flex justify-between items-center cursor-pointer"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <h3 className="font-bold">{title}</h3>
+        {isOpen ? (
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"></polyline></svg>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        )}
+      </div>
+      {isOpen && (
+        <div className="p-4 border-t">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Calculator = () => {
+  // État pour les données générales
+  const [location, setLocation] = React.useState("");
+  const [degreeDays, setDegreeDays] = React.useState("");
+  const [climaticZone, setClimaticZone] = React.useState("");
+  const [buildingType, setBuildingType] = React.useState("residential");
+  const [codeVersion, setCodeVersion] = React.useState("part11");
+  const [envelopeComponent, setEnvelopeComponent] = React.useState("wall_above_grade");
+  
+  // États pour les composants de l'enveloppe
+  const [layers, setLayers] = React.useState([]);
+  const [results, setResults] = React.useState(null);
+  
+  // Mise à jour des degrés-jours en fonction de la municipalité
+  React.useEffect(() => {
+    if (location) {
+      const municipality = municipalities.find(m => m.id === location);
+      if (municipality) {
+        setDegreeDays(municipality.degreeDay);
+        setClimaticZone(municipality.zone);
+      }
+    }
+  }, [location]);
+  
+  // Fonction pour ajouter une couche de matériau
+  const addLayer = (type) => {
+    setLayers([...layers, { id: Date.now(), type, material: null }]);
+  };
+  
+  // Fonction pour supprimer une couche
+  const removeLayer = (id) => {
+    setLayers(layers.filter(layer => layer.id !== id));
+  };
+  
+  // Fonction pour mettre à jour une couche
+  const updateLayer = (id, material) => {
+    setLayers(layers.map(layer => 
+      layer.id === id ? { ...layer, material } : layer
+    ));
+  };
+  
+  // Fonction pour déplacer une couche vers le haut
+  const moveLayerUp = (id) => {
+    const index = layers.findIndex(layer => layer.id === id);
+    if (index > 0) {
+      const newLayers = [...layers];
+      [newLayers[index - 1], newLayers[index]] = [newLayers[index], newLayers[index - 1]];
+      setLayers(newLayers);
+    }
+  };
+  
+  // Fonction pour déplacer une couche vers le bas
+  const moveLayerDown = (id) => {
+    const index = layers.findIndex(layer => layer.id === id);
+    if (index < layers.length - 1) {
+      const newLayers = [...layers];
+      [newLayers[index], newLayers[index + 1]] = [newLayers[index + 1], newLayers[index]];
+      setLayers(newLayers);
+    }
+  };
+  
+  // Fonction pour calculer la résistance thermique totale (RSI_T)
+  const calculateTotalRSI = () => {
+    return layers.reduce((total, layer) => {
+      if (layer.material && layer.material.rsi !== undefined && layer.material.rsi !== null) {
+        return total + layer.material.rsi;
+      }
+      return total;
+    }, 0);
+  };
+  
+  // Fonction pour calculer la résistance thermique effective (RSI_E)
+  const calculateEffectiveRSI = (totalRSI) => {
+    // Pour un calcul simplifié, nous utilisons 85% de la valeur totale
+    // Dans la réalité, le calcul est plus complexe et dépend de la configuration exacte de l'ossature
+    return totalRSI * 0.85;
+  };
+  
+  // Fonction pour vérifier la conformité au code
+  const checkCompliance = (rsi, component, zone, isEffective = false) => {
+    if (!zone || !component) return { compliant: false, minRSI: 0 };
+    
+    const minRSI = isEffective ? 
+      minRSIEffectiveValues[zone][component] : 
+      minRSITotalValues[zone][component];
+    
+    return {
+      compliant: rsi >= minRSI,
+      minRSI
+    };
+  };
+  
+  // Fonction pour calculer les résultats
+  const calculateResults = () => {
+    const totalRSI = calculateTotalRSI();
+    const effectiveRSI = calculateEffectiveRSI(totalRSI);
+    
+    const totalCompliance = checkCompliance(totalRSI, envelopeComponent, climaticZone, false);
+    const effectiveCompliance = checkCompliance(effectiveRSI, envelopeComponent, climaticZone, true);
+    
+    const uValue = totalRSI ? 1 / totalRSI : null;
+    const uValueEffective = effectiveRSI ? 1 / effectiveRSI : null;
+    
+    setResults({
+      totalRSI,
+      effectiveRSI,
+      totalCompliance,
+      effectiveCompliance,
+      uValue,
+      uValueEffective
+    });
+  };
+
+  // Préparation des options de matériaux pour les sélecteurs
+  const prepareMaterialOptions = (materialCategories) => {
+    return Object.entries(materialCategories).map(([key, value]) => ({
+      name: key,
+      materials: value
+    }));
+  };
+  
+  const airFilmOptions = [
+    { name: "Films d'air", materials: materials.airFilms }
+  ];
+  
+  const airSpaceOptions = [
+    { name: "Lames d'air non réfléchissantes", materials: materials.airSpaces },
+    { name: "Lames d'air réfléchissantes", materials: materials.reflectiveAirSpaces }
+  ];
+  
+  const insulationOptions = prepareMaterialOptions({
+    "Isolants en fibre": materials.insulation.filter(m => 
+      m.name.toLowerCase().includes("fibre") || 
+      m.name.toLowerCase().includes("laine")
+    ),
+    "Isolants synthétiques": materials.insulation.filter(m => 
+      m.name.toLowerCase().includes("polystyrène") || 
+      m.name.toLowerCase().includes("polyurethane") ||
+      m.name.toLowerCase().includes("polyiso")
+    ),
+    "Autres isolants": materials.insulation.filter(m => 
+      !m.name.toLowerCase().includes("fibre") && 
+      !m.name.toLowerCase().includes("laine") &&
+      !m.name.toLowerCase().includes("polystyrène") &&
+      !m.name.toLowerCase().includes("polyurethane") &&
+      !m.name.toLowerCase().includes("polyiso")
+    )
+  });
+  
+  const sheatheningOptions = [
+    { name: "Revêtements d'ossature", materials: materials.sheathing }
+  ];
+  
+  const exteriorCladdingOptions = prepareMaterialOptions({
+    "Parements de bois": materials.woodCladding,
+    "Bardage métallique et vinyle": materials.metalVinylCladding,
+    "Maçonnerie": materials.masonry,
+    "Autres parements": materials.otherCladding
+  });
+  
+  const interiorFinishOptions = [
+    { name: "Finitions intérieures", materials: materials.interiorFinish }
+  ];
+  
+  const structuralOptions = prepareMaterialOptions({
+    "Bois": materials.wood,
+    "Béton": materials.concrete,
+    "Blocs de béton": materials.concreteBlocks
+  });
+  
+  const roofingOptions = [
+    { name: "Matériaux de toiture", materials: materials.roofingMaterials }
+  ];
+
+  // Éléments UI pour indiquer les conformités
+  const getComplianceIndicator = (isCompliant) => {
+    return isCompliant ? 
+      <span className="text-green-600 font-bold">Conforme ✓</span> : 
+      <span className="text-red-600 font-bold">Non conforme ✗</span>;
+  };
+
+  // Fonction pour décrire l'élément d'enveloppe sélectionné
+  const getEnvelopeComponentDescription = () => {
+    switch (envelopeComponent) {
+      case 'wall_above_grade':
+        return 'un mur hors sol';
+      case 'foundation_wall':
+        return 'un mur de fondation';
+      case 'roof':
+        return 'un toit ou plafond';
+      case 'floor':
+        return 'un plancher séparant un espace chauffé d\'un espace non chauffé';
+      case 'garage_ceiling':
+        return 'un plafond de garage chauffé';
+      case 'garage_walls_to_dwelling':
+        return 'des murs de garage chauffé contigus au logement';
+      case 'garage_foundation_wall':
+        return 'un mur de fondation de garage chauffé';
+      default:
+        return 'cet élément';
+    }
+  };
+  
+  // Fonction pour obtenir des recommandations spécifiques en fonction du composant et de la conformité
+  const getPontsThermiqueRecommendations = () => {
+    if (!results) return null;
+    
+    let recommendations = [];
+    
+    if (envelopeComponent === 'wall_above_grade') {
+      recommendations.push({
+        title: "Exigences pour les ponts thermiques des murs",
+        description: "Les éléments du bâtiment constituant un pont thermique doivent être recouverts de matériaux isolants ayant une résistance thermique minimale selon l'article 11.2.3.1. du Code:"
+      });
+      
+      recommendations.push({
+        title: "Pour une ossature de bois",
+        description: "- RSI 0,7 lorsque les éléments d'ossature sont espacés de moins de 600 mm d'entraxe\n- RSI 0,53 dans les autres cas"
+      });
+      
+      recommendations.push({
+        title: "Pour une ossature métallique",
+        description: "- RSI 1,76 lorsque les éléments d'ossature sont espacés de moins de 600 mm d'entraxe\n- RSI 1,32 dans les autres cas"
+      });
+      
+      recommendations.push({
+        title: "Pour une construction en béton",
+        description: "- RSI 0,88 minimum"
+      });
+      
+      recommendations.push({
+        title: "Note importante",
+        description: "Le matériau isolant doit couvrir les éléments du bâtiment constituant un pont thermique par l'extérieur, par l'intérieur ou par une combinaison des deux."
+      });
+    } 
+    else if (envelopeComponent === 'foundation_wall') {
+      recommendations.push({
+        title: "Exigences pour les fondations",
+        description: "Un mur de fondation dont plus de 50% de la surface est exposée à l'air extérieur, ainsi que la partie d'un mur de fondation qui est à ossature de bois, doivent avoir une résistance thermique totale égale à celle exigée pour un mur au-dessus du niveau du sol."
+      });
+      
+      recommendations.push({
+        title: "Bris thermique",
+        description: "L'article 11.2.3.3 exige que le matériau isolant placé entre le mur de fondation et le plancher sur sol ait une résistance thermique d'au moins RSI 1,32 jusqu'à une profondeur de 600 mm sous le niveau du sol."
+      });
+    }
+    else if (envelopeComponent === 'roof') {
+      recommendations.push({
+        title: "Résistance thermique à proximité des avant-toits",
+        description: "Selon l'article 11.2.2.3, la résistance thermique totale exigée pour un toit ou plafond peut être réduite à proximité de l'avant-toit lorsque nécessaire pour la ventilation, à condition de ne pas être inférieure à la valeur exigée pour un mur au-dessus du niveau du sol."
+      });
+      
+      recommendations.push({
+        title: "Toits plats",
+        description: "La résistance thermique totale pour les toits plats peut être réduite d'au plus 20% à son point le plus bas pour créer des pentes de drainage, à condition que la perte de chaleur totale ne soit pas supérieure à celle d'un toit conforme aux exigences."
+      });
+    }
+    else if (envelopeComponent === 'floor') {
+      recommendations.push({
+        title: "Ponts thermiques des planchers",
+        description: "Selon l'article 11.2.3.2, la résistance thermique des matériaux isolants recouvrant les ponts thermiques des planchers doit avoir une valeur d'au moins RSI 1,32 pour les planchers hors sol en porte-à-faux et les planchers situés au-dessus d'un espace non chauffé."
+      });
+    }
+    
+    return recommendations;
+  };
+  
+  // Fonction pour obtenir des recommandations générales sur la continuité de l'isolation
+  const getIsolationContinuityRecommendations = () => {
+    return [
+      {
+        title: "Continuité de l'isolation",
+        description: "Pour assurer la performance énergétique de l'enveloppe, l'isolation thermique doit être continue sur toute la surface de l'élément et les ponts thermiques doivent être minimisés selon les exigences du Code."
+      },
+      {
+        title: "Solive de rive",
+        description: "Selon l'article 11.2.3.1, la solive de rive doit être isolée de manière à posséder une valeur de résistance thermique totale équivalente à celle exigée pour un mur au-dessus du niveau du sol. Pour une construction de béton, une résistance thermique d'au moins RSI 1,76 est requise."
+      },
+      {
+        title: "Murs entre espaces chauffés",
+        description: "Lorsque le mur entre deux espaces chauffés crée un pont thermique, il doit être recouvert de matériaux isolants offrant une résistance thermique d'au moins RSI 2,20 de chaque côté du mur sur une distance minimale de 1,2 m à partir de la face extérieure du mur extérieur."
+      }
+    ];
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-4 text-center">Calculateur de Résistance Thermique</h1>
+      <p className="mb-6 text-center text-gray-700">
+        Calculez la résistance thermique totale (RSI<sub>T</sub>) et effective (RSI<sub>E</sub>) de l'enveloppe du bâtiment 
+        selon les exigences du Code de construction du Québec.
+      </p>
+      
+      <Accordion title="Informations sur le Code" defaultOpen={false}>
+        <div className="text-sm text-gray-700 space-y-4">
+          <p>
+            Le Code de construction du Québec comprend des exigences spécifiques relatives à l'efficacité énergétique des bâtiments:
+          </p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li><strong>Partie 11 du Code de construction du Québec (2015)</strong> - S'applique aux habitations d'au plus 3 étages et d'au plus 600 m² n'abritant que des logements.</li>
+          </ul>
+          <p>
+            <strong>Deux notions importantes à comprendre:</strong>
+          </p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li><strong>Résistance thermique totale (RSI<sub>T</sub>)</strong> - Calculée au droit de la partie isolée de la paroi, sans tenir compte des ponts thermiques.</li>
+            <li><strong>Résistance thermique effective (RSI<sub>E</sub>)</strong> - Tient compte de l'effet des ponts thermiques créés par les éléments de structure (poteaux, solives, linteaux, etc.).</li>
+          </ul>
+          <p>
+            Pour les bâtiments soumis à la Partie 11, la résistance thermique totale (RSI<sub>T</sub>) est la valeur principalement utilisée dans le Code. Cependant, la Régie du bâtiment du Québec (RBQ) reconnaît l'équivalence des valeurs de résistance thermique effective (RSI<sub>E</sub>) comme une méthode alternative de conformité. Selon le tableau disponible sur le site de la RBQ, ces valeurs équivalentes sont légèrement inférieures aux valeurs de résistance thermique totale prescrites, car elles tiennent compte de l'impact des ponts thermiques sur la performance réelle de l'enveloppe. Cette approche permet une plus grande flexibilité dans la conception tout en assurant une performance énergétique adéquate.
+          </p>
+        </div>
+      </Accordion>
+      
+      <Accordion title="Données générales du bâtiment" defaultOpen={true}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="form-group">
+            <label className="block text-sm font-medium mb-1">Municipalité:</label>
+            <select 
+              value={location} 
+              onChange={(e) => setLocation(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Sélectionnez une municipalité</option>
+              {municipalities.map(municipality => (
+                <option key={municipality.id} value={municipality.id}>
+                  {municipality.name} ({municipality.degreeDay} degrés-jours)
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="form-group">
+            <label className="block text-sm font-medium mb-1">Degrés-jours sous 18°C:</label>
+            <input 
+              type="number" 
+              value={degreeDays} 
+              onChange={(e) => {
+                setDegreeDays(e.target.value);
+                // Mettre à jour la zone climatique en fonction des degrés-jours
+                const dj = parseInt(e.target.value);
+                if (!isNaN(dj)) {
+                  setClimaticZone(dj < 6000 ? "< 6000" : ">= 6000");
+                }
+              }}
+              className="w-full p-2 border rounded"
+              placeholder="Ex: 4500"
+            />
+            {climaticZone && (
+              <div className="mt-1 text-sm">
+                Zone climatique: {climaticZone === "< 6000" ? "Moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}
+              </div>
+            )}
+          </div>
+          
+          <div className="form-group">
+            <label className="block text-sm font-medium mb-1">Type de bâtiment:</label>
+            <select 
+              value={buildingType} 
+              onChange={(e) => setBuildingType(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="residential_small">Habitation d'au plus 3 étages et d'au plus 600 m²</option>
+              <option value="residential_large">Habitation de plus de 3 étages ou de plus de 600 m²</option>
+              <option value="mixed">Habitation avec autres usages</option>
+              <option value="commercial">Bâtiment commercial</option>
+              <option value="industrial">Bâtiment industriel</option>
+              <option value="institutional">Bâtiment institutionnel</option>
+            </select>
+          </div>
+          
+          <div className="form-group">
+            <label className="block text-sm font-medium mb-1">Version du Code applicable:</label>
+            <select 
+              value={codeVersion} 
+              onChange={(e) => setCodeVersion(e.target.value)}
+              className="w-full p-2 border rounded"
+           >
+             <option value="part11">Partie 11 - Code de construction du Québec (2015)</option>
+           </select>
+         </div>
+         
+         <div className="form-group">
+           <label className="block text-sm font-medium mb-1">Composante de l'enveloppe à analyser:</label>
+           <select 
+             value={envelopeComponent} 
+             onChange={(e) => setEnvelopeComponent(e.target.value)}
+             className="w-full p-2 border rounded"
+           >
+             <option value="wall_above_grade">Mur hors sol</option>
+             <option value="foundation_wall">Mur de fondation</option>
+             <option value="roof">Toit ou plafond</option>
+             <option value="floor">Plancher séparant un espace chauffé d'un espace non chauffé</option>
+             <option value="garage_ceiling">Plafond de garage chauffé</option>
+             <option value="garage_walls_to_dwelling">Murs de garage chauffé contigus au logement</option>
+             <option value="garage_foundation_wall">Mur de fondation de garage chauffé</option>
+           </select>
+         </div>
+         
+         <div className="col-span-2">
+           <div className="p-4 bg-blue-50 border border-blue-200 rounded">
+             <h4 className="font-bold mb-2">Exigences minimales selon le Code</h4>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div>
+                 <h5 className="font-semibold mb-1">Résistance thermique totale (RSI<sub>T</sub>):</h5>
+                 <p className="text-sm">
+                   {climaticZone && envelopeComponent && 
+                     `${formatRSIR(minRSITotalValues[climaticZone][envelopeComponent])}`
+                   }
+                 </p>
+               </div>
+               <div>
+                 <h5 className="font-semibold mb-1">Résistance thermique effective (RSI<sub>E</sub>):</h5>
+                 <p className="text-sm">
+                   {climaticZone && envelopeComponent && 
+                     `${formatRSIR(minRSIEffectiveValues[climaticZone][envelopeComponent])}`
+                   }
+                 </p>
+               </div>
+             </div>
+           </div>
+         </div>
+       </div>
+     </Accordion>
+     
+     <Accordion title="Composition de l'enveloppe" defaultOpen={true}>
+       <div className="mb-4 flex flex-wrap gap-2">
+         <button 
+           onClick={() => addLayer('airfilm')} 
+           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+         >
+           + Film d'air
+         </button>
+         <button 
+           onClick={() => addLayer('airspace')} 
+           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+         >
+           + Lame d'air
+         </button>
+         <button 
+           onClick={() => addLayer('insulation')} 
+           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+         >
+           + Isolant
+         </button>
+         <button 
+           onClick={() => addLayer('sheathening')} 
+           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+         >
+           + Revêtement intermédiaire
+         </button>
+         <button 
+           onClick={() => addLayer('cladding')} 
+           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+         >
+           + Parement extérieur
+         </button>
+         <button 
+           onClick={() => addLayer('interior')} 
+           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+         >
+           + Finition intérieure
+         </button>
+         <button 
+           onClick={() => addLayer('structural')} 
+           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+         >
+           + Élément structural
+         </button>
+         <button 
+           onClick={() => addLayer('roofing')} 
+           className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+         >
+           + Matériau de toiture
+         </button>
+       </div>
+
+       {layers.length === 0 && (
+         <div className="p-4 border rounded bg-gray-50 text-center">
+           Ajoutez des couches de matériaux pour commencer l'analyse de votre composition d'enveloppe.
+         </div>
+       )}
+       
+       {layers.map((layer, index) => (
+         <div key={layer.id} className="border p-4 rounded mb-3 bg-gray-50">
+           <div className="flex justify-between items-start mb-2">
+             <h4 className="font-bold">
+               Couche {index + 1}: {layer.type === 'airfilm' ? 'Film d\'air' : 
+                                 layer.type === 'airspace' ? 'Lame d\'air' : 
+                                 layer.type === 'insulation' ? 'Isolant' : 
+                                 layer.type === 'sheathening' ? 'Revêtement intermédiaire' : 
+                                 layer.type === 'cladding' ? 'Parement extérieur' : 
+                                 layer.type === 'interior' ? 'Finition intérieure' : 
+                                 layer.type === 'roofing' ? 'Matériau de toiture' : 'Élément structural'}
+             </h4>
+             <div className="flex space-x-2">
+               <button 
+                 onClick={() => moveLayerUp(layer.id)} 
+                 disabled={index === 0}
+                 className={`text-blue-600 hover:text-blue-800 ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                 title="Déplacer vers le haut"
+               >
+                 ↑
+               </button>
+               <button 
+                 onClick={() => moveLayerDown(layer.id)} 
+                 disabled={index === layers.length - 1}
+                 className={`text-blue-600 hover:text-blue-800 ${index === layers.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                 title="Déplacer vers le bas"
+               >
+                 ↓
+               </button>
+               <button 
+                 onClick={() => removeLayer(layer.id)} 
+                 className="text-red-600 hover:text-red-800"
+                 title="Supprimer cette couche"
+               >
+                 ✕
+               </button>
+             </div>
+           </div>
+           
+           {layer.type === 'airfilm' && (
+             <MaterialSelector
+               categoryOptions={airFilmOptions}
+               value={layer.material}
+               onChange={(material) => updateLayer(layer.id, material)}
+               label="Sélectionnez un film d'air:"
+             />
+           )}
+           
+           {layer.type === 'airspace' && (
+             <MaterialSelector
+               categoryOptions={airSpaceOptions}
+               value={layer.material}
+               onChange={(material) => updateLayer(layer.id, material)}
+               label="Sélectionnez une lame d'air:"
+             />
+           )}
+           
+           {layer.type === 'insulation' && (
+             <MaterialSelector
+               categoryOptions={insulationOptions}
+               value={layer.material}
+               onChange={(material) => updateLayer(layer.id, material)}
+               label="Sélectionnez un isolant:"
+               showThickness={true}
+               defaultThickness={89}
+             />
+           )}
+           
+           {layer.type === 'sheathening' && (
+             <MaterialSelector
+               categoryOptions={sheatheningOptions}
+               value={layer.material}
+               onChange={(material) => updateLayer(layer.id, material)}
+               label="Sélectionnez un revêtement intermédiaire:"
+               showThickness={true}
+               defaultThickness={11}
+             />
+           )}
+           
+           {layer.type === 'cladding' && (
+             <MaterialSelector
+               categoryOptions={exteriorCladdingOptions}
+               value={layer.material}
+               onChange={(material) => updateLayer(layer.id, material)}
+               label="Sélectionnez un parement extérieur:"
+               showThickness={true}
+               defaultThickness={20}
+             />
+           )}
+           
+           {layer.type === 'interior' && (
+             <MaterialSelector
+               categoryOptions={interiorFinishOptions}
+               value={layer.material}
+               onChange={(material) => updateLayer(layer.id, material)}
+               label="Sélectionnez une finition intérieure:"
+               showThickness={true}
+               defaultThickness={13}
+             />
+           )}
+           
+           {layer.type === 'structural' && (
+             <MaterialSelector
+               categoryOptions={structuralOptions}
+               value={layer.material}
+               onChange={(material) => updateLayer(layer.id, material)}
+               label="Sélectionnez un élément structural:"
+               showThickness={true}
+               defaultThickness={89}
+             />
+           )}
+           
+           {layer.type === 'roofing' && (
+             <MaterialSelector
+               categoryOptions={roofingOptions}
+               value={layer.material}
+               onChange={(material) => updateLayer(layer.id, material)}
+               label="Sélectionnez un matériau de toiture:"
+               showThickness={true}
+               defaultThickness={10}
+             />
+           )}
+         </div>
+       ))}
+       
+       <button 
+         onClick={calculateResults}
+         className="w-full mt-4 bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700 transition"
+         disabled={layers.length === 0}
+       >
+         Calculer la performance thermique
+       </button>
+     </Accordion>
+     
+     {results && (
+       <div className="mt-6 border rounded p-6 bg-gray-50">
+         <h2 className="text-2xl font-bold mb-4">Résultats d'analyse</h2>
+         
+         <div className="mb-6">
+           <p className="mb-2">
+             Selon les données fournies, votre composition d'enveloppe atteint:
+           </p>
+           <ul className="list-disc pl-6 mb-4">
+             <li className="mb-1">
+               <strong>Résistance thermique totale (RSI<sub>T</sub>):</strong> {formatRSIR(results.totalRSI)}
+             </li>
+             <li>
+               <strong>Résistance thermique effective (RSI<sub>E</sub>):</strong> {formatRSIR(results.effectiveRSI)}
+             </li>
+           </ul>
+           
+           <p className="mb-2">
+             Exigences minimales selon le Code pour {getEnvelopeComponentDescription()} 
+             dans votre zone climatique ({climaticZone === "< 6000" ? "moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}):
+           </p>
+           <ul className="list-disc pl-6">
+             <li className="mb-1">
+               <strong>Résistance thermique totale minimale (RSI<sub>T</sub>):</strong> {formatRSIR(results.totalCompliance.minRSI)}
+             </li>
+             <li>
+               <strong>Résistance thermique effective minimale (RSI<sub>E</sub>):</strong> {formatRSIR(results.effectiveCompliance.minRSI)}
+             </li>
+           </ul>
+         </div>
+         
+         <h3 className="text-xl font-bold mb-3">Résistance thermique par couche</h3>
+         <div className="overflow-x-auto">
+           <table className="w-full border-collapse">
+             <thead>
+               <tr className="bg-gray-200">
+                 <th className="border px-4 py-2 text-left">Couche</th>
+                 <th className="border px-4 py-2 text-left">Matériau</th>
+                 <th className="border px-4 py-2 text-left">Épaisseur (mm)</th>
+                 <th className="border px-4 py-2 text-left">RSI (m²·K/W)</th>
+                 <th className="border px-4 py-2 text-left">R (pi²·°F·h/BTU)</th>
+               </tr>
+             </thead>
+             <tbody>
+               {layers.map((layer, index) => (
+                 <tr key={layer.id}>
+                   <td className="border px-4 py-2">{index + 1}. {layer.type === 'airfilm' ? 'Film d\'air' : 
+                                           layer.type === 'airspace' ? 'Lame d\'air' : 
+                                           layer.type === 'insulation' ? 'Isolant' : 
+                                           layer.type === 'sheathening' ? 'Revêtement intermédiaire' : 
+                                           layer.type === 'cladding' ? 'Parement extérieur' : 
+                                           layer.type === 'interior' ? 'Finition intérieure' : 
+                                           layer.type === 'roofing' ? 'Matériau de toiture' : 'Élément structural'}</td>
+                   <td className="border px-4 py-2">{layer.material ? layer.material.description || "—" : "—"}</td>
+                   <td className="border px-4 py-2">{layer.material && layer.material.thickness ? layer.material.thickness : "—"}</td>
+                   <td className="border px-4 py-2">{layer.material && layer.material.rsi ? layer.material.rsi.toFixed(3) : "—"}</td>
+                   <td className="border px-4 py-2">{layer.material && layer.material.rsi ? (layer.material.rsi * 5.678263).toFixed(3) : "—"}</td>
+                 </tr>
+               ))}
+               <tr className="font-bold bg-gray-100">
+                 <td className="border px-4 py-2" colSpan="3">Total</td>
+                 <td className="border px-4 py-2">{results.totalRSI.toFixed(3)}</td>
+                 <td className="border px-4 py-2">{(results.totalRSI * 5.678263).toFixed(3)}</td>
+               </tr>
+               <tr className="font-bold text-gray-600">
+                 <td className="border px-4 py-2" colSpan="3">Total effectif (avec ponts thermiques)</td>
+                 <td className="border px-4 py-2">{results.effectiveRSI.toFixed(3)}</td>
+                 <td className="border px-4 py-2">{(results.effectiveRSI * 5.678263).toFixed(3)}</td>
+               </tr>
+             </tbody>
+           </table>
+         </div>
+         
+         <h3 className="text-xl font-bold my-3">Résumé de conformité</h3>
+         <div className="overflow-x-auto">
+           <table className="w-full border-collapse">
+             <thead>
+               <tr className="bg-gray-200">
+                 <th className="border px-4 py-2 text-left">Mesure</th>
+                 <th className="border px-4 py-2 text-left">Valeur</th>
+                 <th className="border px-4 py-2 text-left">Exigence minimale</th>
+                 <th className="border px-4 py-2 text-left">Conformité</th>
+               </tr>
+             </thead>
+             <tbody>
+               <tr>
+                 <td className="border px-4 py-2">Résistance thermique totale (RSI<sub>T</sub>)</td>
+                 <td className="border px-4 py-2">{formatRSIR(results.totalRSI)}</td>
+                 <td className="border px-4 py-2">{formatRSIR(results.totalCompliance.minRSI)}</td>
+                 <td className="border px-4 py-2">
+                   {getComplianceIndicator(results.totalCompliance.compliant)}
+                 </td>
+               </tr>
+               <tr>
+                 <td className="border px-4 py-2">Résistance thermique effective (RSI<sub>E</sub>)</td>
+                 <td className="border px-4 py-2">{formatRSIR(results.effectiveRSI)}</td>
+                 <td className="border px-4 py-2">{formatRSIR(results.effectiveCompliance.minRSI)}</td>
+                 <td className="border px-4 py-2">
+                   {getComplianceIndicator(results.effectiveCompliance.compliant)}
+                 </td>
+               </tr>
+               <tr>
+                 <td className="border px-4 py-2">Coefficient U total</td>
+                 <td className="border px-4 py-2">{results.uValue !== null ? results.uValue.toFixed(3) + " W/(m²·K)" : "—"}</td>
+                 <td className="border px-4 py-2">—</td>
+                 <td className="border px-4 py-2">—</td>
+               </tr>
+               <tr>
+                 <td className="border px-4 py-2">Coefficient U effectif</td>
+                 <td className="border px-4 py-2">{results.uValueEffective !== null ? results.uValueEffective.toFixed(3) + " W/(m²·K)" : "—"}</td>
+                 <td className="border px-4 py-2">—</td>
+                 <td className="border px-4 py-2">—</td>
+               </tr>
+             </tbody>
+           </table>
+         </div>
+         
+         {/* Nouvelle section: Exigences spécifiques du Code */}
+         <h3 className="text-xl font-bold my-3">Exigences spécifiques du Code</h3>
+         
+         {/* Recommandations pour les ponts thermiques selon le type d'élément */}
+         {getPontsThermiqueRecommendations() && (
+           <div className="mb-4 bg-white rounded border p-4">
+             {getPontsThermiqueRecommendations().map((recommendation, index) => (
+               <div key={index} className="mb-3">
+                 <h4 className="font-bold text-blue-800">{recommendation.title}</h4>
+                 <p className="text-sm whitespace-pre-line">{recommendation.description}</p>
+               </div>
+             ))}
+           </div>
+         )}
+         
+         {/* Recommandations générales pour la continuité de l'isolation */}
+         <div className="mb-4 bg-white rounded border p-4">
+           {getIsolationContinuityRecommendations().map((recommendation, index) => (
+             <div key={index} className="mb-3">
+               <h4 className="font-bold text-blue-800">{recommendation.title}</h4>
+               <p className="text-sm">{recommendation.description}</p>
+             </div>
+           ))}
+         </div>
+         
+         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+           <h4 className="font-bold mb-2">Notes importantes:</h4>
+           <ul className="list-disc pl-6 text-sm space-y-2">
+             <li>
+               <strong>Résistance thermique totale (RSI<sub>T</sub>):</strong> Calculée au droit de la partie isolée de la paroi, 
+               sans tenir compte des ponts thermiques.
+             </li>
+             <li>
+               <strong>Résistance thermique effective (RSI<sub>E</sub>):</strong> Tient compte de l'effet des ponts thermiques. 
+               Pour cette analyse simplifiée, nous avons utilisé une approximation (85% de la résistance thermique totale). 
+               Pour une analyse plus précise, consultez un professionnel ou référez-vous à la méthode de calcul détaillée 
+               dans l'annexe A-9.36.2.4. 1) du Code national du bâtiment.
+             </li>
+             <li>
+               <strong>Exigences de la Partie 11:</strong> Les bâtiments doivent se conformer aux exigences prescriptives de 
+               résistance thermique totale (RSI<sub>T</sub>) ou utiliser la méthode alternative de résistance thermique effective (RSI<sub>E</sub>). 
+               La réduction des ponts thermiques est obligatoire selon la section 11.2.3 du Code.
+             </li>
+             <li>
+               <strong>Conformité par méthode alternative:</strong> Selon l'article 11.2.2.1. 3), une résistance thermique inférieure 
+               aux exigences peut être acceptable si une analyse énergétique démontre que la consommation annuelle d'énergie de la 
+               construction proposée ne dépasse pas celle d'une construction de référence conforme.
+             </li>
+           </ul>
+         </div>
+       </div>
+     )}
+   </div>
+  );
+};
+
+// Rendu du composant principal
+ReactDOM.render(<Calculator />, document.getElementById('root'));
