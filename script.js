@@ -490,18 +490,18 @@ let chart = null;
 document.addEventListener('DOMContentLoaded', function() {
   // Initialiser les sélecteurs
   initializeMunicipalitySelect();
-  
+
   // Initialiser le graphique
   initializeChart();
-  
+
   // Ajouter quelques couches par défaut pour démonstration
   addDefaultLayers();
-  
+
   // Mettre à jour les affichages
   updateLayersDisplay();
   updateMaterialsSummary();
   updateMinRSIDisplay();
-  
+
   // Connecter les événements
   document.getElementById('calculate-btn').addEventListener('click', calculateResults);
   document.getElementById('location').addEventListener('change', updateLocation);
@@ -512,7 +512,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('temp-ext').addEventListener('change', calculateGradient);
   document.getElementById('temp-int').addEventListener('change', calculateGradient);
   document.getElementById('humidity').addEventListener('change', calculateGradient);
-  
+
   // S'assurer que les accordéons importants sont ouverts
   document.getElementById('params-section').classList.remove('hidden');
   document.getElementById('composition-section').classList.remove('hidden');
@@ -555,7 +555,7 @@ function initializeChart() {
       },
       plugins: {
         annotation: {
-          annotations: {}
+          annotations: []
         }
       }
     }
