@@ -555,7 +555,7 @@ function initializeChart() {
       },
       plugins: {
         annotation: {
-          annotations: []
+          annotations: {}
         }
       }
     }
@@ -840,20 +840,20 @@ function generateMaterialCategories(type) {
   const container = document.getElementById('material-categories');
   container.innerHTML = '';
   
-  let materialOptions = [];
+  let materialCategories = [];
   
   switch (type) {
     case 'airfilm':
-      materialOptions = [{ name: "Films d'air", materials: materials.airFilms }];
+      materialCategories = [{ name: "Films d'air", materials: materials.airFilms }];
       break;
     case 'airspace':
-      materialOptions = [
+      materialCategories = [
         { name: "Lames d'air non réfléchissantes", materials: materials.airSpaces },
         { name: "Lames d'air réfléchissantes", materials: materials.reflectiveAirSpaces }
       ];
       break;
     case 'insulation':
-      materialOptions = [
+      materialCategories = [
         { name: "Isolants en nattes", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('nattes')) },
         { name: "Polystyrène", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('polystyrène')) },
         { name: "Polyisocyanurate", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('polyiso')) },
@@ -865,40 +865,40 @@ function generateMaterialCategories(type) {
       ];
       break;
     case 'sheathening':
-      materialOptions = [{ name: "Revêtements d'ossature", materials: materials.sheathing }];
+      materialCategories = [{ name: "Revêtements d'ossature", materials: materials.sheathing }];
       break;
     case 'cladding':
-      materialOptions = [
+      materialCategories = [
         { name: "Parements de bois", materials: materials.woodCladding },
         { name: "Autres parements", materials: materials.otherCladding }
       ];
       break;
     case 'interior':
-      materialOptions = [{ name: "Finitions intérieures", materials: materials.interiorFinish }];
+      materialCategories = [{ name: "Finitions intérieures", materials: materials.interiorFinish }];
       break;
     case 'structural':
-      materialOptions = [
+      materialCategories = [
         { name: "Bois", materials: materials.wood },
         { name: "Béton", materials: materials.concrete },
         { name: "Blocs de béton", materials: materials.concreteBlocks }
       ];
       break;
     case 'roofing':
-      materialOptions = [{ name: "Matériaux de toiture", materials: materials.roofingMaterials }];
+      materialCategories = [{ name: "Matériaux de toiture", materials: materials.roofingMaterials }];
       break;
   }
   
-  materialOptions.forEach(category => {
-    const div = document.createElement('div');
-    div.className = 'mb-4';
+  materialCategories.forEach(category => {
+    const categoryDiv = document.createElement('div');
+    categoryDiv.className = 'mb-4';
     
     const title = document.createElement('h5');
     title.className = 'font-semibold mb-2 text-sm';
     title.textContent = category.name;
-    div.appendChild(title);
+    categoryDiv.appendChild(title);
     
-    const materialList = document.createElement('div');
-    materialList.className = 'space-y-1';
+    const materialsList = document.createElement('div');
+    materialsList.className = 'space-y-1';
     
     category.materials.forEach(material => {
       const button = document.createElement('button');
@@ -906,11 +906,11 @@ function generateMaterialCategories(type) {
       button.textContent = material.name;
       button.onclick = () => selectMaterial(material);
       
-      materialList.appendChild(button);
+      materialsList.appendChild(button);
     });
     
-    div.appendChild(materialList);
-    container.appendChild(div);
+    categoryDiv.appendChild(materialsList);
+    container.appendChild(categoryDiv);
   });
 }
 
