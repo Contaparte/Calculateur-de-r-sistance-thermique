@@ -251,6 +251,100 @@ function calculateGradient() {
   }
 }
 
+// Fonction pour calculer le point de rosée
+function calculateDewPoint(temp, rh) {
+  // Calculer la pression de vapeur d'eau
+  function getSaturationPressure(temperature) {
+    // Trouver les deux points les plus proches dans la table
+    let lowerPoint = saturationTable[0];
+    let upperPoint = saturationTable[saturationTable.length - 1];
+    
+    for (let i = 0; i < saturationTable.length; i++) {
+      if (saturationTable[i].temp <= temperature) {
+        lowerPoint = saturationTable[i];
+      }
+      if (saturationTable[i].temp >= temperature && saturationTable[i].temp < upperPoint.temp) {
+        upperPoint = saturationTable[i];
+      }
+    }
+    
+    // Si les températures sont égales (par exemple, température exacte dans la table)
+    if (lowerPoint.temp === upperPoint.temp) {
+      return lowerPoint.pressure;
+    }
+    
+    // Interpolation linéaire
+    const ratio = (temperature - lowerPoint.temp) / (upperPoint.temp - lowerPoint.temp);
+    return lowerPoint.pressure + ratio * (upperPoint.pressure - lowerPoint.pressure);
+  }
+  
+  // Calculer la pression de vapeur d'eau actuelle
+  const saturationPressure = getSaturationPressure(temp);
+  const vaporPressure = (rh / 100) * saturationPressure;
+  
+  // Trouver la température de rosée (température à laquelle la pression de saturation = pression de vapeur actuelle)
+  let dewPoint = -60; // Démarrer avec une valeur basse
+  
+  // Recherche par incréments de 0.1°C
+  while (dewPoint < 65) {
+    const pressureAtDewPoint = getSaturationPressure(dewPoint);
+    if (Math.abs(pressureAtDewPoint - vaporPressure) < 0.01) {
+      break;
+    }
+    if (pressureAtDewPoint > vaporPressure) {
+      // Ajuster pour plus de précision
+      dewPoint -= 0.1;
+      break;
+    }
+    dewPoint += 0.1;
+  }
+  
+  return Math.round(dewPoint * 10) / 10; // Arrondir à 0.1 près
+}
+
+// Fonction pour trouver la position du point de rosée
+function findDewPointPosition(temperatures, positions, dewPoint) {
+  let dewPointFound = false;
+  let dewPointPosition = null;
+  let dewPointMaterialIndex = null;
+  
+  for (let i = 0; i < temperatures.length - 1; i++) {
+    // Si le point de rosée est entre deux températures
+    if ((temperatures[i] <= dewPoint && temperatures[i+1] >= dewPoint) ||
+        (temperatures[i] >= dewPoint && temperatures[i+1] <= dewPoint)) {
+      dewPointFound = true;
+      
+      // Interpolation linéaire pour trouver la position exacte
+      const ratio = Math.abs((dewPoint - temperatures[i]) / (temperatures[i+1] - temperatures[i]));
+      dewPointPosition = positions[i] + ratio * (positions[i+1] - positions[i]);
+      dewPointMaterialIndex = i;
+      break;
+    }
+  }
+  
+  return {
+    found: dewPointFound,
+    position: dewPointPosition,
+    materialIndex: dewPointMaterialIndex
+  };
+}
+
+// Fonction pour générer une couleur à partir d'une chaîne
+function generateColorFromString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xFF;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+  
+  return color;
+}
+
 // Rendre la visualisation des matériaux
 function renderMaterialsVisualization(dewPointPosition = null) {
   const container = document.getElementById('material-viz');
@@ -297,6 +391,47 @@ function renderMaterialsVisualization(dewPointPosition = null) {
     marker.title = 'Point de rosée';
     container.appendChild(marker);
   }
+}
+
+// Mettre à jour le graphique avec les nouvelles données
+function updateChart(positions, temperatures, dewPoint, dewPointPosition) {
+  chart.data.labels = positions;
+  chart.data.datasets[0].data = temperatures;
+  
+  // Ajouter la ligne horizontale pour le point de rosée
+  chart.options.plugins.annotation = {
+    annotations: {}
+  };
+  
+  if (dewPoint !== null) {
+    chart.options.plugins.annotation.annotations.dewPointLine = {
+      type: 'line',
+      yMin: dewPoint,
+      yMax: dewPoint,
+      borderColor: 'red',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      label: {
+        content: `Point de rosée (${dewPoint.toFixed(1)}°C)`,
+        position: 'right',
+        color: 'red',
+        enabled: true
+      }
+    };
+  }
+  
+  if (dewPointPosition !== null) {
+    chart.options.plugins.annotation.annotations.dewPointPosition = {
+      type: 'line',
+      xMin: dewPointPosition,
+      xMax: dewPointPosition,
+      borderColor: 'red',
+      borderWidth: 2,
+      borderDash: [5, 5]
+    };
+  }
+  
+  chart.update();
 }
 
 // Vérifier la conformité au code
@@ -493,33 +628,682 @@ function toggleAccordion(sectionId) {
   }
 }
 
-// Initialisation de l'application
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialiser les sélecteurs
-  initializeMunicipalitySelect();
+// Initialiser le sélecteur de municipalité
+function initializeMunicipalitySelect() {
+  const select = document.getElementById('location');
   
-  // Initialiser le graphique
-  initializeChart();
+  // S'assurer que le select existe
+  if (!select) {
+    console.error("L'élément 'location' n'a pas été trouvé");
+    return;
+  }
+
+  // Vider le select d'abord pour éviter les duplications
+  select.innerHTML = '<option value="">Sélectionnez une municipalité</option>';
   
-  // Ajouter quelques couches par défaut pour démonstration
-  addDefaultLayers();
+  // Trier les municipalités par nom
+  const sortedMunicipalities = [...municipalities].sort((a, b) => a.name.localeCompare(b.name));
   
-  // Mettre à jour les affichages
+  sortedMunicipalities.forEach(municipality => {
+    const option = document.createElement('option');
+    option.value = municipality.id;
+    option.textContent = `${municipality.name} (${municipality.degreeDay} degrés-jours)`;
+    select.appendChild(option);
+  });
+}
+
+// Mettre à jour les informations basées sur la municipalité
+function updateLocation() {
+  const select = document.getElementById('location');
+  
+  if (!select) {
+    console.error("L'élément 'location' n'a pas été trouvé");
+    return;
+  }
+  
+  selectedLocation = select.value;
+  
+  if (selectedLocation) {
+    const municipality = municipalities.find(m => m.id === selectedLocation);
+    if (municipality) {
+      const degreeDaysInput = document.getElementById('degree-days');
+      if (degreeDaysInput) {
+        degreeDaysInput.value = municipality.degreeDay;
+        degreeDays = municipality.degreeDay;
+      }
+      climaticZone = municipality.zone;
+      updateClimaticZoneDisplay();
+      updateMinRSIDisplay();
+    }
+  }
+}
+
+// Mettre à jour les informations basées sur les degrés-jours
+function updateDegreeDays() {
+  const input = document.getElementById('degree-days');
+  
+  if (!input) {
+    console.error("L'élément 'degree-days' n'a pas été trouvé");
+    return;
+  }
+  
+  degreeDays = input.value;
+  
+  if (degreeDays && !isNaN(degreeDays)) {
+    const dj = parseInt(degreeDays);
+    climaticZone = dj < 6000 ? "< 6000" : ">= 6000";
+    updateClimaticZoneDisplay();
+    updateMinRSIDisplay();
+  }
+}
+
+// Mettre à jour l'affichage de la zone climatique
+function updateClimaticZoneDisplay() {
+  const display = document.getElementById('climatic-zone-display');
+  
+  if (!display) {
+    console.error("L'élément 'climatic-zone-display' n'a pas été trouvé");
+    return;
+  }
+  
+  if (climaticZone) {
+    display.textContent = `Zone climatique: ${climaticZone === "< 6000" ? "Moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}`;
+  } else {
+    display.textContent = "";
+  }
+}
+
+// Mettre à jour l'affichage des valeurs minimales de RSI
+function updateMinRSIDisplay() {
+  const rsiTotalDisplay = document.getElementById('min-rsit-display');
+  const rsiEffectiveDisplay = document.getElementById('min-rsie-display');
+  
+  if (!rsiTotalDisplay || !rsiEffectiveDisplay) {
+    console.error("Les éléments d'affichage RSI n'ont pas été trouvés");
+    return;
+  }
+  
+  if (climaticZone && envelopeComponent) {
+    const rsiTotal = minRSITotalValues[climaticZone][envelopeComponent];
+    const rsiEffective = minRSIEffectiveValues[climaticZone][envelopeComponent];
+    
+    rsiTotalDisplay.textContent = formatRSIR(rsiTotal);
+    rsiEffectiveDisplay.textContent = formatRSIR(rsiEffective);
+  } else {
+    rsiTotalDisplay.textContent = "—";
+    rsiEffectiveDisplay.textContent = "—";
+  }
+}
+
+// Mettre à jour le type de bâtiment
+function updateBuildingType() {
+  const select = document.getElementById('building-type');
+  
+  if (!select) {
+    console.error("L'élément 'building-type' n'a pas été trouvé");
+    return;
+  }
+  
+  buildingType = select.value;
+}
+
+// Mettre à jour la version du code
+function updateCodeVersion() {
+  const select = document.getElementById('code-version');
+  
+  if (!select) {
+    console.error("L'élément 'code-version' n'a pas été trouvé");
+    return;
+  }
+  
+  codeVersion = select.value;
+}
+
+// Mettre à jour le composant d'enveloppe
+function updateEnvelopeComponent() {
+  const select = document.getElementById('envelope-component');
+  
+  if (!select) {
+    console.error("L'élément 'envelope-component' n'a pas été trouvé");
+    return;
+  }
+  
+  envelopeComponent = select.value;
+  updateMinRSIDisplay();
+}
+
+// Initialisation du graphique
+function initializeChart() {
+  const ctx = document.getElementById('chart').getContext('2d');
+  
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Température (°C)',
+        data: [],
+        borderColor: '#1e88e5',
+        backgroundColor: 'rgba(30, 136, 229, 0.1)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Position (mm)'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Température (°C)'
+          }
+        }
+      },
+      plugins: {
+        annotation: {
+          annotations: {}
+        }
+      }
+    }
+  });
+}
+
+// Ajouter un matériau
+function addLayer(type) {
+  selectedLayerType = type;
+  selectedLayerIndex = null;
+  selectedMaterialId = null;
+  
+  // Afficher le sélecteur de matériaux
+  const materialSelector = document.getElementById('material-selector');
+  const materialSelectorTitle = document.getElementById('material-selector-title');
+  
+  if (!materialSelector || !materialSelectorTitle) {
+    console.error("Des éléments du sélecteur de matériaux n'ont pas été trouvés");
+    return;
+  }
+  
+  // Définir le titre selon le type de matériau
+  let title = "Sélectionner un matériau";
+  switch (type) {
+    case 'airfilm':
+      title = "Sélectionner un film d'air";
+      break;
+    case 'airspace':
+      title = "Sélectionner une lame d'air";
+      break;
+    case 'insulation':
+      title = "Sélectionner un isolant";
+      break;
+    case 'structural':
+      title = "Sélectionner un élément structural";
+      break;
+    case 'cladding':
+      title = "Sélectionner un parement extérieur";
+      break;
+    case 'sheathening':
+      title = "Sélectionner un revêtement intermédiaire";
+      break;
+    case 'interior':
+      title = "Sélectionner une finition intérieure";
+      break;
+    case 'roofing':
+      title = "Sélectionner un matériau de toiture";
+      break;
+  }
+  
+  materialSelectorTitle.textContent = title;
+  
+  // Générer les boutons de catégories de matériaux
+  generateMaterialCategoryButtons(type);
+  
+  // Afficher le sélecteur
+  materialSelector.classList.remove('hidden');
+  
+  // Masquer le message "aucune couche"
+  const noLayersMessage = document.getElementById('no-layers-message');
+  if (noLayersMessage) {
+    noLayersMessage.classList.add('hidden');
+  }
+}
+
+// Mettre à jour l'affichage des couches
+function updateLayersDisplay() {
+  const container = document.getElementById('layers-container');
+  
+  if (!container) {
+    console.error("L'élément 'layers-container' n'a pas été trouvé");
+    return;
+  }
+  
+  // Vider le conteneur
+  container.innerHTML = '';
+  
+  // Afficher ou masquer le message "aucune couche"
+  const noLayersMessage = document.getElementById('no-layers-message');
+  
+  if (!noLayersMessage) {
+    console.error("L'élément 'no-layers-message' n'a pas été trouvé");
+    return;
+  }
+  
+  if (layers.length === 0) {
+    noLayersMessage.classList.remove('hidden');
+    return;
+  } else {
+    noLayersMessage.classList.add('hidden');
+  }
+  
+  // Afficher chaque couche
+  layers.forEach((layer, index) => {
+    const layerDiv = document.createElement('div');
+    layerDiv.className = 'flex flex-wrap items-center border p-2 rounded mb-2 relative bg-gray-50';
+    
+    // Couleur indicative selon le type de matériau
+    let indicatorColor = '#ccc';
+    switch (layer.type) {
+      case 'airfilm': indicatorColor = '#e3f2fd'; break;
+      case 'airspace': indicatorColor = '#bbdefb'; break;
+      case 'insulation': indicatorColor = '#f3e5f5'; break;
+      case 'structural': indicatorColor = '#ffe0b2'; break;
+      case 'cladding': indicatorColor = '#dcedc8'; break;
+      case 'sheathening': indicatorColor = '#c8e6c9'; break;
+      case 'interior': indicatorColor = '#e1bee7'; break;
+      case 'roofing': indicatorColor = '#d1c4e9'; break;
+    }
+    
+    const indicator = document.createElement('div');
+    indicator.className = 'mr-3 h-10 w-2 rounded';
+    indicator.style.backgroundColor = indicatorColor;
+    
+    // Ajout de la barre colorée
+    layerDiv.appendChild(indicator);
+    
+    // Informations du matériau
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'flex-grow mr-2';
+    
+    const title = document.createElement('div');
+    title.className = 'font-bold';
+    title.textContent = layer.material ? layer.material.name : 'Matériau non sélectionné';
+    
+    const description = document.createElement('div');
+    description.className = 'text-sm text-gray-600';
+    if (layer.material) {
+      const thickness = layer.material.thickness ? `${layer.material.thickness} mm` : 'N/A';
+      const rsi = layer.material.rsi ? layer.material.rsi.toFixed(3) : 'N/A';
+      const r = layer.material.rsi ? (layer.material.rsi * 5.678).toFixed(1) : 'N/A';
+      description.textContent = `Épaisseur: ${thickness} | RSI: ${rsi} (R-${r})`;
+    } else {
+      description.textContent = 'Cliquez sur "Modifier" pour sélectionner un matériau';
+    }
+    
+    infoDiv.appendChild(title);
+    infoDiv.appendChild(description);
+    
+    layerDiv.appendChild(infoDiv);
+    
+    // Boutons d'action
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'flex space-x-1';
+    
+    // Bouton Monter
+    if (index > 0) {
+      const upButton = document.createElement('button');
+      upButton.className = 'px-2 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300';
+      upButton.innerHTML = '&#9650;';
+      upButton.title = 'Déplacer vers le haut';
+      upButton.onclick = () => moveLayerUp(index);
+      actionsDiv.appendChild(upButton);
+    }
+    
+    // Bouton Descendre
+    if (index < layers.length - 1) {
+      const downButton = document.createElement('button');
+      downButton.className = 'px-2 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300';
+      downButton.innerHTML = '&#9660;';
+      downButton.title = 'Déplacer vers le bas';
+      downButton.onclick = () => moveLayerDown(index);
+      actionsDiv.appendChild(downButton);
+    }
+    
+    // Bouton Modifier
+    const editButton = document.createElement('button');
+    editButton.className = 'px-2 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600';
+    editButton.textContent = 'Modifier';
+    editButton.onclick = () => {
+      // Logique pour modifier une couche
+      editLayer(index);
+    };
+    actionsDiv.appendChild(editButton);
+    
+    // Bouton Supprimer
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600';
+    deleteButton.textContent = 'Supprimer';
+    deleteButton.onclick = () => removeLayer(index);
+    actionsDiv.appendChild(deleteButton);
+    
+    layerDiv.appendChild(actionsDiv);
+    
+    // Ajouter la couche au conteneur
+    container.appendChild(layerDiv);
+  });
+}
+
+// Modifier une couche existante
+function editLayer(index) {
+  if (index < 0 || index >= layers.length) return;
+  
+  const layer = layers[index];
+  selectedLayerType = layer.type;
+  selectedLayerIndex = index;
+  
+  // Afficher le sélecteur de matériaux
+  const materialSelector = document.getElementById('material-selector');
+  const materialSelectorTitle = document.getElementById('material-selector-title');
+  
+  if (!materialSelector || !materialSelectorTitle) {
+    console.error("Des éléments du sélecteur de matériaux n'ont pas été trouvés");
+    return;
+  }
+  
+  // Définir le titre
+  materialSelectorTitle.textContent = `Modifier ${layer.material ? layer.material.name : 'le matériau'}`;
+  
+  // Générer les boutons de catégories de matériaux
+  generateMaterialCategoryButtons(layer.type);
+  
+  // Afficher le sélecteur
+  materialSelector.classList.remove('hidden');
+}
+
+// Mettre à jour le tableau récapitulatif des matériaux
+function updateMaterialsSummary() {
+  const tbody = document.getElementById('materials-summary-body');
+  const totalRsiElement = document.getElementById('total-rsi');
+  const totalRElement = document.getElementById('total-r');
+  const totalEffectiveRsiElement = document.getElementById('total-effective-rsi');
+  const totalEffectiveRElement = document.getElementById('total-effective-r');
+  
+  if (!tbody || !totalRsiElement || !totalRElement || !totalEffectiveRsiElement || !totalEffectiveRElement) {
+    console.error("Des éléments du tableau récapitulatif n'ont pas été trouvés");
+    return;
+  }
+  
+  // Vider le tableau
+  tbody.innerHTML = '';
+  
+  // Calculer les totaux
+  let totalRsi = 0;
+  
+  // Ajouter chaque matériau au tableau
+  layers.forEach((layer, index) => {
+    if (!layer.material) return;
+    
+    const tr = document.createElement('tr');
+    
+    // Colonne Layer
+    const layerCell = document.createElement('td');
+    layerCell.className = 'border px-4 py-2';
+    layerCell.textContent = `Couche ${index + 1}`;
+    tr.appendChild(layerCell);
+    
+    // Colonne Matériau
+    const materialCell = document.createElement('td');
+    materialCell.className = 'border px-4 py-2';
+    materialCell.textContent = layer.material.name;
+    tr.appendChild(materialCell);
+    
+    // Colonne Épaisseur
+    const thicknessCell = document.createElement('td');
+    thicknessCell.className = 'border px-4 py-2';
+    thicknessCell.textContent = layer.material.thickness || 'N/A';
+    tr.appendChild(thicknessCell);
+    
+    // Colonne RSI
+    const rsiCell = document.createElement('td');
+    rsiCell.className = 'border px-4 py-2';
+    rsiCell.textContent = layer.material.rsi.toFixed(3);
+    tr.appendChild(rsiCell);
+    
+    // Colonne R
+    const rCell = document.createElement('td');
+    rCell.className = 'border px-4 py-2';
+    rCell.textContent = (layer.material.rsi * 5.678).toFixed(3);
+    tr.appendChild(rCell);
+    
+    // Ajouter la ligne au tableau
+    tbody.appendChild(tr);
+    
+    // Ajouter au total
+    totalRsi += layer.material.rsi;
+  });
+  
+  // Mettre à jour les totaux
+  totalRsiElement.textContent = totalRsi.toFixed(3);
+  totalRElement.textContent = (totalRsi * 5.678).toFixed(3);
+  
+  // Calculer la résistance thermique effective (simplifiée)
+  const effectiveRsi = totalRsi * 0.85;
+  totalEffectiveRsiElement.textContent = effectiveRsi.toFixed(3);
+  totalEffectiveRElement.textContent = (effectiveRsi * 5.678).toFixed(3);
+}
+
+// Annuler la sélection de matériau
+function cancelMaterialSelection() {
+  const materialSelector = document.getElementById('material-selector');
+  
+  if (!materialSelector) {
+    console.error("L'élément 'material-selector' n'a pas été trouvé");
+    return;
+  }
+  
+  materialSelector.classList.add('hidden');
+  
+  // Réinitialiser les variables de sélection
+  selectedLayerType = null;
+  selectedLayerIndex = null;
+  selectedMaterialId = null;
+  selectedMaterialCategory = null;
+  selectedThickness = 25;
+}
+
+// Confirmer la sélection de matériau
+function confirmMaterialSelection() {
+  if (!selectedMaterialId) {
+    alert("Veuillez sélectionner un matériau.");
+    return;
+  }
+  
+  // Trouver le matériau sélectionné dans la base de données
+  let selectedMaterialObj = null;
+  
+  for (const category in materials) {
+    const foundMaterial = materials[category].find(m => m.id === selectedMaterialId);
+    if (foundMaterial) {
+      selectedMaterialObj = {...foundMaterial};
+      break;
+    }
+  }
+  
+  if (!selectedMaterialObj) {
+    console.error(`Matériau avec ID '${selectedMaterialId}' non trouvé`);
+    return;
+  }
+  
+  // Appliquer l'épaisseur sélectionnée si le matériau a une valeur RSI par mm
+  if (selectedMaterialObj.rsiPerMm !== undefined) {
+    selectedMaterialObj.thickness = selectedThickness;
+    selectedMaterialObj.rsi = selectedMaterialObj.rsiPerMm * selectedThickness;
+  }
+  
+  // Créer ou mettre à jour la couche
+  if (selectedLayerIndex !== null && selectedLayerIndex >= 0 && selectedLayerIndex < layers.length) {
+    // Modifier une couche existante
+    layers[selectedLayerIndex].material = selectedMaterialObj;
+  } else {
+    // Ajouter une nouvelle couche
+    layers.push({
+      id: Date.now(),
+      type: selectedLayerType,
+      material: selectedMaterialObj
+    });
+  }
+  
+  // Mettre à jour l'affichage
   updateLayersDisplay();
   updateMaterialsSummary();
   
-  // Événements du sélecteur d'épaisseur
-  const thicknessSelect = document.getElementById('thickness-select');
+  // Masquer le sélecteur
+  cancelMaterialSelection();
+}
+
+// Sélectionner un matériau
+function selectMaterial(material) {
+  selectedMaterialId = material.id;
+  selectedMaterial = material;
+  
+  // Mettre à jour l'affichage de la résistance thermique
+  const rsiDisplay = document.getElementById('material-rsi-display');
+  const rsiValue = document.getElementById('material-rsi-value');
+  const descriptionElem = document.getElementById('material-description');
+  const thicknessSelector = document.getElementById('thickness-selector');
+  
+  if (!rsiDisplay || !rsiValue || !descriptionElem || !thicknessSelector) {
+    console.error("Des éléments d'affichage du matériau sélectionné n'ont pas été trouvés");
+    return;
+  }
+  
+  // Si le matériau a une valeur RSI fixe
+  if (material.rsi !== undefined) {
+    rsiValue.textContent = formatRSIR(material.rsi);
+    rsiDisplay.classList.remove('hidden');
+    thicknessSelector.classList.add('hidden');
+  } 
+  // Si le matériau a une valeur RSI par mm (nécessite une épaisseur)
+  else if (material.rsiPerMm !== undefined) {
+    // Afficher le sélecteur d'épaisseur
+    initializeThicknessSelector(material);
+    thicknessSelector.classList.remove('hidden');
+    
+    // Calculer le RSI basé sur l'épaisseur par défaut ou existante
+    const thickness = material.thickness || selectedThickness || 25;
+    const rsi = material.rsiPerMm * thickness;
+    rsiValue.textContent = formatRSIR(rsi);
+    rsiDisplay.classList.remove('hidden');
+  }
+  
+  // Afficher la description
+  if (material.description) {
+    descriptionElem.textContent = material.description;
+  } else {
+    descriptionElem.textContent = "";
+  }
+}
+
+// Initialiser le sélecteur d'épaisseur
+function initializeThicknessSelector(material) {
+  const select = document.getElementById('thickness-select');
+  const customThicknessDiv = document.getElementById('custom-thickness');
   const customThicknessInput = document.getElementById('custom-thickness-input');
   
-  if (thicknessSelect) {
-    thicknessSelect.addEventListener('change', handleThicknessChange);
+  if (!select || !customThicknessDiv || !customThicknessInput) {
+    console.error("Des éléments du sélecteur d'épaisseur n'ont pas été trouvés");
+    return;
   }
   
-  if (customThicknessInput) {
-    customThicknessInput.addEventListener('change', handleCustomThicknessChange);
+  select.innerHTML = '';
+  
+  thicknessOptions.forEach(option => {
+    const optElem = document.createElement('option');
+    optElem.value = option.value;
+    optElem.textContent = option.label;
+    select.appendChild(optElem);
+  });
+  
+  // Si le matériau a déjà une épaisseur définie, l'utiliser
+  if (material.thickness) {
+    // Trouver l'option correspondante ou mettre à "personnalisée"
+    const matchingOption = thicknessOptions.find(opt => opt.value === material.thickness);
+    select.value = matchingOption ? material.thickness : 'custom';
+    
+    if (select.value === 'custom') {
+      customThicknessDiv.classList.remove('hidden');
+      customThicknessInput.value = material.thickness;
+    }
+    
+    selectedThickness = material.thickness;
+  } else {
+    // Valeur par défaut selon le type de matériau
+    let defaultThickness = 25;
+    if (selectedLayerType === 'insulation') defaultThickness = 89;
+    if (selectedLayerType === 'sheathening') defaultThickness = 11;
+    if (selectedLayerType === 'cladding') defaultThickness = 20;
+    if (selectedLayerType === 'interior') defaultThickness = 13;
+    if (selectedLayerType === 'structural') defaultThickness = 89;
+    if (selectedLayerType === 'roofing') defaultThickness = 10;
+    
+    select.value = defaultThickness;
+    selectedThickness = defaultThickness;
   }
-});
+}
+
+// Gérer le changement d'épaisseur
+function handleThicknessChange() {
+  const select = document.getElementById('thickness-select');
+  const customThicknessDiv = document.getElementById('custom-thickness');
+  
+  if (!select || !customThicknessDiv) {
+    console.error("Des éléments du sélecteur d'épaisseur n'ont pas été trouvés");
+    return;
+  }
+  
+  if (select.value === 'custom') {
+    customThicknessDiv.classList.remove('hidden');
+    // Attendre que l'utilisateur entre une valeur
+  } else {
+    customThicknessDiv.classList.add('hidden');
+    selectedThickness = parseInt(select.value);
+    updateMaterialRSI();
+  }
+}
+
+// Gérer le changement d'épaisseur personnalisée
+function handleCustomThicknessChange() {
+  const input = document.getElementById('custom-thickness-input');
+  
+  if (!input) {
+    console.error("L'élément 'custom-thickness-input' n'a pas été trouvé");
+    return;
+  }
+  
+  selectedThickness = parseInt(input.value);
+  updateMaterialRSI();
+}
+
+// Mettre à jour l'affichage du RSI en fonction de l'épaisseur
+function updateMaterialRSI() {
+  if (!selectedMaterial || !selectedMaterial.rsiPerMm) return;
+  
+  const rsiValueElem = document.getElementById('material-rsi-value');
+  
+  if (!rsiValueElem) {
+    console.error("L'élément 'material-rsi-value' n'a pas été trouvé");
+    return;
+  }
+  
+  const rsi = selectedMaterial.rsiPerMm * selectedThickness;
+  rsiValueElem.textContent = formatRSIR(rsi);
+}
 
 // Ajouter des couches par défaut pour démonstration
 function addDefaultLayers() {
@@ -592,6 +1376,126 @@ function addDefaultLayers() {
   });
 }
 
+// Générer les boutons de catégories de matériaux
+function generateMaterialCategoryButtons(type) {
+  const container = document.getElementById('material-categories-selector');
+  
+  if (!container) {
+    console.error("L'élément 'material-categories-selector' n'a pas été trouvé");
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  let materialCategories = [];
+  
+  // Déterminer les catégories de matériaux à afficher selon le type
+  switch (type) {
+    case 'airfilm':
+      materialCategories.push({
+        id: 'airFilms',
+        name: "Films d'air",
+        materials: materials.airFilms
+      });
+      break;
+    case 'airspace':
+      materialCategories.push({
+        id: 'airSpaces',
+        name: "Lames d'air non réfléchissantes",
+        materials: materials.airSpaces
+      });
+      materialCategories.push({
+        id: 'reflectiveAirSpaces',
+        name: "Lames d'air réfléchissantes",
+        materials: materials.reflectiveAirSpaces
+      });
+      break;
+    case 'insulation':
+      materialCategories.push({
+        id: 'insulation',
+        name: "Matériaux isolants",
+        materials: materials.insulation
+      });
+      break;
+    case 'structural':
+      materialCategories.push({
+        id: 'wood',
+        name: "Bois",
+        materials: materials.wood
+      });
+      materialCategories.push({
+        id: 'concrete',
+        name: "Béton",
+        materials: materials.concrete
+      });
+      materialCategories.push({
+        id: 'concreteBlocks',
+        name: "Blocs de béton",
+        materials: materials.concreteBlocks
+      });
+      break;
+    case 'cladding':
+      materialCategories.push({
+        id: 'woodCladding',
+        name: "Parements en bois",
+        materials: materials.woodCladding
+      });
+      materialCategories.push({
+        id: 'otherCladding',
+        name: "Autres parements",
+        materials: materials.otherCladding
+      });
+      break;
+    case 'sheathening':
+      materialCategories.push({
+        id: 'sheathing',
+        name: "Revêtements d'ossature",
+        materials: materials.sheathing
+      });
+      break;
+    case 'interior':
+      materialCategories.push({
+        id: 'interiorFinish',
+        name: "Matériaux de finition intérieure",
+        materials: materials.interiorFinish
+      });
+      break;
+    case 'roofing':
+      materialCategories.push({
+        id: 'roofingMaterials',
+        name: "Matériaux de toiture",
+        materials: materials.roofingMaterials
+      });
+      break;
+  }
+  
+  // Créer les boutons pour chaque catégorie
+  materialCategories.forEach(category => {
+    const div = document.createElement('div');
+    div.className = 'border p-2 rounded';
+    
+    const h5 = document.createElement('h5');
+    h5.className = 'font-semibold mb-2 text-sm';
+    h5.textContent = category.name;
+    div.appendChild(h5);
+    
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'space-y-1';
+    
+    // Créer un bouton pour chaque matériau
+    category.materials.forEach(material => {
+      const button = document.createElement('button');
+      button.className = 'w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100';
+      button.textContent = material.name;
+      button.onclick = () => selectMaterial(material);
+      buttonsContainer.appendChild(button);
+    });
+    
+    div.appendChild(buttonsContainer);
+    container.appendChild(div);
+  });
+}
+
 // Fonction pour convertir R en RSI
 const rToRsi = (r) => {
   if (r === null || r === undefined || isNaN(r)) return null;
@@ -604,6 +1508,34 @@ const formatRSIR = (rsi) => {
   const r = rsiToR(rsi);
   return `RSI ${rsi.toFixed(2)} (R ${r.toFixed(2)})`;
 };
+
+// Initialisation de l'application
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser les sélecteurs
+  initializeMunicipalitySelect();
+  
+  // Initialiser le graphique
+  initializeChart();
+  
+  // Ajouter quelques couches par défaut pour démonstration
+  addDefaultLayers();
+  
+  // Mettre à jour les affichages
+  updateLayersDisplay();
+  updateMaterialsSummary();
+  
+  // Événements du sélecteur d'épaisseur
+  const thicknessSelect = document.getElementById('thickness-select');
+  const customThicknessInput = document.getElementById('custom-thickness-input');
+  
+  if (thicknessSelect) {
+    thicknessSelect.addEventListener('change', handleThicknessChange);
+  }
+  
+  if (customThicknessInput) {
+    customThicknessInput.addEventListener('change', handleCustomThicknessChange);
+  }
+});
 
 // Valeurs minimales RSI selon le Code de construction du Québec (Partie 11)
 // Pour la résistance thermique totale (RSI_T)
@@ -650,6 +1582,23 @@ const minRSIEffectiveValues = {
     "garage_foundation_wall": 2.64
   }
 };
+
+// Variables globales
+let selectedLocation = "";
+let degreeDays = "";
+let climaticZone = "";
+let buildingType = "residential_small";
+let codeVersion = "part11";
+let envelopeComponent = "wall_above_grade";
+let layers = [];
+let results = null;
+let selectedLayerType = null;
+let selectedLayerIndex = null;
+let selectedMaterialCategory = null;
+let selectedMaterialId = null;
+let selectedMaterial = null;
+let selectedThickness = 25;
+let chart = null;
 
 // Constantes pour les degrés-jours et les municipalités
 const municipalities = [
@@ -841,198 +1790,6 @@ const saturationTable = [
     { temp: 65, pressure: 250.03 }
 ];
 
-// Base de données des matériaux avec leurs valeurs RSI
-const materials = {
-  // Films d'air
-  airFilms: [
-    { id: "exterior", name: "Film d'air extérieur", rsi: 0.03, description: "Pellicule d'air de surface (vent hivernal de 24 Km/h)" },
-    { id: "interior_vertical", name: "Film d'air intérieur (mur)", rsi: 0.12, description: "Air stable, surface verticale, flux thermique horizontal" },
-    { id: "interior_ceiling", name: "Film d'air intérieur (plafond)", rsi: 0.11, description: "Air stable, surface horizontale, flux thermique ascendant" },
-    { id: "interior_floor", name: "Film d'air intérieur (plancher)", rsi: 0.16, description: "Air stable, surface horizontale, flux thermique descendant" }
-  ],
-  
-  // Lames d'air non réfléchissantes
-  airSpaces: [
-    // Murs (flux thermique horizontal)
-    { id: "airspace_wall_13mm", name: "Lame d'air dans un mur - 13mm", rsi: 0.16, description: "min. 13mm (1/2'')", thickness: 13 },
-    { id: "airspace_wall_20mm", name: "Lame d'air dans un mur - 20mm+", rsi: 0.18, description: "20mm (3/4'') et +", thickness: 20 },
-    { id: "airspace_wall_40mm", name: "Lame d'air dans un mur - 40mm+", rsi: 0.18, description: "40mm (1 1/2'') et +", thickness: 40 },
-    { id: "airspace_wall_90mm", name: "Lame d'air dans un mur - 90mm+", rsi: 0.18, description: "90mm (3 1/2'') et +", thickness: 90 },
-    
-    // Plafonds (flux thermique ascendant)
-    { id: "airspace_ceiling_13mm", name: "Lame d'air dans un plafond - 13mm", rsi: 0.15, description: "min. 13mm (1/2'')", thickness: 13 },
-    { id: "airspace_ceiling_20mm", name: "Lame d'air dans un plafond - 20mm+", rsi: 0.15, description: "20mm (3/4'') et +", thickness: 20 },
-    { id: "airspace_ceiling_40mm", name: "Lame d'air dans un plafond - 40mm+", rsi: 0.16, description: "40mm (1 1/2'') et +", thickness: 40 },
-    { id: "airspace_ceiling_90mm", name: "Lame d'air dans un plafond - 90mm+", rsi: 0.16, description: "90mm (3 1/2'') et +", thickness: 90 },
-    
-    // Planchers (flux thermique descendant)
-    { id: "airspace_floor_13mm", name: "Lame d'air dans un plancher - 13mm", rsi: 0.16, description: "min. 13mm (1/2'')", thickness: 13 },
-    { id: "airspace_floor_20mm", name: "Lame d'air dans un plancher - 20mm+", rsi: 0.18, description: "20mm (3/4'') et +", thickness: 20 },
-    { id: "airspace_floor_40mm", name: "Lame d'air dans un plancher - 40mm+", rsi: 0.2, description: "40mm (1 1/2'') et +", thickness: 40 },
-    { id: "airspace_floor_90mm", name: "Lame d'air dans un plancher - 90mm+", rsi: 0.22, description: "90mm (3 1/2'') et +", thickness: 90 }
-  ],
-  
-  // Lames d'air réfléchissantes
-  reflectiveAirSpaces: [
-    // Murs (flux thermique horizontal)
-    { id: "reflective_wall_oneside", name: "Lame d'air réfléchissante dans un mur - parée d'un côté", rsi: 0.465, description: "Lame verticale parée d'un côté, flux thermique horizontal entre 13 et 19mm", thickness: 19 },
-    { id: "reflective_wall_bothsides", name: "Lame d'air réfléchissante dans un mur - parée de deux côtés", rsi: 0.48, description: "Lame verticale parée de deux côtés, flux thermique horizontal entre 13 et 19mm", thickness: 19 },
-    
-    // Plafonds (flux thermique ascendant)
-    { id: "reflective_ceiling_oneside", name: "Lame d'air réfléchissante dans un plafond - parée d'un côté", rsi: 0.324, description: "Lame horizontale parée d'un côté, flux thermique ascendant entre 13 et 19mm", thickness: 19 },
-    { id: "reflective_ceiling_bothsides", name: "Lame d'air réfléchissante dans un plafond - parée de deux côtés", rsi: 0.332, description: "Lame horizontale parée de deux côtés, flux thermique ascendant entre 13 et 19mm", thickness: 19 },
-    
-    // Planchers (flux thermique descendant)
-    { id: "reflective_floor_oneside", name: "Lame d'air réfléchissante dans un plancher - parée d'un côté", rsi: 0.98, description: "Lame horizontale parée d'un côté, flux thermique descendant entre 13 et 19mm", thickness: 19 },
-    { id: "reflective_floor_bothsides", name: "Lame d'air réfléchissante dans un plancher - parée de deux côtés", rsi: 1.034, description: "Lame horizontale parée de deux côtés, flux thermique descendant entre 13 et 19mm", thickness: 19 }
-  ],
-
-  // Matériaux de charpente - Bois
-  wood: [
-    { id: "wood_spf", name: "Bois de construction courant (S-P-F)", rsiPerMm: 0.0085, description: "Bois de construction courant (Épinette-Pin-Sapin)" },
-    { id: "wood_birch", name: "Bouleau", rsiPerMm: 0.0055, description: "Bouleau" },
-    { id: "wood_oak", name: "Chêne", rsiPerMm: 0.0056, description: "Chêne" },
-    { id: "wood_maple", name: "Érable", rsiPerMm: 0.0063, description: "Érable et frêne" },
-    { id: "wood_cedar", name: "Cèdre blanc", rsiPerMm: 0.0099, description: "Cèdre blanc" },
-    { id: "wood_cypress", name: "Cyprès jaune", rsiPerMm: 0.0077, description: "Cyprès jaune" },
-    { id: "wood_spruce", name: "Épinette blanche", rsiPerMm: 0.0097, description: "Épinette blanche" },
-    { id: "wood_pine_white", name: "Pin blanc", rsiPerMm: 0.0092, description: "Pin blanc" },
-    { id: "wood_pine_lodgepole", name: "Pin lodgepole", rsiPerMm: 0.0082, description: "Pin lodgepole" },
-    { id: "wood_pine_red", name: "Pin rouge", rsiPerMm: 0.0077, description: "Pin rouge" },
-    { id: "wood_hemlock", name: "Pruche", rsiPerMm: 0.0084, description: "Pruche" },
-    { id: "wood_hemlock_western", name: "Pruche de l'ouest", rsiPerMm: 0.0074, description: "Pruche de l'ouest" },
-    { id: "wood_doug_fir", name: "Sapin de Douglas ou mélèze", rsiPerMm: 0.0069, description: "Sapin de Douglas ou mélèze" },
-    { id: "wood_fir", name: "Sapin gracieux", rsiPerMm: 0.008, description: "Sapin gracieux" },
-    { id: "wood_sequoia", name: "Séquoia de Californie", rsiPerMm: 0.0089, description: "Séquoia de Californie" },
-    { id: "wood_cedarwood", name: "Thuya géant", rsiPerMm: 0.0102, description: "Thuya géant" }
-  ],
-  
-  // Béton
-  concrete: [
-    { id: "concrete_2400", name: "Béton 2400 kg/m³", rsiPerMm: 0.0004, description: "Béton coulé sur place, 2400 kg/m³ (150lbs/pi³)" },
-    { id: "concrete_1600", name: "Béton léger 1600 kg/m³", rsiPerMm: 0.0013, description: "Béton léger, 1600 kg/m³ (100lbs/pi³) (schiste, argile ou ardoise expansés, laitier expansé, cendre)" },
-    { id: "concrete_480", name: "Béton léger 480 kg/m³", rsiPerMm: 0.0069, description: "Béton léger, 480 kg/m³ (30lbs/pi³) (perlite, vermiculite et billes de polystyrène)" }
-  ],
-  
-  // Blocs de béton
-  concreteBlocks: [
-    // Blocs de béton à 2 cellules rectangulaires - agrégats de densité normale
-    { id: "block_90mm", name: "Bloc de béton - 90mm", rsi: 0.17, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 90mm", thickness: 90 },
-    { id: "block_140mm", name: "Bloc de béton - 140mm", rsi: 0.19, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 140mm", thickness: 140 },
-    { id: "block_190mm", name: "Bloc de béton - 190mm", rsi: 0.21, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 190mm", thickness: 190 },
-    { id: "block_240mm", name: "Bloc de béton - 240mm", rsi: 0.24, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 240mm", thickness: 240 },
-    { id: "block_290mm", name: "Bloc de béton - 290mm", rsi: 0.26, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) - 290mm", thickness: 290 },
-    { id: "block_vermiculite_140mm", name: "Bloc de béton avec vermiculite - 140mm", rsi: 0.4, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 140mm", thickness: 140 },
-    { id: "block_vermiculite_190mm", name: "Bloc de béton avec vermiculite - 190mm", rsi: 0.51, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 190mm", thickness: 190 },
-    { id: "block_vermiculite_240mm", name: "Bloc de béton avec vermiculite - 240mm", rsi: 0.61, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 240mm", thickness: 240 },
-    { id: "block_vermiculite_290mm", name: "Bloc de béton avec vermiculite - 290mm", rsi: 0.69, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de vermiculite - 290mm", thickness: 290 },
-    { id: "block_perlite_190mm", name: "Bloc de béton avec perlite - 190mm", rsi: 0.53, description: "Blocs de béton à 2 cellules, béton lourds (2100kg/m³) remplis de perlite - 190mm", thickness: 190 },
-    
-    // Blocs de béton - agrégats de faible densité
-    { id: "block_light_90mm", name: "Bloc de béton léger - 90mm", rsi: 0.24, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 90mm", thickness: 90 },
-    { id: "block_light_140mm", name: "Bloc de béton léger - 140mm", rsi: 0.30, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 140mm", thickness: 140 },
-    { id: "block_light_190mm", name: "Bloc de béton léger - 190mm", rsi: 0.32, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 190mm", thickness: 190 },
-    { id: "block_light_240mm", name: "Bloc de béton léger - 240mm", rsi: 0.33, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 240mm", thickness: 240 },
-    { id: "block_light_290mm", name: "Bloc de béton léger - 290mm", rsi: 0.41, description: "Blocs de béton à 2/3 cellules, agrégats de faible densité - 290mm", thickness: 290 }
-  ],
-
-  // Isolants
-  insulation: [
-    // Isolants en nattes
-    { id: "mineral_wool_batt_r12", name: "Laine minérale en nattes R-12", rsi: 2.11, description: "Nattes de fibre minérale de roche ou de verre R-12 (89/92mm)", thickness: 89 },
-    { id: "mineral_wool_batt_r14", name: "Laine minérale en nattes R-14", rsi: 2.46, description: "Nattes de fibre minérale de roche ou de verre R-14 (89/92mm)", thickness: 89 },
-    { id: "mineral_wool_batt_r19", name: "Laine minérale en nattes R-19", rsi: 3.34, description: "Nattes de fibre minérale de roche ou de verre R-19 (140mm)", thickness: 140 },
-    { id: "mineral_wool_batt_r20", name: "Laine minérale en nattes R-20", rsi: 3.52, description: "Nattes de fibre minérale de roche ou de verre R-20 (152mm)", thickness: 152 },
-    { id: "mineral_wool_batt_r22", name: "Laine minérale en nattes R-22", rsi: 3.87, description: "Nattes de fibre minérale de roche ou de verre R-22 (140/152mm)", thickness: 152 },
-    { id: "mineral_wool_batt_r22_5", name: "Laine minérale en nattes R-22.5", rsi: 3.96, description: "Nattes de fibre minérale de roche ou de verre R-22.5 (152mm)", thickness: 152 },
-    { id: "mineral_wool_batt_r24", name: "Laine minérale en nattes R-24", rsi: 4.23, description: "Nattes de fibre minérale de roche ou de verre R-24 (140/152mm)", thickness: 152 },
-    { id: "mineral_wool_batt_r28", name: "Laine minérale en nattes R-28", rsi: 4.93, description: "Nattes de fibre minérale de roche ou de verre R-28 (178/216mm)", thickness: 216 },
-    { id: "mineral_wool_batt_r31", name: "Laine minérale en nattes R-31", rsi: 5.46, description: "Nattes de fibre minérale de roche ou de verre R-31 (241mm)", thickness: 241 },
-    { id: "mineral_wool_batt_r35", name: "Laine minérale en nattes R-35", rsi: 6.16, description: "Nattes de fibre minérale de roche ou de verre R-35 (267mm)", thickness: 267 },
-    { id: "mineral_wool_batt_r40", name: "Laine minérale en nattes R-40", rsi: 7.04, description: "Nattes de fibre minérale de roche ou de verre R-40 (279/300mm)", thickness: 300 },
-    
-    // Panneaux isolants
-    { id: "insulation_panel_roof", name: "Panneau isolant pour toiture", rsiPerMm: 0.018, description: "Panneau isolant pour toiture" },
-    { id: "insulation_panel_wall", name: "Panneau isolant pour murs ou plafonds", rsiPerMm: 0.016, description: "Panneau isolant pour murs ou plafonds (carreaux)" },
-    { id: "fiberglass_thermal", name: "Laine de fibre de verre, usage thermique", rsiPerMm: 0.0208, description: "Laine de fibre de verre, usage thermique (Eco Touch thermique de Owens Corning)" },
-    { id: "mineral_wool", name: "Laine de roche", rsiPerMm: 0.0276, description: "Laine de roche (Roxul Cavity Rock)" },
-    
-    // Polystyrène
-    { id: "polystyrene_type1", name: "Polystyrène expansé Type 1", rsiPerMm: 0.026, description: "Polystyrène expansé Type 1" },
-    { id: "polystyrene_type2", name: "Polystyrène expansé Type 2", rsiPerMm: 0.028, description: "Polystyrène expansé Type 2" },
-    { id: "polystyrene_type3", name: "Polystyrène expansé Type 3", rsiPerMm: 0.030, description: "Polystyrène expansé Type 3" },
-    { id: "polystyrene_type4", name: "Polystyrène expansé Type 4", rsiPerMm: 0.0347, description: "Polystyrène expansé Type 4" },
-    { id: "extruded_polystyrene", name: "Polystyrène extrudé", rsiPerMm: 0.035, description: "Polystyrène extrudé: Types 2, 3 et 4" },
-    
-    // Polyisocyanurate
-    { id: "polyiso_permeable", name: "Polyisocyanurate revêtu perméable", rsiPerMm: 0.03818, description: "Polyisocyanurate ou polyuréthane, revêtus, types 1, 2 et 3, surface perméable" },
-    { id: "polyiso_impermeable", name: "Polyisocyanurate revêtu imperméable", rsiPerMm: 0.03937, description: "Polyisocyanurate ou polyuréthane, revêtus, types 1, 2 et 3, surface imperméable" },
-    { id: "polyiso", name: "Panneau rigide de polyisocyanurate", rsiPerMm: 0.042, description: "Panneau rigide de polyisocyanurate (Sopra-Iso de Soprema)" },
-    
-    // Isolants en vrac
-    { id: "cellulose_blown", name: "Fibre cellulosique épandue (combles)", rsiPerMm: 0.025, description: "Cellulose en vrac pour combles" },
-    { id: "mineral_blown_attic", name: "Fibre minérale épandue (combles)", rsiPerMm: 0.01875, description: "Fibre minérale en vrac pour combles (112mm à 565mm)" },
-    { id: "mineral_injected_89mm", name: "Fibre minérale injectée (murs), 89mm", rsi: 2.55, description: "Fibre minérale injectée (murs), 89mm", rsiPerMm: 0.02865, thickness: 89 },
-    { id: "mineral_injected_140mm", name: "Fibre minérale injectée (murs), 140mm", rsi: 4.05, description: "Fibre minérale injectée (murs), 140mm", rsiPerMm: 0.0289, thickness: 140 },
-    { id: "mineral_injected_152mm", name: "Fibre minérale injectée (murs), 152mm", rsi: 4.23, description: "Fibre minérale injectée (murs), 152mm (6'')", thickness: 152 }
-  ],
-  
-  // Revêtements d'ossature
-  sheathing: [
-    { id: "plywood", name: "Contreplaqué de bois tendre", rsiPerMm: 0.0087, description: "Contreplaqué de bois tendre" },
-    { id: "plywood_douglas_fir", name: "Contreplaqué de sapin de Douglas", rsiPerMm: 0.0111, description: "Contreplaqué de sapin de Douglas" },
-    { id: "particleboard", name: "Panneau de particules", rsiPerMm: 0.0077, description: "Panneau de particules" },
-    { id: "osb", name: "Panneaux de copeaux (OSB)", rsiPerMm: 0.0098, description: "Panneaux de copeaux orientés (OSB)" },
-    { id: "fiberboard_asphalt", name: "Revêtement en carton-fibre asphalté", rsiPerMm: 0.0165, description: "Revêtement en carton-fibre asphalté" },
-    { id: "gypsum", name: "Revêtement en plaque de plâtre (gypse)", rsiPerMm: 0.0063, description: "Revêtement en plaque de plâtre (panneaux de gypse)" },
-    { id: "reflective_fiberboard", name: "Panneau de fibre de bois avec pellicule réfléchissante", rsiPerMm: 0.0194, description: "Panneau de fibre de bois avec pellicule réfléchissante" }
-  ],
-
-  // Parements de bois
-  woodCladding: [
-    { id: "wood_shingle_190mm", name: "Bardeau de bois 400mm, pureau de 190mm", rsi: 0.15, description: "Bardeau de bois 400mm, pureau de 190mm", thickness: 10 },
-    { id: "wood_shingle_300mm", name: "Bardeau de bois 400mm, pureau double de 300mm", rsi: 0.21, description: "Bardeau de bois 400mm, pureau double de 300mm", thickness: 15 },
-    { id: "wood_siding_200mm_13mm", name: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm", rsi: 0.14, description: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm", thickness: 13 },
-    { id: "wood_siding_250mm_20mm", name: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm", rsi: 0.18, description: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm", thickness: 20 },
-    { id: "wood_siding_200mm_20mm", name: "Bardage à mi-bois, 200mm, épaisseur 20mm", rsi: 0.14, description: "Bardage à mi-bois, 200mm, épaisseur 20mm", thickness: 20 },
-    { id: "hardboard_11mm", name: "Panneaux de fibres dures, épaisseur 11mm", rsi: 0.12, description: "Panneaux de fibres dures, épaisseur 11mm (ex.: Canexel)", thickness: 11 },
-    { id: "plywood_siding", name: "Contreplaqué, joints à recouvrement", rsi: 0.10, description: "Contreplaqué, joints à recouvrement, 9,5mm", thickness: 9.5 }
-  ],
-
-  // Autres parements
-  otherCladding: [
-    { id: "brick_90mm", name: "Brique d'argile ou schiste - 90mm", rsi: 0.07, description: "Brique d'argile ou schiste - 90mm (4''nominal, 2400 kg/m³)", thickness: 90 },
-    { id: "brick_concrete_90mm", name: "Brique de béton ou silico-calcaire - 90mm", rsi: 0.053, description: "Brique de béton ou silico-calcaire - 90mm (4'' nominal)", thickness: 90 },
-    { id: "fibercement_6.35mm", name: "Panneaux de fibro-ciment, épaisseur 6.35mm", rsi: 0.019, description: "Panneaux de fibro-ciment, épaisseur 6.35mm", thickness: 6.35 },
-    { id: "fibercement_8mm", name: "Panneaux de fibro-ciment, épaisseur 8mm", rsi: 0.024, description: "Panneaux de fibro-ciment, épaisseur 8mm", thickness: 8 },
-    { id: "vinyl_siding", name: "Planche à clin en vinyle, sans endos", rsi: 0.11, description: "Planche à clin en vinyle, sans endos", thickness: 1 },
-    { id: "vinyl_siding_insulated", name: "Planche à clin en vinyle avec endos isolé, épaisseur 9,5mm", rsi: 0.32, description: "Planche à clin avec endos isolé, épaisseur 9,5mm", thickness: 9.5 },
-    { id: "vinyl_siding_insulated_foil", name: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm", rsi: 0.52, description: "Planche à clin avec endos isolé + pellicule aluminium, épaisseur 9,5mm", thickness: 9.5 }
-  ],
- 
-  // Matériaux de toiture
-  roofingMaterials: [
-    { id: "roll_roofing", name: "Recouvrement de toiture enduit de bitume (en rouleau)", rsi: 0.03, description: "Recouvrement de toiture enduit de bitume (en rouleau)", thickness: 2 },
-    { id: "asphalt_shingles", name: "Bardeaux bitumés", rsi: 0.08, description: "Bardeaux bitumés", thickness: 3 },
-    { id: "built_up_roofing", name: "Couverture multicouche (5 plis) de 10mm d'épaisseur", rsi: 0.06, description: "Couverture multicouche (5 plis) de 10mm d'épaisseur", thickness: 10 },
-    { id: "wood_shingles_roof", name: "Bardeaux de bois", rsi: 0.17, description: "Bardeaux de bois", thickness: 10 },
-    { id: "crushed_stone", name: "Pierre concassée", rsiPerMm: 0.0006, description: "Pierre concassée" },
-    { id: "steel_deck", name: "Platelage d'acier", rsi: 0, description: "Platelage d'acier - négligeable", thickness: 1 },
-    { id: "slate", name: "Ardoise, épaisseur 13mm", rsi: 0.01, description: "Ardoise, épaisseur 13mm", thickness: 13 }
-  ],
- 
-  // Matériaux de finition intérieure
-  interiorFinish: [
-    { id: "gypsum_interior", name: "Plaque de plâtre (gypse)", rsiPerMm: 0.0061, description: "Plaque de plâtre (panneaux de gypse)" },
-    { id: "hardboard_interior", name: "Panneaux de fibres dures", rsiPerMm: 0.0095, description: "Panneaux de fibres dures (800 kg/m³)" },
-    { id: "interior_finishboard", name: "Panneaux intérieurs de finition", rsiPerMm: 0.0198, description: "Panneaux intérieurs de finition (carreaux ou planches)" },
-    { id: "cement_interior", name: "Ciment, granulat de sable", rsiPerMm: 0.0014, description: "Ciment, granulat de sable" },
-    { id: "plaster_sand", name: "Enduit au plâtre - agrégat de sable", rsiPerMm: 0.0012, description: "Enduit au plâtre - agrégat de sable" },
-    { id: "plaster_light", name: "Enduit au plâtre - agrégat léger", rsiPerMm: 0.0044, description: "Enduit au plâtre - agrégat léger" },
-    { id: "plywood_interior", name: "Contreplaqué", rsiPerMm: 0.0087, description: "Contreplaqué" }
-  ]
-};
-
 // Options d'épaisseur communes pour les matériaux
 const thicknessOptions = [
   { value: 3, label: "3 mm" },
@@ -1057,459 +1814,3 @@ const thicknessOptions = [
   { value: 300, label: "300 mm (12\")" },
   { value: "custom", label: "Personnalisée..." }
 ];
-
-// Variables globales
-let location = "";
-let degreeDays = "";
-let climaticZone = "";
-let buildingType = "residential_small";
-let codeVersion = "part11";
-let envelopeComponent = "wall_above_grade";
-let layers = [];
-let results = null;
-let selectedLayerType = null;
-let selectedLayerIndex = null;
-let selectedMaterialCategory = null;
-let selectedMaterialId = null;
-let selectedThickness = 25;
-let chart = null;
-
-// Fonction pour calculer le point de rosée
-function calculateDewPoint(temp, rh) {
-  // Calculer la pression de vapeur d'eau
-  function getSaturationPressure(temperature) {
-    // Trouver les deux points les plus proches dans la table
-    let lowerPoint = saturationTable[0];
-    let upperPoint = saturationTable[saturationTable.length - 1];
-    
-    for (let i = 0; i < saturationTable.length; i++) {
-      if (saturationTable[i].temp <= temperature) {
-        lowerPoint = saturationTable[i];
-      }
-      if (saturationTable[i].temp >= temperature && saturationTable[i].temp < upperPoint.temp) {
-        upperPoint = saturationTable[i];
-      }
-    }
-    
-    // Si les températures sont égales (par exemple, température exacte dans la table)
-    if (lowerPoint.temp === upperPoint.temp) {
-      return lowerPoint.pressure;
-    }
-    
-    // Interpolation linéaire
-    const ratio = (temperature - lowerPoint.temp) / (upperPoint.temp - lowerPoint.temp);
-    return lowerPoint.pressure + ratio * (upperPoint.pressure - lowerPoint.pressure);
-  }
-  
-  // Calculer la pression de vapeur d'eau actuelle
-  const saturationPressure = getSaturationPressure(temp);
-  const vaporPressure = (rh / 100) * saturationPressure;
-  
-  // Trouver la température de rosée (température à laquelle la pression de saturation = pression de vapeur actuelle)
-  let dewPoint = -60; // Démarrer avec une valeur basse
-  
-  // Recherche par incréments de 0.1°C
-  while (dewPoint < 65) {
-    const pressureAtDewPoint = getSaturationPressure(dewPoint);
-    if (Math.abs(pressureAtDewPoint - vaporPressure) < 0.01) {
-      break;
-    }
-    if (pressureAtDewPoint > vaporPressure) {
-      // Ajuster pour plus de précision
-      dewPoint -= 0.1;
-      break;
-    }
-    dewPoint += 0.1;
-  }
-  
-  return Math.round(dewPoint * 10) / 10; // Arrondir à 0.1 près
-}
-
-// Fonction pour trouver la position du point de rosée
-function findDewPointPosition(temperatures, positions, dewPoint) {
-  let dewPointFound = false;
-  let dewPointPosition = null;
-  let dewPointMaterialIndex = null;
-  
-  for (let i = 0; i < temperatures.length - 1; i++) {
-    // Si le point de rosée est entre deux températures
-    if ((temperatures[i] <= dewPoint && temperatures[i+1] >= dewPoint) ||
-        (temperatures[i] >= dewPoint && temperatures[i+1] <= dewPoint)) {
-      dewPointFound = true;
-      
-      // Interpolation linéaire pour trouver la position exacte
-      const ratio = Math.abs((dewPoint - temperatures[i]) / (temperatures[i+1] - temperatures[i]));
-      dewPointPosition = positions[i] + ratio * (positions[i+1] - positions[i]);
-      dewPointMaterialIndex = i;
-      break;
-    }
-  }
-  
-  return {
-    found: dewPointFound,
-    position: dewPointPosition,
-    materialIndex: dewPointMaterialIndex
-  };
-}
-
-// Initialiser le sélecteur de municipalité
-function initializeMunicipalitySelect() {
-  const select = document.getElementById('location');
-  
-  // S'assurer que le select existe
-  if (!select) {
-    console.error("L'élément 'location' n'a pas été trouvé");
-    return;
-  }
-
-  // Vider le select d'abord pour éviter les duplications
-  select.innerHTML = '<option value="">Sélectionnez une municipalité</option>';
-  
-  // Trier les municipalités par nom
-  const sortedMunicipalities = [...municipalities].sort((a, b) => a.name.localeCompare(b.name));
-  
-  sortedMunicipalities.forEach(municipality => {
-    const option = document.createElement('option');
-    option.value = municipality.id;
-    option.textContent = `${municipality.name} (${municipality.degreeDay} degrés-jours)`;
-    select.appendChild(option);
-  });
-}
-
-// Mettre à jour les informations basées sur la municipalité
-function updateLocation() {
-  const select = document.getElementById('location');
-  
-  if (!select) {
-    console.error("L'élément 'location' n'a pas été trouvé");
-    return;
-  }
-  
-  location = select.value;
-  
-  if (location) {
-    const municipality = municipalities.find(m => m.id === location);
-    if (municipality) {
-      const degreeDaysInput = document.getElementById('degree-days');
-      if (degreeDaysInput) {
-        degreeDaysInput.value = municipality.degreeDay;
-        degreeDays = municipality.degreeDay;
-      }
-      climaticZone = municipality.zone;
-      updateClimaticZoneDisplay();
-      updateMinRSIDisplay();
-    }
-  }
-}
-
-// Mettre à jour les informations basées sur les degrés-jours
-function updateDegreeDays() {
-  const input = document.getElementById('degree-days');
-  
-  if (!input) {
-    console.error("L'élément 'degree-days' n'a pas été trouvé");
-    return;
-  }
-  
-  degreeDays = input.value;
-  
-  if (degreeDays && !isNaN(degreeDays)) {
-    const dj = parseInt(degreeDays);
-    climaticZone = dj < 6000 ? "< 6000" : ">= 6000";
-    updateClimaticZoneDisplay();
-    updateMinRSIDisplay();
-  }
-}
-
-// Mettre à jour l'affichage de la zone climatique
-function updateClimaticZoneDisplay() {
-  const display = document.getElementById('climatic-zone-display');
-  
-  if (!display) {
-    console.error("L'élément 'climatic-zone-display' n'a pas été trouvé");
-    return;
-  }
-  
-  if (climaticZone) {
-    display.textContent = `Zone climatique: ${climaticZone === "< 6000" ? "Moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}`;
-  } else {
-    display.textContent = "";
-  }
-}
-
-// Mettre à jour l'affichage des valeurs minimales de RSI
-function updateMinRSIDisplay() {
-  const rsiTotalDisplay = document.getElementById('min-rsit-display');
-  const rsiEffectiveDisplay = document.getElementById('min-rsie-display');
-  
-  if (!rsiTotalDisplay || !rsiEffectiveDisplay) {
-    console.error("Les éléments d'affichage RSI n'ont pas été trouvés");
-    return;
-  }
-  
-  if (climaticZone && envelopeComponent) {
-    const rsiTotal = minRSITotalValues[climaticZone][envelopeComponent];
-    const rsiEffective = minRSIEffectiveValues[climaticZone][envelopeComponent];
-    
-    rsiTotalDisplay.textContent = formatRSIR(rsiTotal);
-    rsiEffectiveDisplay.textContent = formatRSIR(rsiEffective);
-  } else {
-    rsiTotalDisplay.textContent = "—";
-    rsiEffectiveDisplay.textContent = "—";
-  }
-}
-
-// Mettre à jour le type de bâtiment
-function updateBuildingType() {
-  const select = document.getElementById('building-type');
-  
-  if (!select) {
-    console.error("L'élément 'building-type' n'a pas été trouvé");
-    return;
-  }
-  
-  buildingType = select.value;
-}
-
-// Mettre à jour la version du code
-function updateCodeVersion() {
-  const select = document.getElementById('code-version');
-  
-  if (!select) {
-    console.error("L'élément 'code-version' n'a pas été trouvé");
-    return;
-  }
-  
-  codeVersion = select.value;
-}
-
-// Mettre à jour le composant d'enveloppe
-function updateEnvelopeComponent() {
-  const select = document.getElementById('envelope-component');
-  
-  if (!select) {
-    console.error("L'élément 'envelope-component' n'a pas été trouvé");
-    return;
-  }
-  
-  envelopeComponent = select.value;
-  updateMinRSIDisplay();
-}
-
-// Initialiser le graphique
-function initializeChart() {
-  const ctx = document.getElementById('chart').getContext('2d');
-  
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [{
-        label: 'Température (°C)',
-        data: [],
-        borderColor: '#1e88e5',
-        backgroundColor: 'rgba(30, 136, 229, 0.1)',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Position (mm)'
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Température (°C)'
-          }
-        }
-      }
-    }
-  });
-}
-
-// Mettre à jour le graphique avec les nouvelles données
-function updateChart(positions, temperatures, dewPoint, dewPointPosition) {
-  chart.data.labels = positions;
-  chart.data.datasets[0].data = temperatures;
-  
-  // Ajouter la ligne horizontale pour le point de rosée
-  chart.options.plugins.annotation = {
-    annotations: {}
-  };
-  
-  if (dewPoint !== null) {
-    chart.options.plugins.annotation.annotations.dewPointLine = {
-      type: 'line',
-      yMin: dewPoint,
-      yMax: dewPoint,
-      borderColor: 'red',
-      borderWidth: 2,
-      borderDash: [5, 5],
-      label: {
-        content: `Point de rosée (${dewPoint.toFixed(1)}°C)`,
-        position: 'right',
-        color: 'red',
-        enabled: true
-      }
-    };
-  }
-  
-  if (dewPointPosition !== null) {
-    chart.options.plugins.annotation.annotations.dewPointPosition = {
-      type: 'line',
-      xMin: dewPointPosition,
-      xMax: dewPointPosition,
-      borderColor: 'red',
-      borderWidth: 2,
-      borderDash: [5, 5]
-    };
-  }
-  
-  chart.update();
-}
-
-// Sélectionner un matériau
-function selectMaterial(material) {
-  selectedMaterialId = material.id;
-  selectedMaterial = material;
-  
-  // Mettre à jour l'affichage de la résistance thermique
-  const rsiDisplay = document.getElementById('material-rsi-display');
-  const rsiValue = document.getElementById('material-rsi-value');
-  const descriptionElem = document.getElementById('material-description');
-  const thicknessSelector = document.getElementById('thickness-selector');
-  
-  if (!rsiDisplay || !rsiValue || !descriptionElem || !thicknessSelector) {
-    console.error("Des éléments d'affichage du matériau sélectionné n'ont pas été trouvés");
-    return;
-  }
-  
-  // Si le matériau a une valeur RSI fixe
-  if (material.rsi !== undefined) {
-    rsiValue.textContent = formatRSIR(material.rsi);
-    rsiDisplay.classList.remove('hidden');
-    thicknessSelector.classList.add('hidden');
-  } 
-  // Si le matériau a une valeur RSI par mm (nécessite une épaisseur)
-  else if (material.rsiPerMm !== undefined) {
-    // Afficher le sélecteur d'épaisseur
-    initializeThicknessSelector(material);
-    thicknessSelector.classList.remove('hidden');
-    
-    // Calculer le RSI basé sur l'épaisseur par défaut ou existante
-    const thickness = material.thickness || selectedThickness || 25;
-    const rsi = material.rsiPerMm * thickness;
-    rsiValue.textContent = formatRSIR(rsi);
-    rsiDisplay.classList.remove('hidden');
-  }
-  
-  // Afficher la description
-  if (material.description) {
-    descriptionElem.textContent = material.description;
-  } else {
-    descriptionElem.textContent = "";
-  }
-}
-
-// Initialiser le sélecteur d'épaisseur
-function initializeThicknessSelector(material) {
-  const select = document.getElementById('thickness-select');
-  const customThicknessDiv = document.getElementById('custom-thickness');
-  const customThicknessInput = document.getElementById('custom-thickness-input');
-  
-  if (!select || !customThicknessDiv || !customThicknessInput) {
-    console.error("Des éléments du sélecteur d'épaisseur n'ont pas été trouvés");
-    return;
-  }
-  
-  select.innerHTML = '';
-  
-  thicknessOptions.forEach(option => {
-    const optElem = document.createElement('option');
-    optElem.value = option.value;
-    optElem.textContent = option.label;
-    select.appendChild(optElem);
-  });
-  
-  // Si le matériau a déjà une épaisseur définie, l'utiliser
-  if (material.thickness) {
-    // Trouver l'option correspondante ou mettre à "personnalisée"
-    const matchingOption = thicknessOptions.find(opt => opt.value === material.thickness);
-    select.value = matchingOption ? material.thickness : 'custom';
-    
-    if (select.value === 'custom') {
-      customThicknessDiv.classList.remove('hidden');
-      customThicknessInput.value = material.thickness;
-    }
-    
-    selectedThickness = material.thickness;
-  } else {
-    // Valeur par défaut selon le type de matériau
-    let defaultThickness = 25;
-    if (selectedLayerType === 'insulation') defaultThickness = 89;
-    if (selectedLayerType === 'sheathening') defaultThickness = 11;
-    if (selectedLayerType === 'cladding') defaultThickness = 20;
-    if (selectedLayerType === 'interior') defaultThickness = 13;
-    if (selectedLayerType === 'structural') defaultThickness = 89;
-    if (selectedLayerType === 'roofing') defaultThickness = 10;
-    
-    select.value = defaultThickness;
-    selectedThickness = defaultThickness;
-  }
-}
-
-// Gérer le changement d'épaisseur
-function handleThicknessChange() {
-  const select = document.getElementById('thickness-select');
-  const customThicknessDiv = document.getElementById('custom-thickness');
-  
-  if (!select || !customThicknessDiv) {
-    console.error("Des éléments du sélecteur d'épaisseur n'ont pas été trouvés");
-    return;
-  }
-  
-  if (select.value === 'custom') {
-    customThicknessDiv.classList.remove('hidden');
-    // Attendre que l'utilisateur entre une valeur
-  } else {
-    customThicknessDiv.classList.add('hidden');
-    selectedThickness = parseInt(select.value);
-    updateMaterialRSI();
-  }
-}
-
-// Gérer le changement d'épaisseur personnalisée
-function handleCustomThicknessChange() {
-  const input = document.getElementById('custom-thickness-input');
-  
-  if (!input) {
-    console.error("L'élément 'custom-thickness-input' n'a pas été trouvé");
-    return;
-  }
-  
-  selectedThickness = parseInt(input.value);
-  updateMaterialRSI();
-}
-
-// Mettre à jour l'affichage du RSI en fonction de l'épaisseur
-function updateMaterialRSI() {
-  if (!selectedMaterial || !selectedMaterial.rsiPerMm) return;
-  
-  const rsiValueElem = document.getElementById('material-rsi-value');
-  
-  if (!rsiValueElem) {
-    console.error("L'élément 'material-rsi-value' n'a pas été trouvé");
-    return;
-  }
-  
-  const rsi = selectedMaterial.rsiPerMm * selectedThickness;
-  rsiValueElem.textContent = formatRSIR(rsi);
-}
