@@ -2,7 +2,7 @@
 const rsiToR = (rsi) => {
   if (rsi === null || rsi === undefined || isNaN(rsi)) return null;
   return rsi * 5.678263;
-
+};
 
 // Déplacer une couche vers le haut
 function moveLayerUp(index) {
@@ -590,7 +590,7 @@ function addDefaultLayers() {
     type: 'airfilm',
     material: { ...materials.airFilms.find(m => m.id === 'interior_vertical') }
   });
-};
+}
 
 // Fonction pour convertir R en RSI
 const rToRsi = (r) => {
@@ -1134,7 +1134,7 @@ function findDewPointPosition(temperatures, positions, dewPoint) {
   for (let i = 0; i < temperatures.length - 1; i++) {
     // Si le point de rosée est entre deux températures
     if ((temperatures[i] <= dewPoint && temperatures[i+1] >= dewPoint) ||
-      (temperatures[i] >= dewPoint && temperatures[i+1] <= dewPoint)) {
+        (temperatures[i] >= dewPoint && temperatures[i+1] <= dewPoint)) {
       dewPointFound = true;
       
       // Interpolation linéaire pour trouver la position exacte
@@ -1152,105 +1152,7 @@ function findDewPointPosition(temperatures, positions, dewPoint) {
   };
 }
 
-// Fonctions d'initialisation et de gestion de l'interface
-document.addEventListener('DOMContentLoaded', function() {
-  initializeMunicipalitySelect();
-  initializeChart();
-  
-  // Mettre à jour les affichages initiaux
-  updateMinRSIDisplay();
-  
-  // Ajouter les gestionnaires d'événements
-  document.getElementById('temp-ext').addEventListener('change', calculateGradient);
-  document.getElementById('temp-int').addEventListener('change', calculateGradient);
-  document.getElementById('humidity').addEventListener('change', calculateGradient);
-  
-  // Ouvrir les sections nécessaires par défaut
-  document.getElementById('params-section').classList.remove('hidden');
-  document.getElementById('composition-section').classList.remove('hidden');
-});
-
-// Initialiser le graphique
-function initializeChart() {
-  const ctx = document.getElementById('chart').getContext('2d');
-  
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [{
-        label: 'Température (°C)',
-        data: [],
-        borderColor: '#1e88e5',
-        backgroundColor: 'rgba(30, 136, 229, 0.1)',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Position (mm)'
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Température (°C)'
-          }
-        }
-      }
-    }
-  });
-}
-
-// Mettre à jour le graphique avec les nouvelles données
-function updateChart(positions, temperatures, dewPoint, dewPointPosition) {
-  chart.data.labels = positions;
-  chart.data.datasets[0].data = temperatures;
-  
-  // Ajouter la ligne horizontale pour le point de rosée
-  chart.options.plugins.annotation = {
-    annotations: {}
-  };
-  
-  if (dewPoint !== null) {
-    chart.options.plugins.annotation.annotations.dewPointLine = {
-      type: 'line',
-      yMin: dewPoint,
-      yMax: dewPoint,
-      borderColor: 'red',
-      borderWidth: 2,
-      borderDash: [5, 5],
-      label: {
-        content: `Point de rosée (${dewPoint.toFixed(1)}°C)`,
-        position: 'right',
-        color: 'red',
-        enabled: true
-      }
-    };
-  }
-  
-  if (dewPointPosition !== null) {
-    chart.options.plugins.annotation.annotations.dewPointPosition = {
-      type: 'line',
-      xMin: dewPointPosition,
-      xMax: dewPointPosition,
-      borderColor: 'red',
-      borderWidth: 2,
-      borderDash: [5, 5]
-    };
-  }
-  
-  chart.update();
-}
-
-// Initialiser la liste des municipalités
+// Initialiser le sélecteur de municipalité
 function initializeMunicipalitySelect() {
   const select = document.getElementById('location');
   
@@ -1394,159 +1296,84 @@ function updateEnvelopeComponent() {
   updateMinRSIDisplay();
 }
 
-// Générer une couleur à partir d'une chaîne
-function generateColorFromString(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  let color = '#';
-  for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xFF;
-    color += ('00' + value.toString(16)).substr(-2);
-  }
-  return color;
-}
-
-// Ajouter une nouvelle couche
-function addLayer(type) {
-  selectedLayerType = type;
-  selectedLayerIndex = layers.length;
+// Initialiser le graphique
+function initializeChart() {
+  const ctx = document.getElementById('chart').getContext('2d');
   
-  // Afficher le sélecteur de matériau
-  const materialSelector = document.getElementById('material-selector');
-  
-  if (!materialSelector) {
-    console.error("L'élément 'material-selector' n'a pas été trouvé");
-    return;
-  }
-  
-  materialSelector.classList.remove('hidden');
-  
-  // Définir le titre approprié
-  const titleElement = document.getElementById('material-selector-title');
-  
-  if (!titleElement) {
-    console.error("L'élément 'material-selector-title' n'a pas été trouvé");
-    return;
-  }
-  
-  let title = "";
-  switch (type) {
-    case 'airfilm':
-      title = "Sélectionner un film d'air";
-      break;
-    case 'airspace':
-      title = "Sélectionner une lame d'air";
-      break;
-    case 'insulation':
-      title = "Sélectionner un isolant";
-      break;
-    case 'sheathening':
-      title = "Sélectionner un revêtement intermédiaire";
-      break;
-    case 'cladding':
-      title = "Sélectionner un parement extérieur";
-      break;
-    case 'interior':
-      title = "Sélectionner une finition intérieure";
-      break;
-    case 'structural':
-      title = "Sélectionner un élément structural";
-      break;
-    case 'roofing':
-      title = "Sélectionner un matériau de toiture";
-      break;
-  }
-  titleElement.textContent = title;
-  
-  // Générer les catégories de matériaux appropriées
-  generateMaterialCategories(type);
-}
-
-// Générer les catégories de matériaux pour le sélecteur
-function generateMaterialCategories(type) {
-  const container = document.getElementById('material-categories');
-  
-  if (!container) {
-    console.error("L'élément 'material-categories' n'a pas été trouvé");
-    return;
-  }
-  
-  container.innerHTML = '';
-  
-  let materialOptions = [];
-  
-  switch (type) {
-    case 'airfilm':
-      materialOptions = [{ name: "Films d'air", materials: materials.airFilms }];
-      break;
-    case 'airspace':
-      materialOptions = [
-        { name: "Lames d'air non réfléchissantes", materials: materials.airSpaces },
-        { name: "Lames d'air réfléchissantes", materials: materials.reflectiveAirSpaces }
-      ];
-      break;
-    case 'insulation':
-      materialOptions = [
-        { name: "Isolants en nattes", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('nattes')) },
-        { name: "Polystyrène", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('polystyrène')) },
-        { name: "Polyisocyanurate", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('polyiso')) },
-        { name: "Autres isolants", materials: materials.insulation.filter(m => 
-          !m.name.toLowerCase().includes('nattes') && 
-          !m.name.toLowerCase().includes('polystyrène') && 
-          !m.name.toLowerCase().includes('polyiso')
-        )}
-      ];
-      break;
-    case 'sheathening':
-      materialOptions = [{ name: "Revêtements d'ossature", materials: materials.sheathing }];
-      break;
-    case 'cladding':
-      materialOptions = [
-        { name: "Parements de bois", materials: materials.woodCladding },
-        { name: "Autres parements", materials: materials.otherCladding }
-      ];
-      break;
-    case 'interior':
-      materialOptions = [{ name: "Finitions intérieures", materials: materials.interiorFinish }];
-      break;
-    case 'structural':
-      materialOptions = [
-        { name: "Bois", materials: materials.wood },
-        { name: "Béton", materials: materials.concrete },
-        { name: "Blocs de béton", materials: materials.concreteBlocks }
-      ];
-      break;
-    case 'roofing':
-      materialOptions = [{ name: "Matériaux de toiture", materials: materials.roofingMaterials }];
-      break;
-  }
-  
-  materialOptions.forEach(category => {
-    const div = document.createElement('div');
-    div.className = 'mb-4';
-    
-    const title = document.createElement('h5');
-    title.className = 'font-semibold mb-2 text-sm';
-    title.textContent = category.name;
-    div.appendChild(title);
-    
-    const materialList = document.createElement('div');
-    materialList.className = 'space-y-1';
-    
-    category.materials.forEach(material => {
-      const button = document.createElement('button');
-      button.className = 'w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100';
-      button.textContent = material.name;
-      button.onclick = () => selectMaterial(material);
-      
-      materialList.appendChild(button);
-    });
-    
-    div.appendChild(materialList);
-    container.appendChild(div);
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Température (°C)',
+        data: [],
+        borderColor: '#1e88e5',
+        backgroundColor: 'rgba(30, 136, 229, 0.1)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Position (mm)'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Température (°C)'
+          }
+        }
+      }
+    }
   });
+}
+
+// Mettre à jour le graphique avec les nouvelles données
+function updateChart(positions, temperatures, dewPoint, dewPointPosition) {
+  chart.data.labels = positions;
+  chart.data.datasets[0].data = temperatures;
+  
+  // Ajouter la ligne horizontale pour le point de rosée
+  chart.options.plugins.annotation = {
+    annotations: {}
+  };
+  
+  if (dewPoint !== null) {
+    chart.options.plugins.annotation.annotations.dewPointLine = {
+      type: 'line',
+      yMin: dewPoint,
+      yMax: dewPoint,
+      borderColor: 'red',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      label: {
+        content: `Point de rosée (${dewPoint.toFixed(1)}°C)`,
+        position: 'right',
+        color: 'red',
+        enabled: true
+      }
+    };
+  }
+  
+  if (dewPointPosition !== null) {
+    chart.options.plugins.annotation.annotations.dewPointPosition = {
+      type: 'line',
+      xMin: dewPointPosition,
+      xMax: dewPointPosition,
+      borderColor: 'red',
+      borderWidth: 2,
+      borderDash: [5, 5]
+    };
+  }
+  
+  chart.update();
 }
 
 // Sélectionner un matériau
@@ -1637,10 +1464,6 @@ function initializeThicknessSelector(material) {
     select.value = defaultThickness;
     selectedThickness = defaultThickness;
   }
-  
-  // Ajouter l'événement de changement d'épaisseur
-  select.onchange = handleThicknessChange;
-  customThicknessInput.onchange = handleCustomThicknessChange;
 }
 
 // Gérer le changement d'épaisseur
@@ -1689,245 +1512,4 @@ function updateMaterialRSI() {
   
   const rsi = selectedMaterial.rsiPerMm * selectedThickness;
   rsiValueElem.textContent = formatRSIR(rsi);
-}
-
-// Annuler la sélection de matériau
-function cancelMaterialSelection() {
-  const materialSelector = document.getElementById('material-selector');
-  
-  if (!materialSelector) {
-    console.error("L'élément 'material-selector' n'a pas été trouvé");
-    return;
-  }
-  
-  materialSelector.classList.add('hidden');
-  selectedLayerType = null;
-  selectedLayerIndex = null;
-  selectedMaterialId = null;
-  selectedMaterial = null;
-}
-
-// Confirmer la sélection de matériau
-function confirmMaterialSelection() {
-  if (!selectedMaterial) return;
-  
-  // Créer une copie du matériau avec les propriétés mises à jour
-  const material = { ...selectedMaterial };
-  
-  // Si le matériau a une valeur RSI par mm, calculer la valeur RSI en fonction de l'épaisseur
-  if (material.rsiPerMm) {
-    material.thickness = selectedThickness;
-    material.rsi = material.rsiPerMm * selectedThickness;
-  }
-  
-  // Créer le nouvel objet layer
-  const layer = {
-    id: Date.now(),
-    type: selectedLayerType,
-    material: material
-  };
-  
-  // Ajouter ou mettre à jour la couche
-  if (selectedLayerIndex !== null && selectedLayerIndex < layers.length) {
-    // Mettre à jour une couche existante
-    layers[selectedLayerIndex] = layer;
-  } else {
-    // Ajouter une nouvelle couche
-    layers.push(layer);
-  }
-  
-  // Mettre à jour l'affichage
-  updateLayersDisplay();
-  updateMaterialsSummary();
-  
-  // Cacher le sélecteur
-  const materialSelector = document.getElementById('material-selector');
-  
-  if (!materialSelector) {
-    console.error("L'élément 'material-selector' n'a pas été trouvé");
-    return;
-  }
-  
-  materialSelector.classList.add('hidden');
-  
-  // Réinitialiser les variables
-  selectedLayerType = null;
-  selectedLayerIndex = null;
-  selectedMaterialId = null;
-  selectedMaterial = null;
-}
-
-// Mettre à jour l'affichage des couches
-function updateLayersDisplay() {
-  const container = document.getElementById('layers-container');
-  const noLayersMessage = document.getElementById('no-layers-message');
-  
-  if (!container || !noLayersMessage) {
-    console.error("Des éléments d'affichage des couches n'ont pas été trouvés");
-    return;
-  }
-  
-  if (layers.length === 0) {
-    container.innerHTML = '';
-    noLayersMessage.classList.remove('hidden');
-    return;
-  }
-  
-  noLayersMessage.classList.add('hidden');
-  container.innerHTML = '';
-  
-  layers.forEach((layer, index) => {
-    const layerDiv = document.createElement('div');
-    layerDiv.className = 'border p-4 rounded mb-3 bg-gray-50';
-    
-    const headerDiv = document.createElement('div');
-    headerDiv.className = 'flex justify-between items-start mb-2';
-    
-    const title = document.createElement('h4');
-    title.className = 'font-bold';
-    
-    let layerTypeName = '';
-    switch (layer.type) {
-      case 'airfilm': layerTypeName = 'Film d\'air'; break;
-      case 'airspace': layerTypeName = 'Lame d\'air'; break;
-      case 'insulation': layerTypeName = 'Isolant'; break;
-      case 'sheathening': layerTypeName = 'Revêtement intermédiaire'; break;
-      case 'cladding': layerTypeName = 'Parement extérieur'; break;
-      case 'interior': layerTypeName = 'Finition intérieure'; break;
-      case 'structural': layerTypeName = 'Élément structural'; break;
-      case 'roofing': layerTypeName = 'Matériau de toiture'; break;
-    }
-    title.textContent = `Couche ${index + 1}: ${layerTypeName}`;
-    
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'flex space-x-2';
-    
-    const upButton = document.createElement('button');
-    upButton.innerHTML = '↑';
-    upButton.className = `text-blue-600 hover:text-blue-800 ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`;
-    upButton.title = 'Déplacer vers le haut';
-    if (index > 0) {
-      upButton.onclick = () => moveLayerUp(index);
-    }
-    
-    const downButton = document.createElement('button');
-    downButton.innerHTML = '↓';
-    downButton.className = `text-blue-600 hover:text-blue-800 ${index === layers.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`;
-    downButton.title = 'Déplacer vers le bas';
-    if (index < layers.length - 1) {
-      downButton.onclick = () => moveLayerDown(index);
-    }
-    
-    const removeButton = document.createElement('button');
-    removeButton.innerHTML = '✕';
-    removeButton.className = 'text-red-600 hover:text-red-800';
-    removeButton.title = 'Supprimer cette couche';
-    removeButton.onclick = () => removeLayer(index);
-    
-    actionsDiv.appendChild(upButton);
-    actionsDiv.appendChild(downButton);
-    actionsDiv.appendChild(removeButton);
-    
-    headerDiv.appendChild(title);
-    headerDiv.appendChild(actionsDiv);
-    
-    const materialInfo = document.createElement('div');
-    materialInfo.className = 'mt-2';
-    
-    if (layer.material) {
-      const materialName = document.createElement('p');
-      materialName.className = 'font-medium';
-      materialName.textContent = layer.material.name;
-      
-      const materialDesc = document.createElement('p');
-      materialDesc.className = 'text-sm text-gray-600';
-      materialDesc.textContent = layer.material.description || '';
-      
-      const rsiValue = document.createElement('p');
-      rsiValue.className = 'mt-1';
-      rsiValue.innerHTML = `<strong>Résistance thermique:</strong> ${formatRSIR(layer.material.rsi)}`;
-      
-      if (layer.material.thickness) {
-        const thicknessValue = document.createElement('p');
-        thicknessValue.innerHTML = `<strong>Épaisseur:</strong> ${layer.material.thickness} mm`;
-        materialInfo.appendChild(thicknessValue);
-      }
-      
-      materialInfo.appendChild(materialName);
-      materialInfo.appendChild(materialDesc);
-      materialInfo.appendChild(rsiValue);
-    }
-    
-    layerDiv.appendChild(headerDiv);
-    layerDiv.appendChild(materialInfo);
-    
-    container.appendChild(layerDiv);
-  });
-}
-
-// Mettre à jour le résumé des matériaux
-function updateMaterialsSummary() {
-  const tbody = document.getElementById('materials-summary-body');
-  
-  if (!tbody) {
-    console.error("L'élément 'materials-summary-body' n'a pas été trouvé");
-    return;
-  }
-  
-  tbody.innerHTML = '';
-  
-  let totalRSI = 0;
-  
-  layers.forEach((layer, index) => {
-    if (!layer.material) return;
-    
-    const tr = document.createElement('tr');
-    
-    const layerCell = document.createElement('td');
-    layerCell.className = 'border px-4 py-2';
-    layerCell.textContent = index + 1;
-    tr.appendChild(layerCell);
-    
-    const materialCell = document.createElement('td');
-    materialCell.className = 'border px-4 py-2';
-    materialCell.textContent = layer.material.name;
-    tr.appendChild(materialCell);
-    
-    const thicknessCell = document.createElement('td');
-    thicknessCell.className = 'border px-4 py-2';
-    thicknessCell.textContent = layer.material.thickness || "—";
-    tr.appendChild(thicknessCell);
-    
-    const rsiCell = document.createElement('td');
-    rsiCell.className = 'border px-4 py-2';
-    rsiCell.textContent = layer.material.rsi.toFixed(3);
-    tr.appendChild(rsiCell);
-    
-    const rCell = document.createElement('td');
-    rCell.className = 'border px-4 py-2';
-    rCell.textContent = (layer.material.rsi * 5.678263).toFixed(3);
-    tr.appendChild(rCell);
-    
-    tbody.appendChild(tr);
-    
-    totalRSI += layer.material.rsi;
-  });
-  
-  // Mettre à jour les totaux
-  const totalRsiElem = document.getElementById('total-rsi');
-  const totalRElem = document.getElementById('total-r');
-  const totalEffectiveRsiElem = document.getElementById('total-effective-rsi');
-  const totalEffectiveRElem = document.getElementById('total-effective-r');
-  
-  if (!totalRsiElem || !totalRElem || !totalEffectiveRsiElem || !totalEffectiveRElem) {
-    console.error("Des éléments d'affichage des totaux n'ont pas été trouvés");
-    return;
-  }
-  
-  totalRsiElem.textContent = totalRSI.toFixed(3);
-  totalRElem.textContent = (totalRSI * 5.678263).toFixed(3);
-  
-  const effectiveRSI = totalRSI * 0.85;
-  totalEffectiveRsiElem.textContent = effectiveRSI.toFixed(3);
-  totalEffectiveRElem.textContent = (effectiveRSI * 5.678263).toFixed(3);
 }
