@@ -2,6 +2,594 @@
 const rsiToR = (rsi) => {
   if (rsi === null || rsi === undefined || isNaN(rsi)) return null;
   return rsi * 5.678263;
+
+
+// Déplacer une couche vers le haut
+function moveLayerUp(index) {
+  if (index <= 0 || index >= layers.length) return;
+  
+  // Échanger les couches
+  [layers[index - 1], layers[index]] = [layers[index], layers[index - 1]];
+  
+  // Mettre à jour l'affichage
+  updateLayersDisplay();
+  updateMaterialsSummary();
+}
+
+// Déplacer une couche vers le bas
+function moveLayerDown(index) {
+  if (index < 0 || index >= layers.length - 1) return;
+  
+  // Échanger les couches
+  [layers[index], layers[index + 1]] = [layers[index + 1], layers[index]];
+  
+  // Mettre à jour l'affichage
+  updateLayersDisplay();
+  updateMaterialsSummary();
+}
+
+// Supprimer une couche
+function removeLayer(index) {
+  if (index < 0 || index >= layers.length) return;
+  
+  // Supprimer la couche
+  layers.splice(index, 1);
+  
+  // Mettre à jour l'affichage
+  updateLayersDisplay();
+  updateMaterialsSummary();
+}
+
+// Calculer les résultats
+function calculateResults() {
+  if (layers.length === 0) {
+    alert("Veuillez ajouter au moins une couche de matériau pour l'analyse.");
+    return;
+  }
+  
+  // Afficher la section des résultats
+  const noResultsMessage = document.getElementById('no-results-message');
+  const resultsContent = document.getElementById('results-content');
+  
+  if (!noResultsMessage || !resultsContent) {
+    console.error("Des éléments d'affichage des résultats n'ont pas été trouvés");
+    return;
+  }
+  
+  noResultsMessage.classList.add('hidden');
+  resultsContent.classList.remove('hidden');
+  
+  // Calculer la résistance thermique totale
+  const totalRSI = layers.reduce((sum, layer) => {
+    if (layer.material && layer.material.rsi) {
+      return sum + layer.material.rsi;
+    }
+    return sum;
+  }, 0);
+  
+  // Calculer la résistance thermique effective (simplifiée)
+  const effectiveRSI = totalRSI * 0.85;
+  
+  // Vérifier la conformité au code
+  const totalCompliance = checkCompliance(totalRSI, envelopeComponent, climaticZone, false);
+  const effectiveCompliance = checkCompliance(effectiveRSI, envelopeComponent, climaticZone, true);
+  
+  // Calculer les coefficients U
+  const uValue = 1 / totalRSI;
+  const uValueEffective = 1 / effectiveRSI;
+  
+  // Mettre à jour les résultats
+  const resultTotalRsi = document.getElementById('result-total-rsi');
+  const resultEffectiveRsi = document.getElementById('result-effective-rsi');
+  const envelopeDescriptionElem = document.getElementById('envelope-description');
+  const zoneDescriptionElem = document.getElementById('zone-description');
+  const minTotalRsiElem = document.getElementById('min-total-rsi');
+  const minEffectiveRsiElem = document.getElementById('min-effective-rsi');
+  
+  if (!resultTotalRsi || !resultEffectiveRsi || !envelopeDescriptionElem || !zoneDescriptionElem || !minTotalRsiElem || !minEffectiveRsiElem) {
+    console.error("Des éléments d'affichage des résultats n'ont pas été trouvés");
+    return;
+  }
+  
+  resultTotalRsi.textContent = formatRSIR(totalRSI);
+  resultEffectiveRsi.textContent = formatRSIR(effectiveRSI);
+  
+  envelopeDescriptionElem.textContent = getEnvelopeComponentDescription();
+  zoneDescriptionElem.textContent = climaticZone === "< 6000" ? "moins de 6000 degrés-jours" : "6000 degrés-jours ou plus";
+  
+  minTotalRsi.textContent = formatRSIR(totalCompliance.minRSI);
+  minEffectiveRsi.textContent = formatRSIR(effectiveCompliance.minRSI);
+  
+  // Mettre à jour le tableau de conformité
+  const complianceTotalRsiValueElem = document.getElementById('compliance-total-rsi-value');
+  const complianceTotalRsiMinElem = document.getElementById('compliance-total-rsi-min');
+  const complianceTotalRsiStatusElem = document.getElementById('compliance-total-rsi-status');
+  const complianceEffectiveRsiValueElem = document.getElementById('compliance-effective-rsi-value');
+  const complianceEffectiveRsiMinElem = document.getElementById('compliance-effective-rsi-min');
+  const complianceEffectiveRsiStatusElem = document.getElementById('compliance-effective-rsi-status');
+  const complianceUValueElem = document.getElementById('compliance-u-value');
+  const complianceUEffectiveElem = document.getElementById('compliance-u-effective');
+  
+  if (!complianceTotalRsiValueElem || !complianceTotalRsiMinElem || !complianceTotalRsiStatusElem || 
+      !complianceEffectiveRsiValueElem || !complianceEffectiveRsiMinElem || !complianceEffectiveRsiStatusElem || 
+      !complianceUValueElem || !complianceUEffectiveElem) {
+    console.error("Des éléments d'affichage de la conformité n'ont pas été trouvés");
+    return;
+  }
+  
+  complianceTotalRsiValueElem.textContent = formatRSIR(totalRSI);
+  complianceTotalRsiMinElem.textContent = formatRSIR(totalCompliance.minRSI);
+  complianceTotalRsiStatusElem.innerHTML = getComplianceIndicator(totalCompliance.compliant);
+  
+  complianceEffectiveRsiValueElem.textContent = formatRSIR(effectiveRSI);
+  complianceEffectiveRsiMinElem.textContent = formatRSIR(effectiveCompliance.minRSI);
+  complianceEffectiveRsiStatusElem.innerHTML = getComplianceIndicator(effectiveCompliance.compliant);
+  
+  complianceUValueElem.textContent = `${uValue.toFixed(3)} W/(m²·K)`;
+  complianceUEffectiveElem.textContent = `${uValueEffective.toFixed(3)} W/(m²·K)`;
+  
+  // Générer les recommandations
+  generateThermalBridgesRecommendations(envelopeComponent);
+  generateIsolationContinuityRecommendations();
+  
+  // Calculer et afficher le gradient de température et le point de rosée
+  calculateGradient();
+  
+  // Ouvrir l'accordéon des résultats s'il est fermé
+  const resultsSection = document.getElementById('results-section');
+  
+  if (resultsSection && resultsSection.classList.contains('hidden')) {
+    toggleAccordion('results-section');
+  }
+}
+
+// Calculer le gradient de température
+function calculateGradient() {
+  if (layers.length === 0) return;
+  
+  const tempExt = parseFloat(document.getElementById('temp-ext').value);
+  const tempInt = parseFloat(document.getElementById('temp-int').value);
+  const humidity = parseFloat(document.getElementById('humidity').value);
+  
+  // Calculer le point de rosée
+  const dewPointTemp = calculateDewPoint(tempInt, humidity);
+  
+  const dewPointElem = document.getElementById('dew-point');
+  const rsiTotalElem = document.getElementById('rsi-total');
+  const rTotalElem = document.getElementById('r-total');
+  const uValueElem = document.getElementById('u-value');
+  
+  if (!dewPointElem || !rsiTotalElem || !rTotalElem || !uValueElem) {
+    console.error("Des éléments d'affichage du gradient n'ont pas été trouvés");
+    return;
+  }
+  
+  dewPointElem.textContent = dewPointTemp.toFixed(1);
+  
+  // Calculer la résistance thermique totale
+  const rsiTotal = layers.reduce((sum, layer) => {
+    if (layer.material && layer.material.rsi) {
+      return sum + layer.material.rsi;
+    }
+    return sum;
+  }, 0);
+  
+  rsiTotalElem.textContent = rsiTotal.toFixed(2);
+  rTotalElem.textContent = (rsiTotal * 5.678).toFixed(1);
+  uValueElem.textContent = (1/rsiTotal).toFixed(3);
+  
+  // Calculer le gradient de température
+  const tempDiff = tempInt - tempExt;
+  const positions = [0];
+  const temps = [tempExt];
+  let cumulPosition = 0;
+  let cumulTemp = tempExt;
+  
+  // Calculer la température à chaque interface
+  layers.forEach((layer) => {
+    if (!layer.material || !layer.material.rsi) return;
+    
+    const deltaT = (layer.material.rsi / rsiTotal) * tempDiff;
+    cumulTemp += deltaT;
+    cumulPosition += (layer.material.thickness || 0);
+    
+    positions.push(cumulPosition);
+    temps.push(cumulTemp);
+  });
+  
+  // Mettre à jour le graphique
+  updateChart(positions, temps, dewPointTemp, null);
+  
+  // Vérifier si le point de rosée tombe dans la composition
+  const dewPointInfo = findDewPointPosition(temps, positions, dewPointTemp);
+  
+  // Mettre à jour la visualisation des matériaux
+  renderMaterialsVisualization(dewPointInfo.position);
+  
+  // Afficher ou masquer l'avertissement
+  const warningContainer = document.getElementById('warning-container');
+  
+  if (!warningContainer) {
+    console.error("L'élément 'warning-container' n'a pas été trouvé");
+    return;
+  }
+  
+  warningContainer.innerHTML = '';
+  
+  if (dewPointInfo.found) {
+    const dewPointMaterial = layers[dewPointInfo.materialIndex].material.name;
+    
+    warningContainer.innerHTML = `
+      <div class="warning">
+        <strong>Attention:</strong> Point de rosée (${dewPointTemp.toFixed(1)}°C) détecté dans 
+        le matériau "${dewPointMaterial}". 
+        Risque de condensation interne qui peut causer des problèmes d'humidité et de moisissure.
+      </div>
+    `;
+    
+    // Mettre à jour le graphique avec la position du point de rosée
+    updateChart(positions, temps, dewPointTemp, dewPointInfo.position);
+    
+    // Mettre à jour le texte de résumé
+    const summaryTextElem = document.getElementById('summary-text');
+    
+    if (summaryTextElem) {
+      summaryTextElem.textContent = 
+        `La température de part et d'autre de la paroi passe de ${tempExt}°C à ${tempInt}°C. ` +
+        `Le point de rosée calculé est de ${dewPointTemp.toFixed(1)}°C à ${humidity}% d'humidité relative. ` +
+        `Il y a risque de condensation dans le matériau "${dewPointMaterial}".`;
+    }
+  } else {
+    const summaryTextElem = document.getElementById('summary-text');
+    
+    if (summaryTextElem) {
+      summaryTextElem.textContent = 
+        `La température de part et d'autre de la paroi passe de ${tempExt}°C à ${tempInt}°C. ` +
+        `Le point de rosée calculé est de ${dewPointTemp.toFixed(1)}°C à ${humidity}% d'humidité relative. ` +
+        `Aucun risque de condensation détecté dans cette composition.`;
+    }
+  }
+}
+
+// Rendre la visualisation des matériaux
+function renderMaterialsVisualization(dewPointPosition = null) {
+  const container = document.getElementById('material-viz');
+  
+  if (!container) {
+    console.error("L'élément 'material-viz' n'a pas été trouvé");
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  if (layers.length === 0) return;
+  
+  const totalWidth = layers.reduce((sum, layer) => {
+    return sum + (layer.material && layer.material.thickness ? layer.material.thickness : 0);
+  }, 0);
+  
+  layers.forEach(layer => {
+    if (!layer.material) return;
+    
+    const width = layer.material.thickness === 0 ? 20 : layer.material.thickness;
+    const percentage = totalWidth > 0 ? (width / totalWidth) * 100 : 0;
+    const backgroundColor = generateColorFromString(layer.material.name);
+    
+    const div = document.createElement('div');
+    div.className = 'material-segment';
+    div.style.width = `${percentage}%`;
+    div.style.minWidth = '20px';
+    div.style.backgroundColor = backgroundColor;
+    div.title = `${layer.material.name} - RSI: ${layer.material.rsi.toFixed(2)}`;
+    
+    const span = document.createElement('span');
+    span.textContent = layer.material.name;
+    div.appendChild(span);
+    
+    container.appendChild(div);
+  });
+  
+  // Ajouter le marqueur du point de rosée si présent
+  if (dewPointPosition !== null) {
+    const marker = document.createElement('div');
+    marker.className = 'dewpoint-marker';
+    marker.style.left = `${(dewPointPosition / totalWidth) * 100}%`;
+    marker.title = 'Point de rosée';
+    container.appendChild(marker);
+  }
+}
+
+// Vérifier la conformité au code
+function checkCompliance(rsi, component, zone, isEffective = false) {
+  if (!zone || !component) return { compliant: false, minRSI: 0 };
+  
+  const minRSI = isEffective ? 
+    minRSIEffectiveValues[zone][component] : 
+    minRSITotalValues[zone][component];
+  
+  return {
+    compliant: rsi >= minRSI,
+    minRSI
+  };
+}
+
+// Obtenir un indicateur visuel de conformité
+function getComplianceIndicator(isCompliant) {
+  return isCompliant ? 
+    '<span class="text-green-600 font-bold">Conforme ✓</span>' : 
+    '<span class="text-red-600 font-bold">Non conforme ✗</span>';
+}
+
+// Décrire le composant d'enveloppe sélectionné
+function getEnvelopeComponentDescription() {
+  switch (envelopeComponent) {
+    case 'wall_above_grade':
+      return 'un mur hors sol';
+    case 'foundation_wall':
+      return 'un mur de fondation';
+    case 'roof':
+      return 'un toit ou plafond';
+    case 'floor':
+      return 'un plancher séparant un espace chauffé d\'un espace non chauffé';
+    case 'garage_ceiling':
+      return 'un plafond de garage chauffé';
+    case 'garage_walls_to_dwelling':
+      return 'des murs de garage chauffé contigus au logement';
+    case 'garage_foundation_wall':
+      return 'un mur de fondation de garage chauffé';
+    default:
+      return 'cet élément';
+  }
+}
+
+// Générer les recommandations pour les ponts thermiques
+function generateThermalBridgesRecommendations(component) {
+  const container = document.getElementById('thermal-bridges-recommendations');
+  
+  if (!container) {
+    console.error("L'élément 'thermal-bridges-recommendations' n'a pas été trouvé");
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  let recommendations = [];
+  
+  if (component === 'wall_above_grade') {
+    recommendations.push({
+      title: "Exigences pour les ponts thermiques des murs",
+      description: "Les éléments du bâtiment constituant un pont thermique doivent être recouverts de matériaux isolants ayant une résistance thermique minimale selon l'article 11.2.3.1. du Code:"
+    });
+    
+    recommendations.push({
+      title: "Pour une ossature de bois",
+      description: "- RSI 0,7 lorsque les éléments d'ossature sont espacés de moins de 600 mm d'entraxe\n- RSI 0,53 dans les autres cas"
+    });
+    
+    recommendations.push({
+      title: "Pour une ossature métallique",
+      description: "- RSI 1,76 lorsque les éléments d'ossature sont espacés de moins de 600 mm d'entraxe\n- RSI 1,32 dans les autres cas"
+    });
+    
+    recommendations.push({
+      title: "Pour une construction en béton",
+      description: "- RSI 0,88 minimum"
+    });
+    
+    recommendations.push({
+      title: "Note importante",
+      description: "Le matériau isolant doit couvrir les éléments du bâtiment constituant un pont thermique par l'extérieur, par l'intérieur ou par une combinaison des deux."
+    });
+  } 
+  else if (component === 'foundation_wall') {
+    recommendations.push({
+      title: "Exigences pour les fondations",
+      description: "Un mur de fondation dont plus de 50% de la surface est exposée à l'air extérieur, ainsi que la partie d'un mur de fondation qui est à ossature de bois, doivent avoir une résistance thermique totale égale à celle exigée pour un mur au-dessus du niveau du sol."
+    });
+    
+    recommendations.push({
+      title: "Bris thermique",
+      description: "L'article 11.2.3.3 exige que le matériau isolant placé entre le mur de fondation et le plancher sur sol ait une résistance thermique d'au moins RSI 1,32 jusqu'à une profondeur de 600 mm sous le niveau du sol."
+    });
+  }
+  else if (component === 'roof') {
+    recommendations.push({
+      title: "Résistance thermique à proximité des avant-toits",
+      description: "Selon l'article 11.2.2.3, la résistance thermique totale exigée pour un toit ou plafond peut être réduite à proximité de l'avant-toit lorsque nécessaire pour la ventilation, à condition de ne pas être inférieure à la valeur exigée pour un mur au-dessus du niveau du sol."
+    });
+    
+    recommendations.push({
+      title: "Toits plats",
+      description: "La résistance thermique totale pour les toits plats peut être réduite d'au plus 20% à son point le plus bas pour créer des pentes de drainage, à condition que la perte de chaleur totale ne soit pas supérieure à celle d'un toit conforme aux exigences."
+    });
+  }
+  else if (component === 'floor') {
+    recommendations.push({
+      title: "Ponts thermiques des planchers",
+      description: "Selon l'article 11.2.3.2, la résistance thermique des matériaux isolants recouvrant les ponts thermiques des planchers doit avoir une valeur d'au moins RSI 1,32 pour les planchers hors sol en porte-à-faux et les planchers situés au-dessus d'un espace non chauffé."
+    });
+  }
+  
+  recommendations.forEach((recommendation, index) => {
+    const div = document.createElement('div');
+    div.className = 'mb-3';
+    
+    const title = document.createElement('h4');
+    title.className = 'font-bold text-blue-800';
+    title.textContent = recommendation.title;
+    
+    const description = document.createElement('p');
+    description.className = 'text-sm whitespace-pre-line';
+    description.textContent = recommendation.description;
+    
+    div.appendChild(title);
+    div.appendChild(description);
+    
+    container.appendChild(div);
+  });
+}
+
+// Générer les recommandations pour la continuité de l'isolation
+function generateIsolationContinuityRecommendations() {
+  const container = document.getElementById('isolation-continuity-recommendations');
+  
+  if (!container) {
+    console.error("L'élément 'isolation-continuity-recommendations' n'a pas été trouvé");
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  const recommendations = [
+    {
+      title: "Continuité de l'isolation",
+      description: "Pour assurer la performance énergétique de l'enveloppe, l'isolation thermique doit être continue sur toute la surface de l'élément et les ponts thermiques doivent être minimisés selon les exigences du Code."
+    },
+    {
+      title: "Solive de rive",
+      description: "Selon l'article 11.2.3.1, la solive de rive doit être isolée de manière à posséder une valeur de résistance thermique totale équivalente à celle exigée pour un mur au-dessus du niveau du sol. Pour une construction de béton, une résistance thermique d'au moins RSI 1,76 est requise."
+    },
+    {
+      title: "Murs entre espaces chauffés",
+      description: "Lorsque le mur entre deux espaces chauffés crée un pont thermique, il doit être recouvert de matériaux isolants offrant une résistance thermique d'au moins RSI 2,20 de chaque côté du mur sur une distance minimale de 1,2 m à partir de la face extérieure du mur extérieur."
+    }
+  ];
+  
+  recommendations.forEach((recommendation, index) => {
+    const div = document.createElement('div');
+    div.className = 'mb-3';
+    
+    const title = document.createElement('h4');
+    title.className = 'font-bold text-blue-800';
+    title.textContent = recommendation.title;
+    
+    const description = document.createElement('p');
+    description.className = 'text-sm';
+    description.textContent = recommendation.description;
+    
+    div.appendChild(title);
+    div.appendChild(description);
+    
+    container.appendChild(div);
+  });
+}
+
+// Fonction pour ouvrir/fermer les accordéons
+function toggleAccordion(sectionId) {
+  const section = document.getElementById(sectionId);
+  const icon = document.getElementById(`${sectionId}-icon`);
+  
+  if (!section || !icon) {
+    console.error(`Des éléments de l'accordéon '${sectionId}' n'ont pas été trouvés`);
+    return;
+  }
+  
+  if (section.classList.contains('hidden')) {
+    section.classList.remove('hidden');
+    icon.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
+  } else {
+    section.classList.add('hidden');
+    icon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+  }
+}
+
+// Initialisation de l'application
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser les sélecteurs
+  initializeMunicipalitySelect();
+  
+  // Initialiser le graphique
+  initializeChart();
+  
+  // Ajouter quelques couches par défaut pour démonstration
+  addDefaultLayers();
+  
+  // Mettre à jour les affichages
+  updateLayersDisplay();
+  updateMaterialsSummary();
+  
+  // Événements du sélecteur d'épaisseur
+  const thicknessSelect = document.getElementById('thickness-select');
+  const customThicknessInput = document.getElementById('custom-thickness-input');
+  
+  if (thicknessSelect) {
+    thicknessSelect.addEventListener('change', handleThicknessChange);
+  }
+  
+  if (customThicknessInput) {
+    customThicknessInput.addEventListener('change', handleCustomThicknessChange);
+  }
+});
+
+// Ajouter des couches par défaut pour démonstration
+function addDefaultLayers() {
+  // Film d'air extérieur
+  layers.push({
+    id: Date.now(),
+    type: 'airfilm',
+    material: { ...materials.airFilms.find(m => m.id === 'exterior') }
+  });
+  
+  // Brique
+  layers.push({
+    id: Date.now() + 1,
+    type: 'cladding',
+    material: { 
+      ...materials.otherCladding.find(m => m.id === 'brick_90mm')
+    }
+  });
+  
+  // Isolant rigide
+  const eps = { 
+    ...materials.insulation.find(m => m.id === 'polystyrene_type2'),
+    thickness: 50,
+    rsi: 0.028 * 50
+  };
+  layers.push({
+    id: Date.now() + 2,
+    type: 'insulation',
+    material: eps
+  });
+  
+  // OSB
+  const osb = { 
+    ...materials.sheathing.find(m => m.id === 'osb'),
+    thickness: 11,
+    rsi: 0.0098 * 11
+  };
+  layers.push({
+    id: Date.now() + 3,
+    type: 'sheathening',
+    material: osb
+  });
+  
+  // Isolant en nattes
+  layers.push({
+    id: Date.now() + 4,
+    type: 'insulation',
+    material: { ...materials.insulation.find(m => m.id === 'mineral_wool_batt_r20') }
+  });
+  
+  // Coupe-vapeur (négligeable thermiquement)
+  
+  // Gypse
+  const gypsum = { 
+    ...materials.interiorFinish.find(m => m.id === 'gypsum_interior'),
+    thickness: 13,
+    rsi: 0.0061 * 13
+  };
+  layers.push({
+    id: Date.now() + 5,
+    type: 'interior',
+    material: gypsum
+  });
+  
+  // Film d'air intérieur
+  layers.push({
+    id: Date.now() + 6,
+    type: 'airfilm',
+    material: { ...materials.airFilms.find(m => m.id === 'interior_vertical') }
+  });
 };
 
 // Fonction pour convertir R en RSI
@@ -197,6 +785,62 @@ const municipalities = [
   { id: "ville-marie", name: "Ville-Marie", degreeDay: 5550, zone: ">= 6000" }
 ];
 
+// Table de pression de saturation de vapeur d'eau
+const saturationTable = [
+    { temp: -60, pressure: 0.001 },
+    { temp: -40, pressure: 0.13 },
+    { temp: -20, pressure: 1.03 },
+    { temp: -18, pressure: 1.5 },
+    { temp: -15, pressure: 1.9 },
+    { temp: -12, pressure: 2.4 },
+    { temp: -10, pressure: 2.6 },
+    { temp: -9, pressure: 3.0 },
+    { temp: -7, pressure: 3.7 },
+    { temp: -4, pressure: 4.6 },
+    { temp: -1, pressure: 5.6 },
+    { temp: 0, pressure: 6.11 },
+    { temp: 2, pressure: 7.06 },
+    { temp: 4, pressure: 8.13 },
+    { temp: 6, pressure: 9.35 },
+    { temp: 8, pressure: 10.73 },
+    { temp: 10, pressure: 12.28 },
+    { temp: 11, pressure: 13.12 },
+    { temp: 12, pressure: 14.02 },
+    { temp: 13, pressure: 14.97 },
+    { temp: 14, pressure: 15.98 },
+    { temp: 15, pressure: 17.05 },
+    { temp: 16, pressure: 18.18 },
+    { temp: 17, pressure: 19.37 },
+    { temp: 18, pressure: 20.63 },
+    { temp: 19, pressure: 21.97 },
+    { temp: 20, pressure: 23.38 },
+    { temp: 21, pressure: 24.87 },
+    { temp: 22, pressure: 26.43 },
+    { temp: 23, pressure: 28.09 },
+    { temp: 24, pressure: 29.83 },
+    { temp: 25, pressure: 31.67 },
+    { temp: 26, pressure: 33.6 },
+    { temp: 27, pressure: 35.64 },
+    { temp: 28, pressure: 37.8 },
+    { temp: 29, pressure: 40.05 },
+    { temp: 30, pressure: 42.43 },
+    { temp: 31, pressure: 44.92 },
+    { temp: 32, pressure: 47.55 },
+    { temp: 33, pressure: 50.3 },
+    { temp: 34, pressure: 53.19 },
+    { temp: 35, pressure: 56.23 },
+    { temp: 36, pressure: 59.41 },
+    { temp: 37, pressure: 62.75 },
+    { temp: 38, pressure: 66.25 },
+    { temp: 39, pressure: 69.92 },
+    { temp: 40, pressure: 73.75 },
+    { temp: 45, pressure: 95.83 },
+    { temp: 50, pressure: 123.34 },
+    { temp: 55, pressure: 157.37 },
+    { temp: 60, pressure: 199.16 },
+    { temp: 65, pressure: 250.03 }
+];
+
 // Base de données des matériaux avec leurs valeurs RSI
 const materials = {
   // Films d'air
@@ -389,62 +1033,6 @@ const materials = {
   ]
 };
 
-// Table de pression de saturation de vapeur d'eau
-const saturationTable = [
-    { temp: -60, pressure: 0.001 },
-    { temp: -40, pressure: 0.13 },
-    { temp: -20, pressure: 1.03 },
-    { temp: -18, pressure: 1.5 },
-    { temp: -15, pressure: 1.9 },
-    { temp: -12, pressure: 2.4 },
-    { temp: -10, pressure: 2.6 },
-    { temp: -9, pressure: 3.0 },
-    { temp: -7, pressure: 3.7 },
-    { temp: -4, pressure: 4.6 },
-    { temp: -1, pressure: 5.6 },
-    { temp: 0, pressure: 6.11 },
-    { temp: 2, pressure: 7.06 },
-    { temp: 4, pressure: 8.13 },
-    { temp: 6, pressure: 9.35 },
-    { temp: 8, pressure: 10.73 },
-    { temp: 10, pressure: 12.28 },
-    { temp: 11, pressure: 13.12 },
-    { temp: 12, pressure: 14.02 },
-    { temp: 13, pressure: 14.97 },
-    { temp: 14, pressure: 15.98 },
-    { temp: 15, pressure: 17.05 },
-    { temp: 16, pressure: 18.18 },
-    { temp: 17, pressure: 19.37 },
-    { temp: 18, pressure: 20.63 },
-    { temp: 19, pressure: 21.97 },
-    { temp: 20, pressure: 23.38 },
-    { temp: 21, pressure: 24.87 },
-    { temp: 22, pressure: 26.43 },
-    { temp: 23, pressure: 28.09 },
-    { temp: 24, pressure: 29.83 },
-    { temp: 25, pressure: 31.67 },
-    { temp: 26, pressure: 33.6 },
-    { temp: 27, pressure: 35.64 },
-    { temp: 28, pressure: 37.8 },
-    { temp: 29, pressure: 40.05 },
-    { temp: 30, pressure: 42.43 },
-    { temp: 31, pressure: 44.92 },
-    { temp: 32, pressure: 47.55 },
-    { temp: 33, pressure: 50.3 },
-    { temp: 34, pressure: 53.19 },
-    { temp: 35, pressure: 56.23 },
-    { temp: 36, pressure: 59.41 },
-    { temp: 37, pressure: 62.75 },
-    { temp: 38, pressure: 66.25 },
-    { temp: 39, pressure: 69.92 },
-    { temp: 40, pressure: 73.75 },
-    { temp: 45, pressure: 95.83 },
-    { temp: 50, pressure: 123.34 },
-    { temp: 55, pressure: 157.37 },
-    { temp: 60, pressure: 199.16 },
-    { temp: 65, pressure: 250.03 }
-];
-
 // Options d'épaisseur communes pour les matériaux
 const thicknessOptions = [
   { value: 3, label: "3 mm" },
@@ -485,123 +1073,6 @@ let selectedMaterialCategory = null;
 let selectedMaterialId = null;
 let selectedThickness = 25;
 let chart = null;
-
-// Fonctions d'initialisation et de gestion de l'interface
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialiser les sélecteurs
-  initializeMunicipalitySelect();
-
-  // Initialiser le graphique
-  initializeChart();
-
-  // Ajouter quelques couches par défaut pour démonstration
-  addDefaultLayers();
-
-  // Mettre à jour les affichages
-  updateLayersDisplay();
-  updateMaterialsSummary();
-  updateMinRSIDisplay();
-
-  // Connecter les événements
-  document.getElementById('calculate-btn').addEventListener('click', calculateResults);
-  document.getElementById('location').addEventListener('change', updateLocation);
-  document.getElementById('degree-days').addEventListener('change', updateDegreeDays);
-  document.getElementById('building-type').addEventListener('change', updateBuildingType);
-  document.getElementById('code-version').addEventListener('change', updateCodeVersion);
-  document.getElementById('envelope-component').addEventListener('change', updateEnvelopeComponent);
-  document.getElementById('temp-ext').addEventListener('change', calculateGradient);
-  document.getElementById('temp-int').addEventListener('change', calculateGradient);
-  document.getElementById('humidity').addEventListener('change', calculateGradient);
-
-  // S'assurer que les accordéons importants sont ouverts
-  document.getElementById('params-section').classList.remove('hidden');
-  document.getElementById('composition-section').classList.remove('hidden');
-});
-
-// Initialiser le graphique
-function initializeChart() {
-  const ctx = document.getElementById('chart').getContext('2d');
-  
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [{
-        label: 'Température (°C)',
-        data: [],
-        borderColor: '#1e88e5',
-        backgroundColor: 'rgba(30, 136, 229, 0.1)',
-        borderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Position (mm)'
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Température (°C)'
-          }
-        }
-      },
-      plugins: {
-        annotation: {
-          annotations: {}
-        }
-      }
-    }
-  });
-}
-
-// Mettre à jour le graphique avec les nouvelles données
-function updateChart(positions, temperatures, dewPoint, dewPointPosition) {
-  chart.data.labels = positions;
-  chart.data.datasets[0].data = temperatures;
-  
-  // Ajouter la ligne horizontale pour le point de rosée
-  chart.options.plugins.annotation = {
-    annotations: {}
-  };
-  
-  if (dewPoint !== null) {
-    chart.options.plugins.annotation.annotations.dewPointLine = {
-      type: 'line',
-      yMin: dewPoint,
-      yMax: dewPoint,
-      borderColor: 'red',
-      borderWidth: 2,
-      borderDash: [5, 5],
-      label: {
-        content: `Point de rosée (${dewPoint.toFixed(1)}°C)`,
-        position: 'right',
-        color: 'red',
-        enabled: true
-      }
-    };
-  }
-  
-  if (dewPointPosition !== null) {
-    chart.options.plugins.annotation.annotations.dewPointPosition = {
-      type: 'line',
-      xMin: dewPointPosition,
-      xMax: dewPointPosition,
-      borderColor: 'red',
-      borderWidth: 2,
-      borderDash: [5, 5]
-    };
-  }
-  
-  chart.update();
-}
 
 // Fonction pour calculer le point de rosée
 function calculateDewPoint(temp, rh) {
@@ -681,23 +1152,116 @@ function findDewPointPosition(temperatures, positions, dewPoint) {
   };
 }
 
-// Fonction pour ouvrir/fermer les accordéons
-function toggleAccordion(sectionId) {
-  const section = document.getElementById(sectionId);
-  const icon = document.getElementById(`${sectionId}-icon`);
+// Fonctions d'initialisation et de gestion de l'interface
+document.addEventListener('DOMContentLoaded', function() {
+  initializeMunicipalitySelect();
+  initializeChart();
   
-  if (section.classList.contains('hidden')) {
-    section.classList.remove('hidden');
-    icon.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
-  } else {
-    section.classList.add('hidden');
-    icon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+  // Mettre à jour les affichages initiaux
+  updateMinRSIDisplay();
+  
+  // Ajouter les gestionnaires d'événements
+  document.getElementById('temp-ext').addEventListener('change', calculateGradient);
+  document.getElementById('temp-int').addEventListener('change', calculateGradient);
+  document.getElementById('humidity').addEventListener('change', calculateGradient);
+  
+  // Ouvrir les sections nécessaires par défaut
+  document.getElementById('params-section').classList.remove('hidden');
+  document.getElementById('composition-section').classList.remove('hidden');
+});
+
+// Initialiser le graphique
+function initializeChart() {
+  const ctx = document.getElementById('chart').getContext('2d');
+  
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Température (°C)',
+        data: [],
+        borderColor: '#1e88e5',
+        backgroundColor: 'rgba(30, 136, 229, 0.1)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Position (mm)'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Température (°C)'
+          }
+        }
+      }
+    }
+  });
+}
+
+// Mettre à jour le graphique avec les nouvelles données
+function updateChart(positions, temperatures, dewPoint, dewPointPosition) {
+  chart.data.labels = positions;
+  chart.data.datasets[0].data = temperatures;
+  
+  // Ajouter la ligne horizontale pour le point de rosée
+  chart.options.plugins.annotation = {
+    annotations: {}
+  };
+  
+  if (dewPoint !== null) {
+    chart.options.plugins.annotation.annotations.dewPointLine = {
+      type: 'line',
+      yMin: dewPoint,
+      yMax: dewPoint,
+      borderColor: 'red',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      label: {
+        content: `Point de rosée (${dewPoint.toFixed(1)}°C)`,
+        position: 'right',
+        color: 'red',
+        enabled: true
+      }
+    };
   }
+  
+  if (dewPointPosition !== null) {
+    chart.options.plugins.annotation.annotations.dewPointPosition = {
+      type: 'line',
+      xMin: dewPointPosition,
+      xMax: dewPointPosition,
+      borderColor: 'red',
+      borderWidth: 2,
+      borderDash: [5, 5]
+    };
+  }
+  
+  chart.update();
 }
 
 // Initialiser la liste des municipalités
 function initializeMunicipalitySelect() {
   const select = document.getElementById('location');
+  
+  // S'assurer que le select existe
+  if (!select) {
+    console.error("L'élément 'location' n'a pas été trouvé");
+    return;
+  }
+
+  // Vider le select d'abord pour éviter les duplications
+  select.innerHTML = '<option value="">Sélectionnez une municipalité</option>';
   
   // Trier les municipalités par nom
   const sortedMunicipalities = [...municipalities].sort((a, b) => a.name.localeCompare(b.name));
@@ -713,12 +1277,22 @@ function initializeMunicipalitySelect() {
 // Mettre à jour les informations basées sur la municipalité
 function updateLocation() {
   const select = document.getElementById('location');
+  
+  if (!select) {
+    console.error("L'élément 'location' n'a pas été trouvé");
+    return;
+  }
+  
   location = select.value;
   
   if (location) {
     const municipality = municipalities.find(m => m.id === location);
     if (municipality) {
-      document.getElementById('degree-days').value = municipality.degreeDay;
+      const degreeDaysInput = document.getElementById('degree-days');
+      if (degreeDaysInput) {
+        degreeDaysInput.value = municipality.degreeDay;
+        degreeDays = municipality.degreeDay;
+      }
       climaticZone = municipality.zone;
       updateClimaticZoneDisplay();
       updateMinRSIDisplay();
@@ -729,6 +1303,12 @@ function updateLocation() {
 // Mettre à jour les informations basées sur les degrés-jours
 function updateDegreeDays() {
   const input = document.getElementById('degree-days');
+  
+  if (!input) {
+    console.error("L'élément 'degree-days' n'a pas été trouvé");
+    return;
+  }
+  
   degreeDays = input.value;
   
   if (degreeDays && !isNaN(degreeDays)) {
@@ -742,6 +1322,12 @@ function updateDegreeDays() {
 // Mettre à jour l'affichage de la zone climatique
 function updateClimaticZoneDisplay() {
   const display = document.getElementById('climatic-zone-display');
+  
+  if (!display) {
+    console.error("L'élément 'climatic-zone-display' n'a pas été trouvé");
+    return;
+  }
+  
   if (climaticZone) {
     display.textContent = `Zone climatique: ${climaticZone === "< 6000" ? "Moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}`;
   } else {
@@ -751,31 +1337,60 @@ function updateClimaticZoneDisplay() {
 
 // Mettre à jour l'affichage des valeurs minimales de RSI
 function updateMinRSIDisplay() {
+  const rsiTotalDisplay = document.getElementById('min-rsit-display');
+  const rsiEffectiveDisplay = document.getElementById('min-rsie-display');
+  
+  if (!rsiTotalDisplay || !rsiEffectiveDisplay) {
+    console.error("Les éléments d'affichage RSI n'ont pas été trouvés");
+    return;
+  }
+  
   if (climaticZone && envelopeComponent) {
     const rsiTotal = minRSITotalValues[climaticZone][envelopeComponent];
     const rsiEffective = minRSIEffectiveValues[climaticZone][envelopeComponent];
     
-    document.getElementById('min-rsit-display').textContent = formatRSIR(rsiTotal);
-    document.getElementById('min-rsie-display').textContent = formatRSIR(rsiEffective);
+    rsiTotalDisplay.textContent = formatRSIR(rsiTotal);
+    rsiEffectiveDisplay.textContent = formatRSIR(rsiEffective);
   } else {
-    document.getElementById('min-rsit-display').textContent = "—";
-    document.getElementById('min-rsie-display').textContent = "—";
+    rsiTotalDisplay.textContent = "—";
+    rsiEffectiveDisplay.textContent = "—";
   }
 }
 
 // Mettre à jour le type de bâtiment
 function updateBuildingType() {
-  buildingType = document.getElementById('building-type').value;
+  const select = document.getElementById('building-type');
+  
+  if (!select) {
+    console.error("L'élément 'building-type' n'a pas été trouvé");
+    return;
+  }
+  
+  buildingType = select.value;
 }
 
 // Mettre à jour la version du code
 function updateCodeVersion() {
-  codeVersion = document.getElementById('code-version').value;
+  const select = document.getElementById('code-version');
+  
+  if (!select) {
+    console.error("L'élément 'code-version' n'a pas été trouvé");
+    return;
+  }
+  
+  codeVersion = select.value;
 }
 
 // Mettre à jour le composant d'enveloppe
 function updateEnvelopeComponent() {
-  envelopeComponent = document.getElementById('envelope-component').value;
+  const select = document.getElementById('envelope-component');
+  
+  if (!select) {
+    console.error("L'élément 'envelope-component' n'a pas été trouvé");
+    return;
+  }
+  
+  envelopeComponent = select.value;
   updateMinRSIDisplay();
 }
 
@@ -799,9 +1414,23 @@ function addLayer(type) {
   selectedLayerIndex = layers.length;
   
   // Afficher le sélecteur de matériau
-  document.getElementById('material-selector').classList.remove('hidden');
+  const materialSelector = document.getElementById('material-selector');
+  
+  if (!materialSelector) {
+    console.error("L'élément 'material-selector' n'a pas été trouvé");
+    return;
+  }
+  
+  materialSelector.classList.remove('hidden');
   
   // Définir le titre approprié
+  const titleElement = document.getElementById('material-selector-title');
+  
+  if (!titleElement) {
+    console.error("L'élément 'material-selector-title' n'a pas été trouvé");
+    return;
+  }
+  
   let title = "";
   switch (type) {
     case 'airfilm':
@@ -829,7 +1458,7 @@ function addLayer(type) {
       title = "Sélectionner un matériau de toiture";
       break;
   }
-  document.getElementById('material-selector-title').textContent = title;
+  titleElement.textContent = title;
   
   // Générer les catégories de matériaux appropriées
   generateMaterialCategories(type);
@@ -838,22 +1467,28 @@ function addLayer(type) {
 // Générer les catégories de matériaux pour le sélecteur
 function generateMaterialCategories(type) {
   const container = document.getElementById('material-categories');
+  
+  if (!container) {
+    console.error("L'élément 'material-categories' n'a pas été trouvé");
+    return;
+  }
+  
   container.innerHTML = '';
   
-  let materialCategories = [];
+  let materialOptions = [];
   
   switch (type) {
     case 'airfilm':
-      materialCategories = [{ name: "Films d'air", materials: materials.airFilms }];
+      materialOptions = [{ name: "Films d'air", materials: materials.airFilms }];
       break;
     case 'airspace':
-      materialCategories = [
+      materialOptions = [
         { name: "Lames d'air non réfléchissantes", materials: materials.airSpaces },
         { name: "Lames d'air réfléchissantes", materials: materials.reflectiveAirSpaces }
       ];
       break;
     case 'insulation':
-      materialCategories = [
+      materialOptions = [
         { name: "Isolants en nattes", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('nattes')) },
         { name: "Polystyrène", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('polystyrène')) },
         { name: "Polyisocyanurate", materials: materials.insulation.filter(m => m.name.toLowerCase().includes('polyiso')) },
@@ -865,40 +1500,40 @@ function generateMaterialCategories(type) {
       ];
       break;
     case 'sheathening':
-      materialCategories = [{ name: "Revêtements d'ossature", materials: materials.sheathing }];
+      materialOptions = [{ name: "Revêtements d'ossature", materials: materials.sheathing }];
       break;
     case 'cladding':
-      materialCategories = [
+      materialOptions = [
         { name: "Parements de bois", materials: materials.woodCladding },
         { name: "Autres parements", materials: materials.otherCladding }
       ];
       break;
     case 'interior':
-      materialCategories = [{ name: "Finitions intérieures", materials: materials.interiorFinish }];
+      materialOptions = [{ name: "Finitions intérieures", materials: materials.interiorFinish }];
       break;
     case 'structural':
-      materialCategories = [
+      materialOptions = [
         { name: "Bois", materials: materials.wood },
         { name: "Béton", materials: materials.concrete },
         { name: "Blocs de béton", materials: materials.concreteBlocks }
       ];
       break;
     case 'roofing':
-      materialCategories = [{ name: "Matériaux de toiture", materials: materials.roofingMaterials }];
+      materialOptions = [{ name: "Matériaux de toiture", materials: materials.roofingMaterials }];
       break;
   }
   
-  materialCategories.forEach(category => {
-    const categoryDiv = document.createElement('div');
-    categoryDiv.className = 'mb-4';
+  materialOptions.forEach(category => {
+    const div = document.createElement('div');
+    div.className = 'mb-4';
     
     const title = document.createElement('h5');
     title.className = 'font-semibold mb-2 text-sm';
     title.textContent = category.name;
-    categoryDiv.appendChild(title);
+    div.appendChild(title);
     
-    const materialsList = document.createElement('div');
-    materialsList.className = 'space-y-1';
+    const materialList = document.createElement('div');
+    materialList.className = 'space-y-1';
     
     category.materials.forEach(material => {
       const button = document.createElement('button');
@@ -906,11 +1541,11 @@ function generateMaterialCategories(type) {
       button.textContent = material.name;
       button.onclick = () => selectMaterial(material);
       
-      materialsList.appendChild(button);
+      materialList.appendChild(button);
     });
     
-    categoryDiv.appendChild(materialsList);
-    container.appendChild(categoryDiv);
+    div.appendChild(materialList);
+    container.appendChild(div);
   });
 }
 
@@ -923,18 +1558,24 @@ function selectMaterial(material) {
   const rsiDisplay = document.getElementById('material-rsi-display');
   const rsiValue = document.getElementById('material-rsi-value');
   const descriptionElem = document.getElementById('material-description');
+  const thicknessSelector = document.getElementById('thickness-selector');
+  
+  if (!rsiDisplay || !rsiValue || !descriptionElem || !thicknessSelector) {
+    console.error("Des éléments d'affichage du matériau sélectionné n'ont pas été trouvés");
+    return;
+  }
   
   // Si le matériau a une valeur RSI fixe
   if (material.rsi !== undefined) {
     rsiValue.textContent = formatRSIR(material.rsi);
     rsiDisplay.classList.remove('hidden');
-    document.getElementById('thickness-selector').classList.add('hidden');
+    thicknessSelector.classList.add('hidden');
   } 
   // Si le matériau a une valeur RSI par mm (nécessite une épaisseur)
   else if (material.rsiPerMm !== undefined) {
     // Afficher le sélecteur d'épaisseur
     initializeThicknessSelector(material);
-    document.getElementById('thickness-selector').classList.remove('hidden');
+    thicknessSelector.classList.remove('hidden');
     
     // Calculer le RSI basé sur l'épaisseur par défaut ou existante
     const thickness = material.thickness || selectedThickness || 25;
@@ -954,6 +1595,14 @@ function selectMaterial(material) {
 // Initialiser le sélecteur d'épaisseur
 function initializeThicknessSelector(material) {
   const select = document.getElementById('thickness-select');
+  const customThicknessDiv = document.getElementById('custom-thickness');
+  const customThicknessInput = document.getElementById('custom-thickness-input');
+  
+  if (!select || !customThicknessDiv || !customThicknessInput) {
+    console.error("Des éléments du sélecteur d'épaisseur n'ont pas été trouvés");
+    return;
+  }
+  
   select.innerHTML = '';
   
   thicknessOptions.forEach(option => {
@@ -970,8 +1619,8 @@ function initializeThicknessSelector(material) {
     select.value = matchingOption ? material.thickness : 'custom';
     
     if (select.value === 'custom') {
-      document.getElementById('custom-thickness').classList.remove('hidden');
-      document.getElementById('custom-thickness-input').value = material.thickness;
+      customThicknessDiv.classList.remove('hidden');
+      customThicknessInput.value = material.thickness;
     }
     
     selectedThickness = material.thickness;
@@ -991,13 +1640,18 @@ function initializeThicknessSelector(material) {
   
   // Ajouter l'événement de changement d'épaisseur
   select.onchange = handleThicknessChange;
-  document.getElementById('custom-thickness-input').onchange = handleCustomThicknessChange;
+  customThicknessInput.onchange = handleCustomThicknessChange;
 }
 
 // Gérer le changement d'épaisseur
 function handleThicknessChange() {
   const select = document.getElementById('thickness-select');
   const customThicknessDiv = document.getElementById('custom-thickness');
+  
+  if (!select || !customThicknessDiv) {
+    console.error("Des éléments du sélecteur d'épaisseur n'ont pas été trouvés");
+    return;
+  }
   
   if (select.value === 'custom') {
     customThicknessDiv.classList.remove('hidden');
@@ -1012,6 +1666,12 @@ function handleThicknessChange() {
 // Gérer le changement d'épaisseur personnalisée
 function handleCustomThicknessChange() {
   const input = document.getElementById('custom-thickness-input');
+  
+  if (!input) {
+    console.error("L'élément 'custom-thickness-input' n'a pas été trouvé");
+    return;
+  }
+  
   selectedThickness = parseInt(input.value);
   updateMaterialRSI();
 }
@@ -1020,13 +1680,27 @@ function handleCustomThicknessChange() {
 function updateMaterialRSI() {
   if (!selectedMaterial || !selectedMaterial.rsiPerMm) return;
   
+  const rsiValueElem = document.getElementById('material-rsi-value');
+  
+  if (!rsiValueElem) {
+    console.error("L'élément 'material-rsi-value' n'a pas été trouvé");
+    return;
+  }
+  
   const rsi = selectedMaterial.rsiPerMm * selectedThickness;
-  document.getElementById('material-rsi-value').textContent = formatRSIR(rsi);
+  rsiValueElem.textContent = formatRSIR(rsi);
 }
 
 // Annuler la sélection de matériau
 function cancelMaterialSelection() {
-  document.getElementById('material-selector').classList.add('hidden');
+  const materialSelector = document.getElementById('material-selector');
+  
+  if (!materialSelector) {
+    console.error("L'élément 'material-selector' n'a pas été trouvé");
+    return;
+  }
+  
+  materialSelector.classList.add('hidden');
   selectedLayerType = null;
   selectedLayerIndex = null;
   selectedMaterialId = null;
@@ -1067,7 +1741,14 @@ function confirmMaterialSelection() {
   updateMaterialsSummary();
   
   // Cacher le sélecteur
-  document.getElementById('material-selector').classList.add('hidden');
+  const materialSelector = document.getElementById('material-selector');
+  
+  if (!materialSelector) {
+    console.error("L'élément 'material-selector' n'a pas été trouvé");
+    return;
+  }
+  
+  materialSelector.classList.add('hidden');
   
   // Réinitialiser les variables
   selectedLayerType = null;
@@ -1080,6 +1761,11 @@ function confirmMaterialSelection() {
 function updateLayersDisplay() {
   const container = document.getElementById('layers-container');
   const noLayersMessage = document.getElementById('no-layers-message');
+  
+  if (!container || !noLayersMessage) {
+    console.error("Des éléments d'affichage des couches n'ont pas été trouvés");
+    return;
+  }
   
   if (layers.length === 0) {
     container.innerHTML = '';
@@ -1182,6 +1868,12 @@ function updateLayersDisplay() {
 // Mettre à jour le résumé des matériaux
 function updateMaterialsSummary() {
   const tbody = document.getElementById('materials-summary-body');
+  
+  if (!tbody) {
+    console.error("L'élément 'materials-summary-body' n'a pas été trouvé");
+    return;
+  }
+  
   tbody.innerHTML = '';
   
   let totalRSI = 0;
@@ -1222,470 +1914,20 @@ function updateMaterialsSummary() {
   });
   
   // Mettre à jour les totaux
-  document.getElementById('total-rsi').textContent = totalRSI.toFixed(3);
-  document.getElementById('total-r').textContent = (totalRSI * 5.678263).toFixed(3);
+  const totalRsiElem = document.getElementById('total-rsi');
+  const totalRElem = document.getElementById('total-r');
+  const totalEffectiveRsiElem = document.getElementById('total-effective-rsi');
+  const totalEffectiveRElem = document.getElementById('total-effective-r');
   
-  const effectiveRSI = totalRSI * 0.85;
-  document.getElementById('total-effective-rsi').textContent = effectiveRSI.toFixed(3);
-  document.getElementById('total-effective-r').textContent = (effectiveRSI * 5.678263).toFixed(3);
-}
-
-// Déplacer une couche vers le haut
-function moveLayerUp(index) {
-  if (index <= 0 || index >= layers.length) return;
-  
-  // Échanger les couches
-  [layers[index - 1], layers[index]] = [layers[index], layers[index - 1]];
-  
-  // Mettre à jour l'affichage
-  updateLayersDisplay();
-  updateMaterialsSummary();
-}
-
-// Déplacer une couche vers le bas
-function moveLayerDown(index) {
-  if (index < 0 || index >= layers.length - 1) return;
-  
-  // Échanger les couches
-  [layers[index], layers[index + 1]] = [layers[index + 1], layers[index]];
-  
-  // Mettre à jour l'affichage
-  updateLayersDisplay();
-  updateMaterialsSummary();
-}
-
-// Supprimer une couche
-function removeLayer(index) {
-  if (index < 0 || index >= layers.length) return;
-  
-  // Supprimer la couche
-  layers.splice(index, 1);
-  
-  // Mettre à jour l'affichage
-  updateLayersDisplay();
-  updateMaterialsSummary();
-}
-
-// Calculer les résultats
-function calculateResults() {
-  if (layers.length === 0) {
-    alert("Veuillez ajouter au moins une couche de matériau pour l'analyse.");
+  if (!totalRsiElem || !totalRElem || !totalEffectiveRsiElem || !totalEffectiveRElem) {
+    console.error("Des éléments d'affichage des totaux n'ont pas été trouvés");
     return;
   }
   
-  // Afficher la section des résultats
-  document.getElementById('no-results-message').classList.add('hidden');
-  document.getElementById('results-content').classList.remove('hidden');
+  totalRsiElem.textContent = totalRSI.toFixed(3);
+  totalRElem.textContent = (totalRSI * 5.678263).toFixed(3);
   
-  // Calculer la résistance thermique totale
-  const totalRSI = layers.reduce((sum, layer) => {
-    if (layer.material && layer.material.rsi) {
-      return sum + layer.material.rsi;
-    }
-    return sum;
-  }, 0);
-  
-  // Calculer la résistance thermique effective (simplifiée)
   const effectiveRSI = totalRSI * 0.85;
-  
-  // Vérifier la conformité au code
-  const totalCompliance = checkCompliance(totalRSI, envelopeComponent, climaticZone, false);
-  const effectiveCompliance = checkCompliance(effectiveRSI, envelopeComponent, climaticZone, true);
-  
-  // Calculer les coefficients U
-  const uValue = 1 / totalRSI;
-  const uValueEffective = 1 / effectiveRSI;
-  
-  // Mettre à jour les résultats
-  document.getElementById('result-total-rsi').textContent = formatRSIR(totalRSI);
-  document.getElementById('result-effective-rsi').textContent = formatRSIR(effectiveRSI);
-  
-  document.getElementById('envelope-description').textContent = getEnvelopeComponentDescription();
-  document.getElementById('zone-description').textContent = climaticZone === "< 6000" ? "moins de 6000 degrés-jours" : "6000 degrés-jours ou plus";
-  
-  document.getElementById('min-total-rsi').textContent = formatRSIR(totalCompliance.minRSI);
-  document.getElementById('min-effective-rsi').textContent = formatRSIR(effectiveCompliance.minRSI);
-  
-  // Mettre à jour le tableau de conformité
-  document.getElementById('compliance-total-rsi-value').textContent = formatRSIR(totalRSI);
-  document.getElementById('compliance-total-rsi-min').textContent = formatRSIR(totalCompliance.minRSI);
-  document.getElementById('compliance-total-rsi-status').innerHTML = getComplianceIndicator(totalCompliance.compliant);
-  
-  document.getElementById('compliance-effective-rsi-value').textContent = formatRSIR(effectiveRSI);
-  document.getElementById('compliance-effective-rsi-min').textContent = formatRSIR(effectiveCompliance.minRSI);
-  document.getElementById('compliance-effective-rsi-status').innerHTML = getComplianceIndicator(effectiveCompliance.compliant);
-  
-  document.getElementById('compliance-u-value').textContent = `${uValue.toFixed(3)} W/(m²·K)`;
-  document.getElementById('compliance-u-effective').textContent = `${uValueEffective.toFixed(3)} W/(m²·K)`;
-  
-  // Générer les recommandations
-  generateThermalBridgesRecommendations(envelopeComponent);
-  generateIsolationContinuityRecommendations();
-  
-  // Calculer et afficher le gradient de température et le point de rosée
-  calculateGradient();
-  
-  // Ouvrir l'accordéon des résultats s'il est fermé
-  if (document.getElementById('results-section').classList.contains('hidden')) {
-    toggleAccordion('results-section');
-  }
-}
-
-// Calculer le gradient de température
-function calculateGradient() {
-  if (layers.length === 0) return;
-  
-  const tempExt = parseFloat(document.getElementById('temp-ext').value);
-  const tempInt = parseFloat(document.getElementById('temp-int').value);
-  const humidity = parseFloat(document.getElementById('humidity').value);
-  
-  // Calculer le point de rosée
-  const dewPointTemp = calculateDewPoint(tempInt, humidity);
-  document.getElementById('dew-point').textContent = dewPointTemp.toFixed(1);
-  
-  // Calculer la résistance thermique totale
-  const rsiTotal = layers.reduce((sum, layer) => {
-    if (layer.material && layer.material.rsi) {
-      return sum + layer.material.rsi;
-    }
-    return sum;
-  }, 0);
-  
-  document.getElementById('rsi-total').textContent = rsiTotal.toFixed(2);
-  document.getElementById('r-total').textContent = (rsiTotal * 5.678).toFixed(1);
-  document.getElementById('u-value').textContent = (1/rsiTotal).toFixed(3);
-  
-  // Calculer le gradient de température
-  const tempDiff = tempInt - tempExt;
-  const positions = [0];
-  const temps = [tempExt];
-  let cumulPosition = 0;
-  let cumulTemp = tempExt;
-  
-  // Calculer la température à chaque interface
-  layers.forEach((layer) => {
-    if (!layer.material || !layer.material.rsi) return;
-    
-    const deltaT = (layer.material.rsi / rsiTotal) * tempDiff;
-    cumulTemp += deltaT;
-    cumulPosition += (layer.material.thickness || 0);
-    
-    positions.push(cumulPosition);
-    temps.push(cumulTemp);
-  });
-  
-  // Mettre à jour le graphique
-  updateChart(positions, temps, dewPointTemp, null);
-  
-  // Vérifier si le point de rosée tombe dans la composition
-  const dewPointInfo = findDewPointPosition(temps, positions, dewPointTemp);
-  
-  // Mettre à jour la visualisation des matériaux
-  renderMaterialsVisualization(dewPointInfo.position);
-  
-  // Afficher ou masquer l'avertissement
-  const warningContainer = document.getElementById('warning-container');
-  warningContainer.innerHTML = '';
-  
-  if (dewPointInfo.found) {
-    const dewPointMaterial = layers[dewPointInfo.materialIndex].material.name;
-    
-    warningContainer.innerHTML = `
-      <div class="warning">
-        <strong>Attention:</strong> Point de rosée (${dewPointTemp.toFixed(1)}°C) détecté dans 
-        le matériau "${dewPointMaterial}". 
-        Risque de condensation interne qui peut causer des problèmes d'humidité et de moisissure.
-      </div>
-    `;
-    
-    // Mettre à jour le graphique avec la position du point de rosée
-    updateChart(positions, temps, dewPointTemp, dewPointInfo.position);
-    
-    // Mettre à jour le texte de résumé
-    document.getElementById('summary-text').textContent = 
-      `La température de part et d'autre de la paroi passe de ${tempExt}°C à ${tempInt}°C. ` +
-      `Le point de rosée calculé est de ${dewPointTemp.toFixed(1)}°C à ${humidity}% d'humidité relative. ` +
-      `Il y a risque de condensation dans le matériau "${dewPointMaterial}".`;
-  } else {
-    document.getElementById('summary-text').textContent = 
-      `La température de part et d'autre de la paroi passe de ${tempExt}°C à ${tempInt}°C. ` +
-      `Le point de rosée calculé est de ${dewPointTemp.toFixed(1)}°C à ${humidity}% d'humidité relative. ` +
-      `Aucun risque de condensation détecté dans cette composition.`;
-  }
-}
-
-// Rendre la visualisation des matériaux
-function renderMaterialsVisualization(dewPointPosition = null) {
-  const container = document.getElementById('material-viz');
-  container.innerHTML = '';
-  
-  if (layers.length === 0) return;
-  
-  const totalWidth = layers.reduce((sum, layer) => {
-    return sum + (layer.material && layer.material.thickness ? layer.material.thickness : 0);
-  }, 0);
-  
-  layers.forEach(layer => {
-    if (!layer.material) return;
-    
-    const width = layer.material.thickness === 0 ? 20 : layer.material.thickness;
-    const percentage = totalWidth > 0 ? (width / totalWidth) * 100 : 0;
-    const backgroundColor = generateColorFromString(layer.material.name);
-    
-    const div = document.createElement('div');
-    div.className = 'material-segment';
-    div.style.width = `${percentage}%`;
-    div.style.minWidth = '20px';
-    div.style.backgroundColor = backgroundColor;
-    div.title = `${layer.material.name} - RSI: ${layer.material.rsi.toFixed(2)}`;
-    
-    const span = document.createElement('span');
-    span.textContent = layer.material.name;
-    div.appendChild(span);
-    
-    container.appendChild(div);
-  });
-  
-  // Ajouter le marqueur du point de rosée si présent
-  if (dewPointPosition !== null) {
-    const marker = document.createElement('div');
-    marker.className = 'dewpoint-marker';
-    marker.style.left = `${(dewPointPosition / totalWidth) * 100}%`;
-    marker.title = 'Point de rosée';
-    container.appendChild(marker);
-  }
-}
-
-// Vérifier la conformité au code
-function checkCompliance(rsi, component, zone, isEffective = false) {
-  if (!zone || !component) return { compliant: false, minRSI: 0 };
-  
-  const minRSI = isEffective ? 
-    minRSIEffectiveValues[zone][component] : 
-    minRSITotalValues[zone][component];
-  
-  return {
-    compliant: rsi >= minRSI,
-    minRSI
-  };
-}
-
-// Obtenir un indicateur visuel de conformité
-function getComplianceIndicator(isCompliant) {
-  return isCompliant ? 
-    '<span class="text-green-600 font-bold">Conforme ✓</span>' : 
-    '<span class="text-red-600 font-bold">Non conforme ✗</span>';
-}
-
-// Décrire le composant d'enveloppe sélectionné
-function getEnvelopeComponentDescription() {
-  switch (envelopeComponent) {
-    case 'wall_above_grade':
-      return 'un mur hors sol';
-    case 'foundation_wall':
-      return 'un mur de fondation';
-    case 'roof':
-      return 'un toit ou plafond';
-    case 'floor':
-      return 'un plancher séparant un espace chauffé d\'un espace non chauffé';
-    case 'garage_ceiling':
-      return 'un plafond de garage chauffé';
-    case 'garage_walls_to_dwelling':
-      return 'des murs de garage chauffé contigus au logement';
-    case 'garage_foundation_wall':
-      return 'un mur de fondation de garage chauffé';
-    default:
-      return 'cet élément';
-  }
-}
-
-// Générer les recommandations pour les ponts thermiques
-function generateThermalBridgesRecommendations(component) {
-  const container = document.getElementById('thermal-bridges-recommendations');
-  container.innerHTML = '';
-  
-  let recommendations = [];
-  
-  if (component === 'wall_above_grade') {
-    recommendations.push({
-      title: "Exigences pour les ponts thermiques des murs",
-      description: "Les éléments du bâtiment constituant un pont thermique doivent être recouverts de matériaux isolants ayant une résistance thermique minimale selon l'article 11.2.3.1. du Code:"
-    });
-    
-    recommendations.push({
-      title: "Pour une ossature de bois",
-      description: "- RSI 0,7 lorsque les éléments d'ossature sont espacés de moins de 600 mm d'entraxe\n- RSI 0,53 dans les autres cas"
-    });
-    
-    recommendations.push({
-      title: "Pour une ossature métallique",
-      description: "- RSI 1,76 lorsque les éléments d'ossature sont espacés de moins de 600 mm d'entraxe\n- RSI 1,32 dans les autres cas"
-    });
-    
-    recommendations.push({
-      title: "Pour une construction en béton",
-      description: "- RSI 0,88 minimum"
-    });
-    
-    recommendations.push({
-      title: "Note importante",
-      description: "Le matériau isolant doit couvrir les éléments du bâtiment constituant un pont thermique par l'extérieur, par l'intérieur ou par une combinaison des deux."
-    });
-  } 
-  else if (component === 'foundation_wall') {
-    recommendations.push({
-      title: "Exigences pour les fondations",
-      description: "Un mur de fondation dont plus de 50% de la surface est exposée à l'air extérieur, ainsi que la partie d'un mur de fondation qui est à ossature de bois, doivent avoir une résistance thermique totale égale à celle exigée pour un mur au-dessus du niveau du sol."
-    });
-    
-    recommendations.push({
-      title: "Bris thermique",
-      description: "L'article 11.2.3.3 exige que le matériau isolant placé entre le mur de fondation et le plancher sur sol ait une résistance thermique d'au moins RSI 1,32 jusqu'à une profondeur de 600 mm sous le niveau du sol."
-    });
-  }
-  else if (component === 'roof') {
-    recommendations.push({
-      title: "Résistance thermique à proximité des avant-toits",
-      description: "Selon l'article 11.2.2.3, la résistance thermique totale exigée pour un toit ou plafond peut être réduite à proximité de l'avant-toit lorsque nécessaire pour la ventilation, à condition de ne pas être inférieure à la valeur exigée pour un mur au-dessus du niveau du sol."
-    });
-    
-    recommendations.push({
-      title: "Toits plats",
-      description: "La résistance thermique totale pour les toits plats peut être réduite d'au plus 20% à son point le plus bas pour créer des pentes de drainage, à condition que la perte de chaleur totale ne soit pas supérieure à celle d'un toit conforme aux exigences."
-    });
-  }
-  else if (component === 'floor') {
-    recommendations.push({
-      title: "Ponts thermiques des planchers",
-      description: "Selon l'article 11.2.3.2, la résistance thermique des matériaux isolants recouvrant les ponts thermiques des planchers doit avoir une valeur d'au moins RSI 1,32 pour les planchers hors sol en porte-à-faux et les planchers situés au-dessus d'un espace non chauffé."
-    });
-  }
-  
-  recommendations.forEach((recommendation, index) => {
-    const div = document.createElement('div');
-    div.className = 'mb-3';
-    
-    const title = document.createElement('h4');
-    title.className = 'font-bold text-blue-800';
-    title.textContent = recommendation.title;
-    
-    const description = document.createElement('p');
-    description.className = 'text-sm whitespace-pre-line';
-    description.textContent = recommendation.description;
-    
-    div.appendChild(title);
-    div.appendChild(description);
-    
-    container.appendChild(div);
-  });
-}
-
-// Générer les recommandations pour la continuité de l'isolation
-function generateIsolationContinuityRecommendations() {
-  const container = document.getElementById('isolation-continuity-recommendations');
-  container.innerHTML = '';
-  
-  const recommendations = [
-    {
-      title: "Continuité de l'isolation",
-      description: "Pour assurer la performance énergétique de l'enveloppe, l'isolation thermique doit être continue sur toute la surface de l'élément et les ponts thermiques doivent être minimisés selon les exigences du Code."
-    },
-    {
-      title: "Solive de rive",
-      description: "Selon l'article 11.2.3.1, la solive de rive doit être isolée de manière à posséder une valeur de résistance thermique totale équivalente à celle exigée pour un mur au-dessus du niveau du sol. Pour une construction de béton, une résistance thermique d'au moins RSI 1,76 est requise."
-    },
-    {
-      title: "Murs entre espaces chauffés",
-      description: "Lorsque le mur entre deux espaces chauffés crée un pont thermique, il doit être recouvert de matériaux isolants offrant une résistance thermique d'au moins RSI 2,20 de chaque côté du mur sur une distance minimale de 1,2 m à partir de la face extérieure du mur extérieur."
-    }
-  ];
-  
-  recommendations.forEach((recommendation, index) => {
-    const div = document.createElement('div');
-    div.className = 'mb-3';
-    
-    const title = document.createElement('h4');
-    title.className = 'font-bold text-blue-800';
-    title.textContent = recommendation.title;
-    
-    const description = document.createElement('p');
-    description.className = 'text-sm';
-    description.textContent = recommendation.description;
-    
-    div.appendChild(title);
-    div.appendChild(description);
-    
-    container.appendChild(div);
-  });
-}
-
-// Ajouter des couches par défaut pour démonstration
-function addDefaultLayers() {
-  // Film d'air extérieur
-  layers.push({
-    id: Date.now(),
-    type: 'airfilm',
-    material: { ...materials.airFilms.find(m => m.id === 'exterior') }
-  });
-  
-  // Brique
-  layers.push({
-    id: Date.now() + 1,
-    type: 'cladding',
-    material: { 
-      ...materials.otherCladding.find(m => m.id === 'brick_90mm')
-    }
-  });
-  
-  // Isolant rigide
-  const eps = { 
-    ...materials.insulation.find(m => m.id === 'polystyrene_type2'),
-    thickness: 50,
-    rsi: 0.028 * 50
-  };
-  layers.push({
-    id: Date.now() + 2,
-    type: 'insulation',
-    material: eps
-  });
-  
-  // OSB
-  const osb = { 
-    ...materials.sheathing.find(m => m.id === 'osb'),
-    thickness: 11,
-    rsi: 0.0098 * 11
-  };
-  layers.push({
-    id: Date.now() + 3,
-    type: 'sheathening',
-    material: osb
-  });
-  
-  // Isolant en nattes
-  layers.push({
-    id: Date.now() + 4,
-    type: 'insulation',
-    material: { ...materials.insulation.find(m => m.id === 'mineral_wool_batt_r20') }
-  });
-  
-  // Coupe-vapeur (négligeable thermiquement)
-  
-  // Gypse
-  const gypsum = { 
-    ...materials.interiorFinish.find(m => m.id === 'gypsum_interior'),
-    thickness: 13,
-    rsi: 0.0061 * 13
-  };
-  layers.push({
-    id: Date.now() + 5,
-    type: 'interior',
-    material: gypsum
-  });
-  
-  // Film d'air intérieur
-  layers.push({
-    id: Date.now() + 6,
-    type: 'airfilm',
-    material: { ...materials.airFilms.find(m => m.id === 'interior_vertical') }
-  });
+  totalEffectiveRsiElem.textContent = effectiveRSI.toFixed(3);
+  totalEffectiveRElem.textContent = (effectiveRSI * 5.678263).toFixed(3);
 }
