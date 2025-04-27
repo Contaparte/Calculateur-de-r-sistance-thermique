@@ -132,6 +132,12 @@ function calculateResults() {
   generateThermalBridgesRecommendations(envelopeComponent);
   generateIsolationContinuityRecommendations();
   
+  // Vérifier si des matériaux imperméables ou à faible perméance sont présents
+  checkLowPermeanceMaterials();
+
+  // Vérifier la continuité du système d'étanchéité à l'air
+  checkAirBarrierContinuity();
+  
   // Calculer et afficher le gradient de température et le point de rosée
   calculateGradient();
   
@@ -141,6 +147,20 @@ function calculateResults() {
   if (resultsSection && resultsSection.classList.contains('hidden')) {
     toggleAccordion('results-section');
   }
+}
+
+// Vérifier la continuité du système d'étanchéité à l'air
+function checkAirBarrierContinuity() {
+  // Cette fonction pourrait être développée pour vérifier la continuité du système d'étanchéité à l'air
+  // entre les différentes composantes de l'enveloppe du bâtiment, selon les exigences de la section 9.25.3.
+  // Pour l'instant, elle ne fait qu'afficher des recommandations générales.
+}
+
+// Vérifier si des matériaux imperméables ou à faible perméance sont présents
+function checkLowPermeanceMaterials() {
+  // Cette fonction pourrait être développée pour identifier les matériaux à faible perméance
+  // dans l'assemblage et vérifier s'ils sont correctement positionnés selon l'article 9.25.5.2.
+  // Pour l'instant, elle ne fait qu'afficher des recommandations générales.
 }
 
 // Calculer le gradient de température
@@ -239,6 +259,17 @@ function calculateGradient() {
         `Le point de rosée calculé est de ${dewPointTemp.toFixed(1)}°C à ${humidity}% d'humidité relative. ` +
         `Il y a risque de condensation dans le matériau "${dewPointMaterial}".`;
     }
+
+    // Vérifier si le matériau au point de rosée est une mousse plastique
+    if (dewPointMaterial.toLowerCase().includes("polystyrène") || 
+        dewPointMaterial.toLowerCase().includes("polyuréthane") || 
+        dewPointMaterial.toLowerCase().includes("polyisocyanurate")) {
+      warningContainer.innerHTML += `
+        <div class="warning mt-2">
+          <strong>Protection des mousses plastiques:</strong> Selon l'article 9.10.17.10 du CNB, les mousses plastiques doivent être protégées des espaces contigus par un revêtement approprié. Vérifiez que ce matériau est correctement protégé.
+        </div>
+      `;
+    }
   } else {
     const summaryTextElem = document.getElementById('summary-text');
     
@@ -248,6 +279,52 @@ function calculateGradient() {
         `Le point de rosée calculé est de ${dewPointTemp.toFixed(1)}°C à ${humidity}% d'humidité relative. ` +
         `Aucun risque de condensation détecté dans cette composition.`;
     }
+  }
+
+  // Vérifier si le point de rosée se trouve près d'une lame d'air
+  checkDewPointNearAirSpace(dewPointTemp, temps, dewPointInfo);
+}
+
+// Vérifier si le point de rosée se trouve près d'une lame d'air
+function checkDewPointNearAirSpace(dewPointTemp, temps, dewPointInfo) {
+  if (!dewPointInfo.found) return;
+
+  const warningContainer = document.getElementById('warning-container');
+  if (!warningContainer) return;
+
+  // Vérifier s'il y a des lames d'air dans la composition
+  const airSpaceLayers = layers.filter(layer => 
+    layer.type === 'airspace' || 
+    (layer.material && layer.material.name && 
+     layer.material.name.toLowerCase().includes('lame d\'air'))
+  );
+
+  if (airSpaceLayers.length === 0) return;
+
+  // Vérifier si une lame d'air est adjacente ou proche du point de rosée
+  let airSpaceNearDewPoint = false;
+  let airSpaceIndex = -1;
+
+  for (let i = 0; i < layers.length; i++) {
+    if (i === dewPointInfo.materialIndex - 1 || i === dewPointInfo.materialIndex + 1) {
+      if (layers[i].type === 'airspace' || 
+         (layers[i].material && layers[i].material.name && 
+          layers[i].material.name.toLowerCase().includes('lame d\'air'))) {
+        airSpaceNearDewPoint = true;
+        airSpaceIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (airSpaceNearDewPoint) {
+    warningContainer.innerHTML += `
+      <div class="warning mt-2">
+        <strong>Avertissement - Ventilation:</strong> Le point de rosée est proche d'une lame d'air (${layers[airSpaceIndex].material.name}). 
+        Selon l'article 9.27.2.2, pour les lames d'air, une ventilation adéquate peut être nécessaire pour éviter l'accumulation d'humidité.
+        Vérifiez que cette lame d'air est drainée et mise à l'air libre.
+      </div>
+    `;
   }
 }
 
@@ -532,6 +609,11 @@ function generateThermalBridgesRecommendations(component) {
       title: "Bris thermique",
       description: "L'article 11.2.3.3 exige que le matériau isolant placé entre le mur de fondation et le plancher sur sol ait une résistance thermique d'au moins RSI 1,32 jusqu'à une profondeur de 600 mm sous le niveau du sol."
     });
+
+    recommendations.push({
+      title: "Protection contre l'humidité",
+      description: "Selon l'article 9.13.2.1, si le niveau du sol fini du côté intérieur est en contrebas du niveau du côté extérieur, la face extérieure des murs de fondation se trouvant au-dessous du niveau du sol doit être protégée contre l'humidité."
+    });
   }
   else if (component === 'roof') {
     recommendations.push({
@@ -543,11 +625,33 @@ function generateThermalBridgesRecommendations(component) {
       title: "Toits plats",
       description: "La résistance thermique totale pour les toits plats peut être réduite d'au plus 20% à son point le plus bas pour créer des pentes de drainage, à condition que la perte de chaleur totale ne soit pas supérieure à celle d'un toit conforme aux exigences."
     });
+
+    recommendations.push({
+      title: "Ventilation des vides sous toit",
+      description: "Selon l'article 9.19.1.1, si un isolant est posé entre un plafond et la sous-face d'un support de couverture, il faut prévoir un espace d'au moins 63 mm entre cet isolant et le support, ainsi que des orifices de ventilation pour permettre l'évacuation de l'humidité."
+    });
   }
   else if (component === 'floor') {
     recommendations.push({
       title: "Ponts thermiques des planchers",
       description: "Selon l'article 11.2.3.2, la résistance thermique des matériaux isolants recouvrant les ponts thermiques des planchers doit avoir une valeur d'au moins RSI 1,32 pour les planchers hors sol en porte-à-faux et les planchers situés au-dessus d'un espace non chauffé."
+    });
+
+    if (layers.some(layer => layer.type === 'structural' && 
+                     layer.material && 
+                     layer.material.name.toLowerCase().includes('béton'))) {
+      recommendations.push({
+        title: "Dalle de béton sur sol",
+        description: "Selon l'article 9.25.2.3, l'isolant en pourtour d'une dalle sur sol doit être mis en œuvre de manière que la chaleur du bâtiment puisse se transmettre au sol sous-jacent si les semelles des murs extérieurs ne sont pas sous le niveau du gel."
+      });
+    }
+  }
+
+  // Recommandations pour la protection contre les gaz souterrains
+  if (component === 'foundation_wall' || component === 'floor') {
+    recommendations.push({
+      title: "Protection contre les gaz souterrains",
+      description: "Selon la section 9.13.4, tous les murs, toits et planchers qui séparent un espace climatisé du sol doivent être protégés par un système d'étanchéité à l'air conforme à la sous-section 9.25.3, et être équipés des canalisations nécessaires à la mise en place d'un système d'extraction de radon."
     });
   }
   
@@ -593,6 +697,10 @@ function generateIsolationContinuityRecommendations() {
     {
       title: "Murs entre espaces chauffés",
       description: "Lorsque le mur entre deux espaces chauffés crée un pont thermique, il doit être recouvert de matériaux isolants offrant une résistance thermique d'au moins RSI 2,20 de chaque côté du mur sur une distance minimale de 1,2 m à partir de la face extérieure du mur extérieur."
+    },
+    {
+      title: "Rapport entre résistance côté extérieur et intérieur",
+      description: "Selon l'article 9.25.5.2, les matériaux à faible perméance doivent respecter un rapport minimal entre la résistance thermique du côté extérieur et celle du côté intérieur, variable selon les degrés-jours de chauffage, pour éviter la condensation."
     }
   ];
   
@@ -1595,6 +1703,19 @@ const minRSIEffectiveValues = {
   }
 };
 
+// Rapport minimal entre résistance thermique extérieur/intérieur selon le tableau 9.25.5.2 du CNB
+const thermalResistanceRatioValues = {
+  "< 5000": 0.20,
+  "5000-5999": 0.30,
+  "6000-6999": 0.35,
+  "7000-7999": 0.40,
+  "8000-8999": 0.50,
+  "9000-9999": 0.55,
+  "10000-10999": 0.60,
+  "11000-11999": 0.65,
+  ">= 12000": 0.75
+};
+
 // Variables globales
 let selectedLocation = "";
 let degreeDays = "";
@@ -2015,6 +2136,7 @@ const materials = {
     { id: "cement_interior", name: "Ciment, granulat de sable", rsiPerMm: 0.0014, description: "Ciment, granulat de sable" },
     { id: "plaster_sand", name: "Enduit au plâtre - agrégat de sable", rsiPerMm: 0.0012, description: "Enduit au plâtre - agrégat de sable" },
     { id: "plaster_light", name: "Enduit au plâtre - agrégat léger", rsiPerMm: 0.0044, description: "Enduit au plâtre - agrégat léger" },
-    { id: "plywood_interior", name: "Contreplaqué", rsiPerMm: 0.0087, description: "Contreplaqué" }
+    { id: "plywood_interior", name: "Contreplaqué", rsiPerMm: 0.0087, description: "Contreplaqué" },
+    { id: "vapor_barrier", name: "Pare-vapeur polyéthylène", rsi: 0, description: "Pare-vapeur en polyéthylène (0,15mm), perméance max. 60 ng/(Pa·s·m²)", thickness: 0.15 }
   ]
 };
