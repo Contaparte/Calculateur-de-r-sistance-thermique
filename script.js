@@ -362,6 +362,9 @@ function renderMaterialsVisualization(dewPointPosition = null) {
     return sum + (layer.material && layer.material.thickness ? layer.material.thickness : 0);
   }, 0);
   
+  // Position cumulative pour le calcul correct des pourcentages
+  let cumulPosition = 0;
+  
   layers.forEach(layer => {
     if (!layer.material) return;
     
@@ -381,12 +384,15 @@ function renderMaterialsVisualization(dewPointPosition = null) {
     div.appendChild(span);
     
     container.appendChild(div);
+    
+    cumulPosition += width;
   });
   
   // Ajouter le marqueur du point de rosée si présent
   if (dewPointPosition !== null) {
     const marker = document.createElement('div');
     marker.className = 'dewpoint-marker';
+    // Utiliser la position exacte du point de rosée par rapport à la largeur totale
     marker.style.left = `${(dewPointPosition / totalWidth) * 100}%`;
     marker.title = 'Point de rosée';
     container.appendChild(marker);
@@ -808,6 +814,9 @@ function initializeChart() {
         }
       },
       plugins: {
+        legend: {
+          onClick: null // Désactiver l'interaction sur la légende
+        },
         annotation: {
           annotations: {}
         }
@@ -1523,6 +1532,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Mettre à jour les affichages
   updateLayersDisplay();
   updateMaterialsSummary();
+  
+  // Calculer et afficher le gradient initial
+  calculateGradient();
   
   // Événements du sélecteur d'épaisseur
   const thicknessSelect = document.getElementById('thickness-select');
