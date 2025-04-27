@@ -97,8 +97,8 @@ function calculateResults() {
   envelopeDescriptionElem.textContent = getEnvelopeComponentDescription();
   zoneDescriptionElem.textContent = climaticZone === "< 6000" ? "moins de 6000 degrés-jours" : "6000 degrés-jours ou plus";
   
-  minTotalRsi.textContent = formatRSIR(totalCompliance.minRSI);
-  minEffectiveRsi.textContent = formatRSIR(effectiveCompliance.minRSI);
+  minTotalRsiElem.textContent = formatRSIR(totalCompliance.minRSI);
+  minEffectiveRsiElem.textContent = formatRSIR(effectiveCompliance.minRSI);
   
   // Mettre à jour le tableau de conformité
   const complianceTotalRsiValueElem = document.getElementById('compliance-total-rsi-value');
@@ -1372,6 +1372,10 @@ function initializeThicknessSelector(material) {
     select.value = defaultThickness;
     selectedThickness = defaultThickness;
   }
+  
+  // Ajouter des écouteurs d'événements
+  select.onchange = handleThicknessChange;
+  customThicknessInput.onchange = handleCustomThicknessChange;
 }
 
 // Gérer le changement d'épaisseur
@@ -1422,76 +1426,18 @@ function updateMaterialRSI() {
   rsiValueElem.textContent = formatRSIR(rsi);
 }
 
-// Ajouter des couches par défaut pour démonstration
-function addDefaultLayers() {
-  // Film d'air extérieur
-  layers.push({
-    id: Date.now(),
-    type: 'airfilm',
-    material: { ...materials.airFilms.find(m => m.id === 'exterior') }
-  });
-  
-  // Brique
-  layers.push({
-    id: Date.now() + 1,
-    type: 'cladding',
-    material: { 
-      ...materials.otherCladding.find(m => m.id === 'brick_90mm')
-    }
-  });
-  
-  // Isolant rigide
-  const eps = { 
-    ...materials.insulation.find(m => m.id === 'polystyrene_type2'),
-    thickness: 50,
-    rsi: 0.028 * 50
-  };
-  layers.push({
-    id: Date.now() + 2,
-    type: 'insulation',
-    material: eps
-  });
-  
-  // OSB
-  const osb = { 
-    ...materials.sheathing.find(m => m.id === 'osb'),
-    thickness: 11,
-    rsi: 0.0098 * 11
-  };
-  layers.push({
-    id: Date.now() + 3,
-    type: 'sheathening',
-    material: osb
-  });
-  
-  // Isolant en nattes
-  layers.push({
-    id: Date.now() + 4,
-    type: 'insulation',
-    material: { ...materials.insulation.find(m => m.id === 'mineral_wool_batt_r20') }
-  });
-  
-  // Coupe-vapeur (négligeable thermiquement)
-  
-  // Gypse
-  const gypsum = { 
-    ...materials.interiorFinish.find(m => m.id === 'gypsum_interior'),
-    thickness: 13,
-    rsi: 0.0061 * 13
-  };
-  layers.push({
-    id: Date.now() + 5,
-    type: 'interior',
-    material: gypsum
-  });
-  
-  // Film d'air intérieur
-  layers.push({
-    id: Date.now() + 6,
-    type: 'airfilm',
-    material: { ...materials.airFilms.find(m => m.id === 'interior_vertical') }
-  });
-}
+// Fonction pour convertir R en RSI
+const rToRsi = (r) => {
+  if (r === null || r === undefined || isNaN(r)) return null;
+  return r / 5.678263;
+};
+
+// Fonction pour formater les valeurs RSI et R
+const formatRSIR = (rsi) => {
+  if (rsi === null || rsi === undefined || isNaN(rsi)) return "—";
+  const r = rsiToR(rsi);
+  return `RSI ${rsi.toFixed(2)} (R ${r.toFixed(2)})`;
+};
 
 // Générer les boutons de catégories de matériaux
 function generateMaterialCategoryButtons(type) {
@@ -1613,19 +1559,6 @@ function generateMaterialCategoryButtons(type) {
   });
 }
 
-// Fonction pour convertir R en RSI
-const rToRsi = (r) => {
-  if (r === null || r === undefined || isNaN(r)) return null;
-  return r / 5.678263;
-};
-
-// Fonction pour formater les valeurs RSI et R
-const formatRSIR = (rsi) => {
-  if (rsi === null || rsi === undefined || isNaN(rsi)) return "—";
-  const r = rsiToR(rsi);
-  return `RSI ${rsi.toFixed(2)} (R ${r.toFixed(2)})`;
-};
-
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', function() {
   // Initialiser les sélecteurs
@@ -1634,15 +1567,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialiser le graphique
   initializeChart();
   
-  // Ajouter quelques couches par défaut pour démonstration
-  addDefaultLayers();
-  
   // Mettre à jour les affichages
   updateLayersDisplay();
   updateMaterialsSummary();
-  
-  // Calculer et afficher le gradient initial
-  calculateGradient();
   
   // Événements du sélecteur d'épaisseur
   const thicknessSelect = document.getElementById('thickness-select');
