@@ -68,13 +68,14 @@
     </style>
 </head>
 <body>
-    <div id="root" class="p-4">
+    <div id="root" class="p-4 max-w-6xl mx-auto">
         <h1 class="text-3xl font-bold mb-4 text-center">Calculateur de Résistance Thermique et Point de Rosée</h1>
         <p class="mb-6 text-center text-gray-700">
             Calculez la résistance thermique totale (RSI<sub>T</sub>) et effective (RSI<sub>E</sub>) de l'enveloppe du bâtiment 
             selon les exigences du Code de construction du Québec, et visualisez le gradient de température avec le point de rosée.
         </p>
         
+        <!-- Le reste du contenu reste identique mais avec quelques modifications de largeur -->
         <div class="border rounded mb-4 overflow-hidden">
             <div class="p-3 bg-gray-100 flex justify-between items-center cursor-pointer" onclick="toggleAccordion('info-section')">
                 <h3 class="font-bold">Informations sur le Code</h3>
@@ -337,15 +338,6 @@
                             <div><strong>Résistance thermique:</strong> <span id="material-rsi-value">-</span></div>
                             <div id="material-description" class="text-gray-600"></div>
                         </div>
-                        
-                        <div class="flex justify-end mt-4">
-                            <button onclick="cancelMaterialSelection()" class="bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm hover:bg-gray-400 mr-2">
-                                Annuler
-                            </button>
-                            <button onclick="confirmMaterialSelection()" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
-                                Confirmer
-                            </button>
-                        </div>
                     </div>
                 </div>
                 
@@ -389,6 +381,7 @@
             </div>
         </div>
         
+        <!-- Le reste du contenu HTML reste inchangé -->
         <div class="border rounded mb-4 overflow-hidden">
             <div class="p-3 bg-gray-100 flex justify-between items-center cursor-pointer" onclick="toggleAccordion('results-section')">
                 <h3 class="font-bold">Résultats d'analyse</h3>
