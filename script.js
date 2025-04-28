@@ -1060,7 +1060,7 @@ function updateLayersDisplay() {
       const r = layer.material.rsi ? (layer.material.rsi * 5.678).toFixed(1) : 'N/A';
       description.textContent = `Épaisseur: ${thickness} | RSI: ${rsi} (R-${r})`;
     } else {
-      description.textContent = 'Cliquez sur "Modifier" pour sélectionner un matériau';
+      description.textContent = 'Cliquez sur le symbole loupe pour sélectionner un matériau';
     }
     
     infoDiv.appendChild(title);
@@ -1092,20 +1092,22 @@ function updateLayersDisplay() {
       actionsDiv.appendChild(downButton);
     }
     
-    // Bouton Modifier
+    // Bouton Modifier (loupe)
     const editButton = document.createElement('button');
-    editButton.className = 'px-2 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600';
-    editButton.textContent = 'Modifier';
+    editButton.className = 'px-2 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 flex items-center justify-center';
+    editButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+    editButton.title = 'Modifier';
     editButton.onclick = () => {
       // Logique pour modifier une couche
       editLayer(index);
     };
     actionsDiv.appendChild(editButton);
     
-    // Bouton Supprimer
+    // Bouton Supprimer (X)
     const deleteButton = document.createElement('button');
-    deleteButton.className = 'px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600';
-    deleteButton.textContent = 'Supprimer';
+    deleteButton.className = 'px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 flex items-center justify-center';
+    deleteButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    deleteButton.title = 'Supprimer';
     deleteButton.onclick = () => removeLayer(index);
     actionsDiv.appendChild(deleteButton);
     
@@ -1114,33 +1116,6 @@ function updateLayersDisplay() {
     // Ajouter la couche au conteneur
     container.appendChild(layerDiv);
   });
-}
-
-// Modifier une couche existante
-function editLayer(index) {
-  if (index < 0 || index >= layers.length) return;
-  
-  const layer = layers[index];
-  selectedLayerType = layer.type;
-  selectedLayerIndex = index;
-  
-  // Afficher le sélecteur de matériaux
-  const materialSelector = document.getElementById('material-selector');
-  const materialSelectorTitle = document.getElementById('material-selector-title');
-  
-  if (!materialSelector || !materialSelectorTitle) {
-    console.error("Des éléments du sélecteur de matériaux n'ont pas été trouvés");
-    return;
-  }
-  
-  // Définir le titre
-  materialSelectorTitle.textContent = `Modifier ${layer.material ? layer.material.name : 'le matériau'}`;
-  
-  // Générer les boutons de catégories de matériaux
-  generateMaterialCategoryButtons(layer.type);
-  
-  // Afficher le sélecteur
-  materialSelector.classList.remove('hidden');
 }
 
 // Mettre à jour le tableau récapitulatif des matériaux
@@ -1215,64 +1190,94 @@ function updateMaterialsSummary() {
   totalEffectiveRElement.textContent = (effectiveRsi * 5.678).toFixed(3);
 }
 
-// Annuler la sélection de matériau
-function cancelMaterialSelection() {
-  const materialSelector = document.getElementById('material-selector');
+// Modifier une couche existante
+function editLayer(index) {
+  if (index < 0 || index >= layers.length) return;
   
-  if (!materialSelector) {
-    console.error("L'élément 'material-selector' n'a pas été trouvé");
+  const layer = layers[index];
+  selectedLayerType = layer.type;
+  selectedLayerIndex = index;
+  
+  // Afficher le sélecteur de matériaux
+  const materialSelector = document.getElementById('material-selector');
+  const materialSelectorTitle = document.getElementById('material-selector-title');
+  
+  if (!materialSelector || !materialSelectorTitle) {
+    console.error("Des éléments du sélecteur de matériaux n'ont pas été trouvés");
     return;
   }
   
-  materialSelector.classList.add('hidden');
+  // Définir le titre
+  materialSelectorTitle.textContent = `Modifier ${layer.material ? layer.material.name : 'le matériau'}`;
   
-  // Réinitialiser les variables de sélection
-  selectedLayerType = null;
-  selectedLayerIndex = null;
-  selectedMaterialId = null;
-  selectedMaterialCategory = null;
-  selectedThickness = 25;
+  // Générer les boutons de catégories de matériaux
+  generateMaterialCategoryButtons(layer.type);
+  
+  // Afficher le sélecteur
+  materialSelector.classList.remove('hidden');
 }
 
-// Confirmer la sélection de matériau
-function confirmMaterialSelection() {
-  if (!selectedMaterialId) {
-    alert("Veuillez sélectionner un matériau.");
-    return;
-  }
+// Sélectionner un matériau
+function selectMaterial(material) {
+  selectedMaterialId = material.id;
+  selectedMaterial = material;
   
-  // Trouver le matériau sélectionné dans la base de données
-  let selectedMaterialObj = null;
-  
-  for (const category in materials) {
-    const foundMaterial = materials[category].find(m => m.id === selectedMaterialId);
-    if (foundMaterial) {
-      selectedMaterialObj = {...foundMaterial};
-      break;
+  // Si le matériau a une valeur RSI fixe
+  if (material.rsi !== undefined) {
+    // Ajouter directement le matériau
+    addMaterialToLayers(material);
+  } 
+  // Si le matériau a une valeur RSI par mm (nécessite une épaisseur)
+  else if (material.rsiPerMm !== undefined) {
+    // Afficher le sélecteur d'épaisseur
+    initializeThicknessSelector(material);
+    const thicknessSelector = document.getElementById('thickness-selector');
+    if (thicknessSelector) {
+      thicknessSelector.classList.remove('hidden');
+    }
+    
+    // Afficher la résistance thermique calculée
+    const rsiDisplay = document.getElementById('material-rsi-display');
+    const rsiValue = document.getElementById('material-rsi-value');
+    const descriptionElem = document.getElementById('material-description');
+    
+    if (rsiDisplay && rsiValue && descriptionElem) {
+      const thickness = material.thickness || selectedThickness || 25;
+      const rsi = material.rsiPerMm * thickness;
+      rsiValue.textContent = formatRSIR(rsi);
+      rsiDisplay.classList.remove('hidden');
+      
+      if (material.description) {
+        descriptionElem.textContent = material.description;
+      } else {
+        descriptionElem.textContent = "";
+      }
     }
   }
-  
-  if (!selectedMaterialObj) {
-    console.error(`Matériau avec ID '${selectedMaterialId}' non trouvé`);
-    return;
-  }
+}
+
+// Nouvelle fonction pour ajouter le matériau à la liste des couches
+function addMaterialToLayers(materialObj) {
+  if (!materialObj) return;
   
   // Appliquer l'épaisseur sélectionnée si le matériau a une valeur RSI par mm
-  if (selectedMaterialObj.rsiPerMm !== undefined) {
-    selectedMaterialObj.thickness = selectedThickness;
-    selectedMaterialObj.rsi = selectedMaterialObj.rsiPerMm * selectedThickness;
+  if (materialObj.rsiPerMm !== undefined) {
+    const materialCopy = {...materialObj};
+    materialCopy.thickness = selectedThickness;
+    materialCopy.rsi = materialCopy.rsiPerMm * selectedThickness;
+    materialObj = materialCopy;
   }
   
   // Créer ou mettre à jour la couche
   if (selectedLayerIndex !== null && selectedLayerIndex >= 0 && selectedLayerIndex < layers.length) {
     // Modifier une couche existante
-    layers[selectedLayerIndex].material = selectedMaterialObj;
+    layers[selectedLayerIndex].material = materialObj;
   } else {
     // Ajouter une nouvelle couche
     layers.push({
       id: Date.now(),
       type: selectedLayerType,
-      material: selectedMaterialObj
+      material: materialObj
     });
   }
   
@@ -1281,50 +1286,17 @@ function confirmMaterialSelection() {
   updateMaterialsSummary();
   
   // Masquer le sélecteur
-  cancelMaterialSelection();
-}
-
-// Sélectionner un matériau
-function selectMaterial(material) {
-  selectedMaterialId = material.id;
-  selectedMaterial = material;
-  
-  // Mettre à jour l'affichage de la résistance thermique
-  const rsiDisplay = document.getElementById('material-rsi-display');
-  const rsiValue = document.getElementById('material-rsi-value');
-  const descriptionElem = document.getElementById('material-description');
-  const thicknessSelector = document.getElementById('thickness-selector');
-  
-  if (!rsiDisplay || !rsiValue || !descriptionElem || !thicknessSelector) {
-    console.error("Des éléments d'affichage du matériau sélectionné n'ont pas été trouvés");
-    return;
+  const materialSelector = document.getElementById('material-selector');
+  if (materialSelector) {
+    materialSelector.classList.add('hidden');
   }
   
-  // Si le matériau a une valeur RSI fixe
-  if (material.rsi !== undefined) {
-    rsiValue.textContent = formatRSIR(material.rsi);
-    rsiDisplay.classList.remove('hidden');
-    thicknessSelector.classList.add('hidden');
-  } 
-  // Si le matériau a une valeur RSI par mm (nécessite une épaisseur)
-  else if (material.rsiPerMm !== undefined) {
-    // Afficher le sélecteur d'épaisseur
-    initializeThicknessSelector(material);
-    thicknessSelector.classList.remove('hidden');
-    
-    // Calculer le RSI basé sur l'épaisseur par défaut ou existante
-    const thickness = material.thickness || selectedThickness || 25;
-    const rsi = material.rsiPerMm * thickness;
-    rsiValue.textContent = formatRSIR(rsi);
-    rsiDisplay.classList.remove('hidden');
-  }
-  
-  // Afficher la description
-  if (material.description) {
-    descriptionElem.textContent = material.description;
-  } else {
-    descriptionElem.textContent = "";
-  }
+  // Réinitialiser les variables de sélection
+  selectedLayerType = null;
+  selectedLayerIndex = null;
+  selectedMaterialId = null;
+  selectedMaterialCategory = null;
+  selectedThickness = 25;
 }
 
 // Initialiser le sélecteur d'épaisseur
@@ -1395,6 +1367,11 @@ function handleThicknessChange() {
     customThicknessDiv.classList.add('hidden');
     selectedThickness = parseInt(select.value);
     updateMaterialRSI();
+    
+    // Ajouter automatiquement le matériau après sélection de l'épaisseur standard
+    if (selectedMaterial) {
+      addMaterialToLayers(selectedMaterial);
+    }
   }
 }
 
@@ -1409,6 +1386,11 @@ function handleCustomThicknessChange() {
   
   selectedThickness = parseInt(input.value);
   updateMaterialRSI();
+  
+  // Ajouter automatiquement le matériau après saisie de l'épaisseur personnalisée
+  if (selectedMaterial && selectedThickness > 0) {
+    addMaterialToLayers(selectedMaterial);
+  }
 }
 
 // Mettre à jour l'affichage du RSI en fonction de l'épaisseur
