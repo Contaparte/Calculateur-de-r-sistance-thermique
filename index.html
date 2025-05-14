@@ -8,6 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
+        body {
+            background-color: #fef7f2;
+        }
         .material-viz {
             display: flex;
             height: 60px;
@@ -47,7 +50,7 @@
             margin-bottom: 20px;
             position: relative;
             border: 1px solid #e2e8f0;
-            background-color: #fef7f2;
+            background-color: white;
             padding: 20px;
             box-sizing: border-box;
         }
@@ -76,7 +79,7 @@
         </p>
         
         <!-- Le reste du contenu reste identique mais avec quelques modifications de largeur -->
-        <div class="border rounded mb-4 overflow-hidden">
+        <div class="border rounded mb-4 overflow-hidden bg-white">
             <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('info-section')">
                 <h3 class="font-bold">Informations sur le Code</h3>
                 <svg id="info-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -103,7 +106,7 @@
             </div>
         </div>
         
-        <div class="border rounded mb-4 overflow-hidden">
+        <div class="border rounded mb-4 overflow-hidden bg-white">
             <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('params-section')">
                 <h3 class="font-bold">Paramètres du bâtiment</h3>
                 <svg id="params-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"></polyline></svg>
@@ -239,7 +242,7 @@
             </div>
         </div>
         
-        <div class="border rounded mb-4 overflow-hidden">
+        <div class="border rounded mb-4 overflow-hidden bg-white">
             <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('composition-section')">
                 <h3 class="font-bold">Composition de l'enveloppe</h3>
                 <svg id="composition-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"></polyline></svg>
@@ -252,7 +255,7 @@
                         <div class="border p-2 rounded">
                             <h5 class="font-semibold mb-2 text-sm">Films d'air</h5>
                             <div class="space-y-1">
-                                <button onclick="addLayer('airfilm')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                <button onclick="addLayer('airfilm')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
                                     + Films d'air
                                 </button>
                             </div>
@@ -260,7 +263,7 @@
                         <div class="border p-2 rounded">
                             <h5 class="font-semibold mb-2 text-sm">Espaces d'air</h5>
                             <div class="space-y-1">
-                                <button onclick="addLayer('airspace')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                <button onclick="addLayer('airspace')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
                                     + Lames d'air
                                 </button>
                             </div>
@@ -268,7 +271,7 @@
                         <div class="border p-2 rounded">
                             <h5 class="font-semibold mb-2 text-sm">Isolants</h5>
                             <div class="space-y-1">
-                                <button onclick="addLayer('insulation')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                <button onclick="addLayer('insulation')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
                                     + Isolants
                                 </button>
                             </div>
@@ -276,7 +279,7 @@
                         <div class="border p-2 rounded">
                             <h5 class="font-semibold mb-2 text-sm">Structure</h5>
                             <div class="space-y-1">
-                                <button onclick="addLayer('structural')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                <button onclick="addLayer('structural')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
                                     + Éléments structuraux
                                 </button>
                             </div>
@@ -284,10 +287,10 @@
                         <div class="border p-2 rounded">
                             <h5 class="font-semibold mb-2 text-sm">Revêtements</h5>
                             <div class="space-y-1">
-                                <button onclick="addLayer('cladding')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                <button onclick="addLayer('cladding')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
                                     + Parements extérieurs
                                 </button>
-                                <button onclick="addLayer('sheathening')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                <button onclick="addLayer('sheathening')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
                                     + Revêtements intermédiaires
                                 </button>
                             </div>
@@ -295,10 +298,10 @@
                         <div class="border p-2 rounded">
                             <h5 class="font-semibold mb-2 text-sm">Autres</h5>
                             <div class="space-y-1">
-                                <button onclick="addLayer('interior')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                <button onclick="addLayer('interior')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
                                     + Finition intérieure
                                 </button>
-                                <button onclick="addLayer('roofing')" class="w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100">
+                                <button onclick="addLayer('roofing')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
                                     + Matériau de toiture
                                 </button>
                             </div>
@@ -307,7 +310,7 @@
                 </div>
                 
                 <!-- Message quand aucune couche n'est ajoutée -->
-                <div id="no-layers-message" class="p-4 border rounded bg-gray-50 text-center">
+                <div id="no-layers-message" class="p-4 border rounded bg-white text-center">
                     Ajoutez des couches de matériaux pour commencer l'analyse de votre composition d'enveloppe.
                 </div>
                 
@@ -382,13 +385,13 @@
         </div>
         
         <!-- Le reste du contenu HTML reste inchangé -->
-        <div class="border rounded mb-4 overflow-hidden">
+        <div class="border rounded mb-4 overflow-hidden bg-white">
             <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('results-section')">
                 <h3 class="font-bold">Résultats d'analyse</h3>
                 <svg id="results-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"></polyline></svg>
             </div>
             <div id="results-section" class="p-4 border-t">
-                <div id="no-results-message" class="p-4 border rounded bg-gray-50 text-center">
+                <div id="no-results-message" class="p-4 border rounded bg-white text-center">
                     Cliquez sur "Calculer la performance thermique" pour générer les résultats d'analyse.
                 </div>
                 
