@@ -78,29 +78,26 @@
             selon les exigences du Code de construction du Québec, et visualisez le gradient de température avec le point de rosée.
         </p>
         
-        <!-- Le reste du contenu reste identique mais avec quelques modifications de largeur -->
         <div class="border rounded mb-4 overflow-hidden bg-white">
-            <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('info-section')">
-                <h3 class="font-bold">Informations sur le Code</h3>
-                <svg id="info-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('intro-section')">
+                <h3 class="font-bold">Introduction et objectifs</h3>
+                <svg id="intro-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-up">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
             </div>
-            <div id="info-section" class="p-4 border-t hidden">
-                <div class="text-sm text-gray-700 space-y-4">
-                    <p>
-                        Le Code de construction du Québec comprend des exigences spécifiques relatives à l'efficacité énergétique des bâtiments:
+            <div id="intro-section" class="p-4 border-t">
+                <div class="text-gray-700 leading-relaxed">
+                    <p class="mb-4">
+                        Cet outil vous aide à analyser la performance thermique de votre enveloppe de bâtiment selon les exigences du Code de construction du Québec.
+                        Il calcule automatiquement les valeurs de résistance thermique et identifie les risques de condensation grâce à l'analyse du point de rosée.
                     </p>
-                    <ul class="list-disc pl-6 space-y-2">
-                        <li><strong>Partie 11 du Code de construction du Québec (2015)</strong> - S'applique aux habitations d'au plus 3 étages et d'au plus 600 m² n'abritant que des logements.</li>
-                    </ul>
-                    <p>
-                        <strong>Deux notions importantes à comprendre:</strong>
+                    <p class="mb-4">
+                        <strong>Résistance thermique totale (RSI<sub>T</sub>):</strong> Méthode prescriptive basée sur la somme des valeurs RSI de tous les composants de l'enveloppe.
+                        Cette approche simple est généralement plus conservative et exige des valeurs minimales plus élevées.
                     </p>
-                    <ul class="list-disc pl-6 space-y-2">
-                        <li><strong>Résistance thermique totale (RSI<sub>T</sub>)</strong> - Calculée au droit de la partie isolée de la paroi, sans tenir compte des ponts thermiques.</li>
-                        <li><strong>Résistance thermique effective (RSI<sub>E</sub>)</strong> - Tient compte de l'effet des ponts thermiques créés par les éléments de structure (poteaux, solives, linteaux, etc.).</li>
-                    </ul>
-                    <p>
-                        Pour les bâtiments soumis à la Partie 11, la résistance thermique totale (RSI<sub>T</sub>) est la valeur principalement utilisée dans le Code. Cependant, la Régie du bâtiment du Québec (RBQ) reconnaît l'équivalence des valeurs de résistance thermique effective (RSI<sub>E</sub>) comme une méthode alternative de conformité. Selon le tableau disponible sur le site de la RBQ, ces valeurs équivalentes sont légèrement inférieures aux valeurs de résistance thermique totale prescrites, car elles tiennent compte de l'impact des ponts thermiques sur la performance réelle de l'enveloppe. Cette approche permet une plus grande flexibilité dans la conception tout en assurant une performance énergétique adéquate.
+                    <p class="mb-4">
+                        <strong>Résistance thermique effective (RSI<sub>E</sub>):</strong> Méthode alternative qui tient compte de l'impact des ponts thermiques sur la performance réelle de l'enveloppe.
+                        Selon le tableau disponible sur le site de la RBQ, ces valeurs équivalentes sont légèrement inférieures aux valeurs de résistance thermique totale prescrites, car elles tiennent compte de l'impact des ponts thermiques sur la performance réelle de l'enveloppe. Cette approche permet une plus grande flexibilité dans la conception tout en assurant une performance énergétique adéquate.
                     </p>
                 </div>
             </div>
@@ -109,7 +106,9 @@
         <div class="border rounded mb-4 overflow-hidden bg-white">
             <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('params-section')">
                 <h3 class="font-bold">Paramètres du bâtiment</h3>
-                <svg id="params-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                <svg id="params-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-up">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
             </div>
             <div id="params-section" class="p-4 border-t">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -121,7 +120,6 @@
                             class="w-full p-2 border rounded"
                         >
                             <option value="">Sélectionnez une municipalité</option>
-                            <!-- Options générées par JavaScript -->
                         </select>
                     </div>
                     
@@ -144,100 +142,42 @@
                             onchange="updateBuildingType()"
                             class="w-full p-2 border rounded"
                         >
-                            <option value="residential_small">Habitation d'au plus 3 étages et d'au plus 600 m²</option>
-                            <option value="residential_large">Habitation de plus de 3 étages ou de plus de 600 m²</option>
-                            <option value="mixed">Habitation avec autres usages</option>
-                            <option value="commercial">Bâtiment commercial</option>
-                            <option value="industrial">Bâtiment industriel</option>
-                            <option value="institutional">Bâtiment institutionnel</option>
+                            <option value="residential">Résidentiel</option>
+                            <option value="commercial">Commercial</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="block text-sm font-medium mb-1">Version du Code applicable:</label>
+                        <label class="block text-sm font-medium mb-1">Version du code:</label>
                         <select 
                             id="code-version" 
                             onchange="updateCodeVersion()"
                             class="w-full p-2 border rounded"
                         >
-                            <option value="part11">Partie 11 - Code de construction du Québec (2015)</option>
+                            <option value="2015">Code 2015 (avec modifications du Québec)</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label class="block text-sm font-medium mb-1">Composante de l'enveloppe à analyser:</label>
+                        <label class="block text-sm font-medium mb-1">Composant d'enveloppe:</label>
                         <select 
                             id="envelope-component" 
                             onchange="updateEnvelopeComponent()"
                             class="w-full p-2 border rounded"
                         >
+                            <option value="roof">Toit ou plafond</option>
                             <option value="wall_above_grade">Mur hors sol</option>
                             <option value="foundation_wall">Mur de fondation</option>
-                            <option value="roof">Toit ou plafond</option>
-                            <option value="floor">Plancher séparant un espace chauffé d'un espace non chauffé</option>
+                            <option value="floor">Plancher</option>
                             <option value="garage_ceiling">Plafond de garage chauffé</option>
-                            <option value="garage_walls_to_dwelling">Murs de garage chauffé contigus au logement</option>
-                            <option value="garage_foundation_wall">Mur de fondation de garage chauffé</option>
+                            <option value="garage_wall">Mur de garage chauffé</option>
                         </select>
                     </div>
-                    
-                    <div class="col-span-1 md:col-span-2">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="form-group">
-                                <label class="block text-sm font-medium mb-1">Température extérieure (°C):</label>
-                                <input 
-                                    type="number" 
-                                    id="temp-ext" 
-                                    value="-26" 
-                                    step="0.1"
-                                    class="w-full p-2 border rounded"
-                                    onchange="calculateGradient()"
-                                />
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="block text-sm font-medium mb-1">Température intérieure (°C):</label>
-                                <input 
-                                    type="number" 
-                                    id="temp-int" 
-                                    value="21" 
-                                    step="0.1"
-                                    class="w-full p-2 border rounded"
-                                    onchange="calculateGradient()"
-                                />
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="block text-sm font-medium mb-1">Humidité relative intérieure (%):</label>
-                                <input 
-                                    type="number" 
-                                    id="humidity" 
-                                    value="40" 
-                                    min="0" 
-                                    max="100" 
-                                    step="1"
-                                    class="w-full p-2 border rounded"
-                                    onchange="calculateGradient()"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-span-1 md:col-span-2">
-                        <div class="p-4 bg-blue-50 border border-blue-200 rounded">
-                            <h4 class="font-bold mb-2">Exigences minimales selon le Code</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <h5 class="font-semibold mb-1">Résistance thermique totale (RSI<sub>T</sub>):</h5>
-                                    <p class="text-sm" id="min-rsit-display">-</p>
-                                </div>
-                                <div>
-                                    <h5 class="font-semibold mb-1">Résistance thermique effective (RSI<sub>E</sub>):</h5>
-                                    <p class="text-sm" id="min-rsie-display">-</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-blue-50 rounded text-sm">
+                    <p><strong>RSI<sub>T</sub> minimal requis:</strong> <span id="min-rsit-display">—</span></p>
+                    <p><strong>RSI<sub>E</sub> minimal requis:</strong> <span id="min-rsie-display">—</span></p>
                 </div>
             </div>
         </div>
@@ -245,87 +185,75 @@
         <div class="border rounded mb-4 overflow-hidden bg-white">
             <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('composition-section')">
                 <h3 class="font-bold">Composition de l'enveloppe</h3>
-                <svg id="composition-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                <svg id="composition-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-up">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
             </div>
             <div id="composition-section" class="p-4 border-t">
-                <!-- Catégories de matériaux -->
-                <div class="mb-4">
-                    <h4 class="font-bold mb-2">Ajouter des matériaux par catégorie</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="material-categories">
-                        <div class="border p-2 rounded">
-                            <h5 class="font-semibold mb-2 text-sm">Films d'air</h5>
-                            <div class="space-y-1">
-                                <button onclick="addLayer('airfilm')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
-                                    + Films d'air
-                                </button>
-                            </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="border p-2 rounded">
+                        <h5 class="font-semibold mb-2 text-sm">Films et lames d'air</h5>
+                        <div class="space-y-1">
+                            <button onclick="addLayer('airfilm')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
+                                + Film d'air
+                            </button>
+                            <button onclick="addLayer('airspace')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
+                                + Lame d'air
+                            </button>
                         </div>
-                        <div class="border p-2 rounded">
-                            <h5 class="font-semibold mb-2 text-sm">Espaces d'air</h5>
-                            <div class="space-y-1">
-                                <button onclick="addLayer('airspace')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
-                                    + Lames d'air
-                                </button>
-                            </div>
+                    </div>
+                    <div class="border p-2 rounded">
+                        <h5 class="font-semibold mb-2 text-sm">Isolants</h5>
+                        <div class="space-y-1">
+                            <button onclick="addLayer('insulation')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
+                                + Matériaux isolants
+                            </button>
                         </div>
-                        <div class="border p-2 rounded">
-                            <h5 class="font-semibold mb-2 text-sm">Isolants</h5>
-                            <div class="space-y-1">
-                                <button onclick="addLayer('insulation')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
-                                    + Isolants
-                                </button>
-                            </div>
+                    </div>
+                    <div class="border p-2 rounded">
+                        <h5 class="font-semibold mb-2 text-sm">Structure</h5>
+                        <div class="space-y-1">
+                            <button onclick="addLayer('structural')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
+                                + Éléments structuraux
+                            </button>
                         </div>
-                        <div class="border p-2 rounded">
-                            <h5 class="font-semibold mb-2 text-sm">Structure</h5>
-                            <div class="space-y-1">
-                                <button onclick="addLayer('structural')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
-                                    + Éléments structuraux
-                                </button>
-                            </div>
+                    </div>
+                    <div class="border p-2 rounded">
+                        <h5 class="font-semibold mb-2 text-sm">Revêtements</h5>
+                        <div class="space-y-1">
+                            <button onclick="addLayer('cladding')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
+                                + Parements extérieurs
+                            </button>
+                            <button onclick="addLayer('sheathening')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
+                                + Revêtements intermédiaires
+                            </button>
                         </div>
-                        <div class="border p-2 rounded">
-                            <h5 class="font-semibold mb-2 text-sm">Revêtements</h5>
-                            <div class="space-y-1">
-                                <button onclick="addLayer('cladding')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
-                                    + Parements extérieurs
-                                </button>
-                                <button onclick="addLayer('sheathening')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
-                                    + Revêtements intermédiaires
-                                </button>
-                            </div>
-                        </div>
-                        <div class="border p-2 rounded">
-                            <h5 class="font-semibold mb-2 text-sm">Autres</h5>
-                            <div class="space-y-1">
-                                <button onclick="addLayer('interior')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
-                                    + Finition intérieure
-                                </button>
-                                <button onclick="addLayer('roofing')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
-                                    + Matériau de toiture
-                                </button>
-                            </div>
+                    </div>
+                    <div class="border p-2 rounded">
+                        <h5 class="font-semibold mb-2 text-sm">Autres</h5>
+                        <div class="space-y-1">
+                            <button onclick="addLayer('interior')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
+                                + Finition intérieure
+                            </button>
+                            <button onclick="addLayer('roofing')" class="w-full text-left bg-white p-2 rounded text-sm hover:bg-blue-100">
+                                + Matériau de toiture
+                            </button>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Message quand aucune couche n'est ajoutée -->
                 <div id="no-layers-message" class="p-4 border rounded bg-white text-center">
                     Ajoutez des couches de matériaux pour commencer l'analyse de votre composition d'enveloppe.
                 </div>
                 
-                <!-- Container pour les couches ajoutées (rempli dynamiquement) -->
                 <div id="layers-container"></div>
                 
-                <!-- Liste des matériaux en accordéon (affiché lors de l'ajout d'une couche) -->
                 <div id="material-selector" class="hidden">
                     <div class="p-4 mb-4 border rounded">
                         <h4 class="font-bold mb-2" id="material-selector-title">Sélectionner un matériau</h4>
                         
-                        <!-- Catégories de matériaux (généré par JavaScript) -->
                         <div id="material-categories-selector" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"></div>
                         
-                        <!-- Options d'épaisseur pour les matériaux qui le supportent -->
                         <div id="thickness-selector" class="hidden">
                             <label class="block text-sm font-medium mb-1">Épaisseur:</label>
                             <select id="thickness-select" class="w-full p-2 border rounded mb-2"></select>
@@ -336,92 +264,86 @@
                             </div>
                         </div>
                         
-                        <!-- Résistance thermique calculée -->
                         <div id="material-rsi-display" class="mt-2 text-sm hidden">
-                            <div><strong>Résistance thermique:</strong> <span id="material-rsi-value">-</span></div>
-                            <div id="material-description" class="text-gray-600"></div>
+                            <p><strong>Résistance thermique:</strong> <span id="material-rsi-value">—</span></p>
+                        </div>
+                        
+                        <div id="material-description" class="mt-2 text-sm text-gray-600"></div>
+                        
+                        <div class="mt-4">
+                            <button onclick="addSelectedMaterial()" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mr-2">
+                                Ajouter ce matériau
+                            </button>
+                            <button onclick="cancelMaterialSelection()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                                Annuler
+                            </button>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Tableau récapitulatif des matériaux -->
-                <div style="overflow-x: auto;" class="mt-4">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr class="bg-gray-200">
-                                <th class="border px-4 py-2 text-left">Couche</th>
-                                <th class="border px-4 py-2 text-left">Matériau</th>
-                                <th class="border px-4 py-2 text-left">Épaisseur (mm)</th>
-                                <th class="border px-4 py-2 text-left">RSI (m²·K/W)</th>
-                                <th class="border px-4 py-2 text-left">R (pi²·°F·h/BTU)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="materials-summary-body">
-                            <!-- Rempli par JavaScript -->
-                        </tbody>
-                        <tfoot>
-                            <tr class="font-bold bg-gray-100">
-                                <td class="border px-4 py-2" colspan="3">Total</td>
-                                <td class="border px-4 py-2" id="total-rsi">-</td>
-                                <td class="border px-4 py-2" id="total-r">-</td>
-                            </tr>
-                            <tr class="font-bold text-gray-600">
-                                <td class="border px-4 py-2" colspan="3">Total effectif (avec ponts thermiques)</td>
-                                <td class="border px-4 py-2" id="total-effective-rsi">-</td>
-                                <td class="border px-4 py-2" id="total-effective-r">-</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                
-                <button 
-                    onclick="calculateResults()"
-                    class="w-full mt-4 bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700 transition"
-                    id="calculate-btn"
-                >
-                    Calculer la performance thermique
-                </button>
             </div>
         </div>
         
-        <!-- Le reste du contenu HTML reste inchangé -->
         <div class="border rounded mb-4 overflow-hidden bg-white">
-            <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('results-section')">
-                <h3 class="font-bold">Résultats d'analyse</h3>
-                <svg id="results-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" class="feather feather-chevron-up"><polyline points="18 15 12 9 6 15"></polyline></svg>
+            <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('analysis-section')">
+                <h3 class="font-bold">Analyse thermique</h3>
+                <svg id="analysis-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-up">
+                    <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
             </div>
-            <div id="results-section" class="p-4 border-t">
-                <div id="no-results-message" class="p-4 border rounded bg-white text-center">
-                    Cliquez sur "Calculer la performance thermique" pour générer les résultats d'analyse.
+            <div id="analysis-section" class="p-4 border-t">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="form-group">
+                        <label class="block text-sm font-medium mb-1">Température intérieure (°C):</label>
+                        <input 
+                            type="number" 
+                            id="temp-int" 
+                            value="20"
+                            class="w-full p-2 border rounded"
+                        />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-sm font-medium mb-1">Température extérieure (°C):</label>
+                        <input 
+                            type="number" 
+                            id="temp-ext" 
+                            value="-25"
+                            class="w-full p-2 border rounded"
+                        />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="block text-sm font-medium mb-1">Humidité relative intérieure (%):</label>
+                        <input 
+                            type="number" 
+                            id="humidity" 
+                            value="40"
+                            min="0" 
+                            max="100"
+                            class="w-full p-2 border rounded"
+                        />
+                    </div>
                 </div>
                 
-                <div id="results-content" class="hidden">
-                    <div class="mb-6">
-                        <p class="mb-2">
-                            Selon les données fournies, votre composition d'enveloppe atteint:
-                        </p>
-                        <ul class="list-disc pl-6 mb-4">
-                            <li class="mb-1">
-                                <strong>Résistance thermique totale (RSI<sub>T</sub>):</strong> <span id="result-total-rsi">-</span>
-                            </li>
-                            <li>
-                                <strong>Résistance thermique effective (RSI<sub>E</sub>):</strong> <span id="result-effective-rsi">-</span>
-                            </li>
-                        </ul>
-                        
-                        <p class="mb-2">
-                            Exigences minimales selon le Code pour <span id="envelope-description">-</span> 
-                            dans votre zone climatique (<span id="zone-description">-</span>):
-                        </p>
-                        <ul class="list-disc pl-6">
-                            <li class="mb-1">
-                                <strong>Résistance thermique totale minimale (RSI<sub>T</sub>):</strong> <span id="min-total-rsi">-</span>
-                            </li>
-                            <li>
-                                <strong>Résistance thermique effective minimale (RSI<sub>E</sub>):</strong> <span id="min-effective-rsi">-</span>
-                            </li>
-                        </ul>
+                <button onclick="calculateResults()" class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mb-4">
+                    Calculer les résultats
+                </button>
+                
+                <div id="summary-results" class="hidden">
+                    <div class="mb-4 p-4 bg-gray-50 rounded">
+                        <h4 class="font-bold mb-2">Résumé des calculs</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p><strong>Point de rosée:</strong> <span id="dew-point">—</span>°C</p>
+                                <p><strong>RSI total:</strong> <span id="rsi-total">—</span></p>
+                                <p><strong>R total:</strong> <span id="r-total">—</span></p>
+                                <p><strong>Valeur U:</strong> <span id="u-value">—</span></p>
+                            </div>
+                        </div>
+                        <div id="summary-text" class="mt-2 text-sm"></div>
                     </div>
+                    
+                    <div id="warning-container"></div>
                     
                     <h3 class="text-xl font-bold mb-3">Gradient de température et point de rosée</h3>
                     
@@ -430,151 +352,1751 @@
                     </div>
                     
                     <div class="material-viz" id="material-viz"></div>
-                    
-                    <div id="warning-container"></div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <p><strong>Point de rosée:</strong> <span id="dew-point">-</span> °C</p>
-                            <p><strong>RSI total:</strong> <span id="rsi-total">-</span> (R-<span id="r-total">-</span>)</p>
-                            <p><strong>Coefficient U:</strong> <span id="u-value">-</span> W/(m²·K)</p>
-                        </div>
-                        <div>
-                            <p id="summary-text" class="text-sm text-gray-600"></p>
-                        </div>
-                    </div>
-                    
-                    <h3 class="text-xl font-bold mb-3">Résumé de conformité</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr class="bg-gray-200">
-                                    <th class="border px-4 py-2 text-left">Mesure</th>
-                                    <th class="border px-4 py-2 text-left">Valeur</th>
-                                    <th class="border px-4 py-2 text-left">Exigence minimale</th>
-                                    <th class="border px-4 py-2 text-left">Conformité</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="border px-4 py-2">Résistance thermique totale (RSI<sub>T</sub>)</td>
-                                    <td class="border px-4 py-2" id="compliance-total-rsi-value">-</td>
-                                    <td class="border px-4 py-2" id="compliance-total-rsi-min">-</td>
-                                    <td class="border px-4 py-2" id="compliance-total-rsi-status">-</td>
-                                </tr>
-                                <tr>
-                                    <td class="border px-4 py-2">Résistance thermique effective (RSI<sub>E</sub>)</td>
-                                    <td class="border px-4 py-2" id="compliance-effective-rsi-value">-</td>
-                                    <td class="border px-4 py-2" id="compliance-effective-rsi-min">-</td>
-                                    <td class="border px-4 py-2" id="compliance-effective-rsi-status">-</td>
-                                </tr>
-                                <tr>
-                                    <td class="border px-4 py-2">Coefficient U total</td>
-                                    <td class="border px-4 py-2" id="compliance-u-value">-</td>
-                                    <td class="border px-4 py-2">—</td>
-                                    <td class="border px-4 py-2">—</td>
-                                </tr>
-                                <tr>
-                                    <td class="border px-4 py-2">Coefficient U effectif</td>
-                                    <td class="border px-4 py-2" id="compliance-u-effective">-</td>
-                                    <td class="border px-4 py-2">—</td>
-                                    <td class="border px-4 py-2">—</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Exigences spécifiques du code -->
-                    <h3 class="text-xl font-bold my-3">Exigences spécifiques du Code</h3>
-                    
-                    <div id="thermal-bridges-recommendations" class="mb-4 bg-white rounded border p-4">
-                        <!-- Rempli par JavaScript -->
-                    </div>
-                    
-                    <div class="mb-4 bg-white rounded border p-4" id="isolation-continuity-recommendations">
-                        <!-- Rempli par JavaScript -->
-                    </div>
-                    
-                    <!-- Nouvelles sections pour les exigences supplémentaires du Code -->
-                    <div class="mb-4 bg-white rounded border p-4" id="air-barrier-requirements">
-                        <h4 class="font-bold text-blue-800 mb-2">Système d'étanchéité à l'air</h4>
-                        <p class="text-sm">Selon l'article 9.25.3.1, les murs, plafonds et planchers qui séparent un espace climatisé d'un espace non climatisé ou du sol doivent comporter un système d'étanchéité à l'air offrant une protection continue contre le passage de l'air, pouvant empêcher la formation excessive de condensation dans les vides au cours de l'hiver.</p>
-                        <p class="text-sm mt-2">Le système d'étanchéité à l'air doit être conçu pour empêcher les infiltrations d'air et les fuites d'air provoquées par la différence de pression due à l'effet de tirage, à la ventilation mécanique ou au vent.</p>
-                    </div>
-                    
-                    <div class="mb-4 bg-white rounded border p-4" id="vapor-barrier-requirements">
-                        <h4 class="font-bold text-blue-800 mb-2">Pare-vapeur</h4>
-                        <p class="text-sm">Selon l'article 9.25.4.1, les murs, les plafonds et les planchers isolés doivent comporter un pare-vapeur de façon à empêcher que la vapeur d'eau contenue dans l'air intérieur ne migre dans les vides des murs et des planchers ou dans les combles ou vides sous toit.</p>
-                        <p class="text-sm mt-2">Selon l'article 9.25.4.2, les pare-vapeur doivent avoir une perméance d'au plus 60 ng/(Pa·s·m²) et doivent être installés du côté chaud de l'isolant.</p>
-                    </div>
-                    
-                    <div class="mb-4 bg-white rounded border p-4" id="low-permeance-materials">
-                        <h4 class="font-bold text-blue-800 mb-2">Matériaux à faible perméance</h4>
-                        <p class="text-sm">Selon l'article 9.25.5.1, pour les matériaux à faible perméance à l'air et à la vapeur d'eau, leur emplacement dans l'ensemble de construction doit être conforme à l'article 9.25.5.2 pour éviter la condensation.</p>
-                        <p class="text-sm mt-2">Le rapport entre la résistance thermique totale côté extérieur et côté intérieur de la couche imperméable doit respecter les valeurs minimales du tableau 9.25.5.2 selon les degrés-jours de chauffage.</p>
-                    </div>
-                    
-                    <div class="mb-4 bg-white rounded border p-4" id="moisture-protection">
-                        <h4 class="font-bold text-blue-800 mb-2">Protection contre l'humidité</h4>
-                        <p class="text-sm">Selon l'article 9.13.2.1, si le niveau du sol fini côté intérieur est en contrebas du niveau côté extérieur, la face extérieure des murs de fondation située sous le niveau du sol doit être protégée contre l'humidité.</p>
-                        <p class="text-sm mt-2">Selon l'article 9.13.2.4, une protection extérieure contre l'humidité doit être appliquée à partir du niveau du sol fini jusqu'au sommet de l'extérieur de la semelle.</p>
-                    </div>
-                    
-                    <div class="mb-4 bg-white rounded border p-4" id="precipitation-protection">
-                        <h4 class="font-bold text-blue-800 mb-2">Protection contre les précipitations</h4>
-                        <p class="text-sm">Selon l'article 9.27.2.1, les murs extérieurs doivent être conçus et construits de manière à réduire au minimum l'infiltration des précipitations et à prévenir l'infiltration des précipitations dans les espaces intérieurs.</p>
-                        <p class="text-sm mt-2">Selon l'article 9.27.2.2, les murs extérieurs exposés aux précipitations doivent être protégés par un revêtement extérieur comportant un premier et un deuxième plans de protection.</p>
-                    </div>
-                    
-                    <div class="mb-4 bg-white rounded border p-4" id="ventilation-requirements">
-                        <h4 class="font-bold text-blue-800 mb-2">Exigences de ventilation</h4>
-                        <p class="text-sm">Selon l'article 9.32.1.2, les habitations doivent prévoir des mesures pour assurer la ventilation en dehors de la saison de chauffe et, si alimentées en électricité et desservies par une installation de chauffage, des mesures pour assurer la ventilation pendant la saison de chauffe.</p>
-                        <p class="text-sm mt-2">Selon l'article 9.19.1.1, si un isolant est posé entre un plafond et la sous-face d'un support de couverture, il faut prévoir un espace entre cet isolant et le support de couverture ainsi que des orifices de ventilation pour permettre l'évacuation de l'humidité à l'extérieur.</p>
-                    </div>
-                    
-                    <div class="mb-4 bg-white rounded border p-4" id="crawl-space-ventilation">
-                        <h4 class="font-bold text-blue-800 mb-2">Ventilation des vides sanitaires</h4>
-                        <p class="text-sm">Selon l'article 9.18.3.1, les vides sanitaires non chauffés doivent être ventilés naturellement ou mécaniquement.</p>
-                        <p class="text-sm mt-2">Selon l'article 9.18.3.2, les vides sanitaires chauffés doivent être ventilés conformément à la section 9.32.</p>
-                    </div>
-                    
-                    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
-                        <h4 class="font-bold mb-2">Notes importantes:</h4>
-                        <ul class="list-disc pl-6 text-sm space-y-2">
-                            <li>
-                                <strong>Résistance thermique totale (RSI<sub>T</sub>):</strong> Calculée au droit de la partie isolée de la paroi, 
-                                sans tenir compte des ponts thermiques.
-                            </li>
-                            <li>
-                                <strong>Résistance thermique effective (RSI<sub>E</sub>):</strong> Tient compte de l'effet des ponts thermiques. 
-                                Pour cette analyse simplifiée, nous avons utilisé une approximation (85% de la résistance thermique totale). 
-                                Pour une analyse plus précise, consultez un professionnel ou référez-vous à la méthode de calcul détaillée 
-                                dans l'annexe A-9.36.2.4. 1) du Code national du bâtiment.
-                            </li>
-                            <li>
-                                <strong>Point de rosée:</strong> Température à laquelle l'air devient saturé d'humidité et où la condensation commence à se former.
-                                Si ce point se trouve dans un matériau non résistant à l'humidité, des problèmes de moisissure et de détérioration peuvent survenir.
-                            </li>
-                            <li>
-                                <strong>Exigences de la Partie 11:</strong> Les bâtiments doivent se conformer aux exigences prescriptives de 
-                                résistance thermique totale (RSI<sub>T</sub>) ou utiliser la méthode alternative de résistance thermique effective (RSI<sub>E</sub>). 
-                                La réduction des ponts thermiques est obligatoire selon la section 11.2.3 du Code.
-                            </li>
-                            <li>
-                                <strong>Conformité par méthode alternative:</strong> Selon l'article 11.2.2.1. 3), une résistance thermique inférieure 
-                                aux exigences peut être acceptable si une analyse énergétique démontre que la consommation annuelle d'énergie de la 
-                                construction proposée ne dépasse pas celle d'une construction de référence conforme.
-                            </li>
-                            <li>
-                                <strong>Protection des mousses plastiques:</strong> Selon l'article 9.10.17.10, les mousses plastiques dans les murs ou plafonds doivent être protégées par l'un des revêtements intérieurs de finition décrits aux sous-sections 9.29.4 à 9.29.9 ou par une barrière thermique conforme.
-                            </li>
-                        </ul>
-                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="border rounded mb-4 overflow-hidden bg-white">
+            <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('materials-summary-section')">
+                <h3 class="font-bold">Tableau récapitulatif des matériaux</h3>
+                <svg id="materials-summary-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div id="materials-summary-section" class="p-4 border-t hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="border px-4 py-2 text-left">Couche</th>
+                                <th class="border px-4 py-2 text-left">Matériau</th>
+                                <th class="border px-4 py-2 text-left">Épaisseur (mm)</th>
+                                <th class="border px-4 py-2 text-left">RSI</th>
+                                <th class="border px-4 py-2 text-left">R</th>
+                            </tr>
+                        </thead>
+                        <tbody id="materials-summary-body"></tbody>
+                        <tfoot>
+                            <tr class="bg-gray-100 font-bold">
+                                <td class="border px-4 py-2" colspan="3">Total</td>
+                                <td class="border px-4 py-2" id="total-rsi">—</td>
+                                <td class="border px-4 py-2" id="total-r">—</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="border rounded mb-4 overflow-hidden bg-white">
+            <div class="p-3 bg-white flex justify-between items-center cursor-pointer" onclick="toggleAccordion('notes-section')">
+                <h3 class="font-bold">Notes importantes</h3>
+                <svg id="notes-section-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+            <div id="notes-section" class="p-4 border-t hidden">
+                <div class="text-gray-700 leading-relaxed">
+                    <ul class="list-disc pl-6 space-y-2">
+                        <li>
+                            <strong>Analyse simplifiée:</strong> Cette analyse utilise une méthode simplifiée unidimensionnelle et ne prend pas en compte tous les facteurs complexes comme les ponts thermiques tridimensionnels, la convection dans les lames d'air ou les variations météorologiques.
+                            Pour une analyse plus précise, consultez un professionnel ou référez-vous à la méthode de calcul détaillée 
+                            dans l'annexe A-9.36.2.4. 1) du Code national du bâtiment.
+                        </li>
+                        <li>
+                            <strong>Point de rosée:</strong> Température à laquelle l'air devient saturé d'humidité et où la condensation commence à se former.
+                            Si ce point se trouve dans un matériau non résistant à l'humidité, des problèmes de moisissure et de détérioration peuvent survenir.
+                        </li>
+                        <li>
+                            <strong>Exigences de la Partie 11:</strong> Les bâtiments doivent se conformer aux exigences prescriptives de 
+                            résistance thermique totale (RSI<sub>T</sub>) ou utiliser la méthode alternative de résistance thermique effective (RSI<sub>E</sub>). 
+                            La réduction des ponts thermiques est obligatoire selon la section 11.2.3 du Code.
+                        </li>
+                        <li>
+                            <strong>Conformité par méthode alternative:</strong> Selon l'article 11.2.2.1. 3), une résistance thermique inférieure 
+                            aux exigences peut être acceptable si une analyse énergétique démontre que la consommation annuelle d'énergie de la 
+                            construction proposée ne dépasse pas celle d'une construction de référence conforme.
+                        </li>
+                        <li>
+                            <strong>Protection des mousses plastiques:</strong> Selon l'article 9.10.17.10, les mousses plastiques dans les murs ou plafonds doivent être protégées par l'un des revêtements intérieurs de finition décrits aux sous-sections 9.29.4 à 9.29.9 ou par une barrière thermique conforme.
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+// Variables globales
+let chart = null;
+let layers = [];
+let selectedLayerType = null;
+let selectedLayerIndex = null;
+let selectedMaterialId = null;
+let selectedMaterialCategory = null;
+let selectedThickness = 25;
+let selectedMaterial = null;
+
+// Variables pour les paramètres du bâtiment
+let selectedLocation = null;
+let degreeDays = null;
+let climaticZone = null;
+let buildingType = 'residential';
+let codeVersion = '2015';
+let envelopeComponent = 'roof';
+
+// Table de pression de vapeur saturante 
+const saturationPressureTable = [
+    { temp: -30, pressure: 0.38 },
+    { temp: -25, pressure: 0.63 },
+    { temp: -20, pressure: 1.03 },
+    { temp: -15, pressure: 1.65 },
+    { temp: -10, pressure: 2.6 },
+    { temp: -5, pressure: 4.01 },
+    { temp: 0, pressure: 6.11 },
+    { temp: 1, pressure: 6.57 },
+    { temp: 2, pressure: 7.06 },
+    { temp: 3, pressure: 7.58 },
+    { temp: 4, pressure: 8.13 },
+    { temp: 5, pressure: 8.72 },
+    { temp: 6, pressure: 9.35 },
+    { temp: 7, pressure: 10.01 },
+    { temp: 8, pressure: 10.72 },
+    { temp: 9, pressure: 11.47 },
+    { temp: 10, pressure: 12.27 },
+    { temp: 11, pressure: 13.12 },
+    { temp: 12, pressure: 14.02 },
+    { temp: 13, pressure: 14.97 },
+    { temp: 14, pressure: 15.98 },
+    { temp: 15, pressure: 17.04 },
+    { temp: 16, pressure: 18.17 },
+    { temp: 17, pressure: 19.37 },
+    { temp: 18, pressure: 20.63 },
+    { temp: 19, pressure: 21.96 },
+    { temp: 20, pressure: 23.37 },
+    { temp: 21, pressure: 24.86 },
+    { temp: 22, pressure: 26.43 },
+    { temp: 23, pressure: 28.09 },
+    { temp: 24, pressure: 29.83 },
+    { temp: 25, pressure: 31.67 },
+    { temp: 26, pressure: 33.6 },
+    { temp: 27, pressure: 35.64 },
+    { temp: 28, pressure: 37.8 },
+    { temp: 29, pressure: 40.05 },
+    { temp: 30, pressure: 42.43 },
+    { temp: 31, pressure: 44.92 },
+    { temp: 32, pressure: 47.55 },
+    { temp: 33, pressure: 50.3 },
+    { temp: 34, pressure: 53.19 },
+    { temp: 35, pressure: 56.23 },
+    { temp: 36, pressure: 59.41 },
+    { temp: 37, pressure: 62.75 },
+    { temp: 38, pressure: 66.25 },
+    { temp: 39, pressure: 69.92 },
+    { temp: 40, pressure: 73.75 },
+    { temp: 45, pressure: 95.83 },
+    { temp: 50, pressure: 123.34 },
+    { temp: 55, pressure: 157.37 },
+    { temp: 60, pressure: 199.16 },
+    { temp: 65, pressure: 250.03 }
+];
+
+// Options d'épaisseur communes pour les matériaux
+const thicknessOptions = [
+  { value: 3, label: "3 mm" },
+  { value: 6, label: "6 mm" },
+  { value: 9, label: "9 mm" },
+  { value: 11, label: "11 mm (7/16\")" },
+  { value: 12, label: "12.5 mm (1/2\")" },
+  { value: 16, label: "15.9 mm (5/8\")" },
+  { value: 19, label: "19 mm (3/4\")" },
+  { value: 25, label: "25 mm (1\")" },
+  { value: 38, label: "38 mm (1-1/2\")" },
+  { value: 50, label: "50 mm (2\")" },
+  { value: 64, label: "64 mm (2-1/2\")" },
+  { value: 75, label: "75 mm (3\")" },
+  { value: 89, label: "89 mm (3-1/2\")" },
+  { value: 100, label: "100 mm (4\")" },
+  { value: 140, label: "140 mm (5-1/2\")" },
+  { value: 150, label: "150 mm (6\")" },
+  { value: 190, label: "190 mm (7-1/2\")" },
+  { value: 200, label: "200 mm (8\")" },
+  { value: 250, label: "250 mm (10\")" },
+  { value: 300, label: "300 mm (12\")" },
+  { value: "custom", label: "Personnalisée..." }
+];
+
+// Base de données des matériaux avec leurs valeurs RSI
+const materials = {
+  // Films d'air
+  airFilms: [
+    { id: "exterior", name: "Film d'air extérieur", rsi: 0.03, description: "Pellicule d'air de surface (vent hivernal de 24 Km/h)" },
+    { id: "interior_vertical", name: "Film d'air intérieur (mur)", rsi: 0.12, description: "Air stable, surface verticale, flux thermique horizontal" },
+    { id: "interior_ceiling", name: "Film d'air intérieur (plafond)", rsi: 0.11, description: "Air stable, surface horizontale, flux thermique ascendant" },
+    { id: "interior_floor", name: "Film d'air intérieur (plancher)", rsi: 0.16, description: "Air stable, surface horizontale, flux thermique descendant" }
+  ],
+  
+  // Lames d'air non réfléchissantes
+  airSpaces: [
+    // Murs (flux thermique horizontal)
+    { id: "airspace_wall_13mm", name: "Lame d'air dans un mur - 13mm", rsi: 0.16, description: "min. 13mm (1/2'')", thickness: 13 },
+    { id: "airspace_wall_20mm", name: "Lame d'air dans un mur - 20mm+", rsi: 0.17, description: "20mm (3/4'') et +", thickness: 20 },
+    { id: "airspace_wall_40mm", name: "Lame d'air dans un mur - 40mm+", rsi: 0.18, description: "40mm (1 1/2'') et +", thickness: 40 },
+    { id: "airspace_wall_90mm", name: "Lame d'air dans un mur - 90mm+", rsi: 0.18, description: "90mm (3 1/2'') et +", thickness: 90 },
+    
+    // Plafonds (flux thermique ascendant)
+    { id: "airspace_ceiling_13mm", name: "Lame d'air dans un plafond - 13mm", rsi: 0.15, description: "min. 13mm (1/2'')", thickness: 13 },
+    { id: "airspace_ceiling_20mm", name: "Lame d'air dans un plafond - 20mm+", rsi: 0.16, description: "20mm (3/4'') et +", thickness: 20 },
+    { id: "airspace_ceiling_40mm", name: "Lame d'air dans un plafond - 40mm+", rsi: 0.16, description: "40mm (1 1/2'') et +", thickness: 40 },
+    { id: "airspace_ceiling_90mm", name: "Lame d'air dans un plafond - 90mm+", rsi: 0.16, description: "90mm (3 1/2'') et +", thickness: 90 },
+    
+    // Planchers (flux thermique descendant)
+    { id: "airspace_floor_13mm", name: "Lame d'air dans un plancher - 13mm", rsi: 0.17, description: "min. 13mm (1/2'')", thickness: 13 },
+    { id: "airspace_floor_20mm", name: "Lame d'air dans un plancher - 20mm+", rsi: 0.18, description: "20mm (3/4'') et +", thickness: 20 },
+    { id: "airspace_floor_40mm", name: "Lame d'air dans un plancher - 40mm+", rsi: 0.2, description: "40mm (1 1/2'') et +", thickness: 40 },
+    { id: "airspace_floor_90mm", name: "Lame d'air dans un plancher - 90mm+", rsi: 0.22, description: "90mm (3 1/2'') et +", thickness: 90 }
+  ],
+  
+  // Lames d'air réfléchissantes
+  reflectiveAirSpaces: [
+    // Murs (flux thermique horizontal)
+    { id: "reflective_wall_oneside", name: "Lame d'air réfléchissante dans un mur - parée d'un côté", rsi: 0.465, description: "Lame verticale parée d'un côté, flux thermique horizontal entre 13 et 19mm", thickness: 19 },
+    { id: "reflective_wall_bothsides", name: "Lame d'air réfléchissante dans un mur - parée de deux côtés", rsi: 0.48, description: "Lame verticale parée de deux côtés, flux thermique horizontal entre 13 et 19mm", thickness: 19 },
+    
+    // Plafonds (flux thermique ascendant)
+    { id: "reflective_ceiling_oneside", name: "Lame d'air réfléchissante dans un plafond - parée d'un côté", rsi: 0.324, description: "Lame horizontale parée d'un côté, flux thermique ascendant entre 13 et 19mm", thickness: 19 },
+    { id: "reflective_ceiling_bothsides", name: "Lame d'air réfléchissante dans un plafond - parée de deux côtés", rsi: 0.332, description: "Lame horizontale parée de deux côtés, flux thermique ascendant entre 13 et 19mm", thickness: 19 },
+    
+    // Planchers (flux thermique descendant)
+    { id: "reflective_floor_oneside", name: "Lame d'air réfléchissante dans un plancher - parée d'un côté", rsi: 0.98, description: "Lame horizontale parée d'un côté, flux thermique descendant entre 13 et 19mm", thickness: 19 },
+    { id: "reflective_floor_bothsides", name: "Lame d'air réfléchissante dans un plancher - parée de deux côtés", rsi: 1.034, description: "Lame horizontale parée de deux côtés, flux thermique descendant entre 13 et 19mm", thickness: 19 }
+  ],
+
+  // Matériaux de charpente - Bois
+  wood: [
+    { id: "wood_spf", name: "Bois de construction courant (S-P-F)", rsiPerMm: 0.0085, description: "Bois de construction courant (Épinette-Pin-Sapin)" },
+    { id: "wood_birch", name: "Bouleau", rsiPerMm: 0.0055, description: "Bouleau" },
+    { id: "wood_oak", name: "Chêne", rsiPerMm: 0.0052, description: "Chêne" },
+    { id: "wood_poplar", name: "Peuplier", rsiPerMm: 0.0087, description: "Peuplier" },
+    { id: "wood_osb", name: "Panneau OSB", rsiPerMm: 0.0098, description: "Panneau de copeaux orientés (OSB)" },
+    { id: "engineered_wood", name: "Poutre en I ou lamellé-collé", rsiPerMm: 0.0087, description: "Bois d'ingénierie (poutre en I, lamellé-collé)" }
+  ],
+
+  // Béton
+  concrete: [
+    { id: "concrete_normal", name: "Béton normal", rsiPerMm: 0.00062, description: "Béton coulé en place, densité normale (2400 kg/m³)" },
+    { id: "concrete_lightweight", name: "Béton léger", rsiPerMm: 0.00153, description: "Béton léger, densité réduite" },
+    { id: "concrete_cellular", name: "Béton cellulaire", rsiPerMm: 0.00244, description: "Béton cellulaire autoclavé" }
+  ],
+
+  // Blocs de béton
+  concreteBlocks: [
+    { id: "cmu_hollow_200mm", name: "Bloc de béton creux 200mm", rsi: 0.14, description: "Bloc de maçonnerie creux de 200mm", thickness: 200 },
+    { id: "cmu_hollow_250mm", name: "Bloc de béton creux 250mm", rsi: 0.20, description: "Bloc de maçonnerie creux de 250mm", thickness: 250 },
+    { id: "cmu_hollow_300mm", name: "Bloc de béton creux 300mm", rsi: 0.27, description: "Bloc de maçonnerie creux de 300mm", thickness: 300 }
+  ],
+
+  // Matériaux isolants
+  insulation: [
+    // Laine minérale
+    { id: "fiberglass_batt", name: "Laine de fibre de verre en nattes", rsiPerMm: 0.0208, description: "Laine de fibre de verre en nattes pour ossature" },
+    { id: "fiberglass_board", name: "Panneau isolant pour murs ou plafonds", rsiPerMm: 0.016, description: "Panneau isolant pour murs ou plafonds (carreaux)" },
+    { id: "fiberglass_thermal", name: "Laine de fibre de verre, usage thermique", rsiPerMm: 0.0208, description: "Laine de fibre de verre, usage thermique (Eco Touch thermique de Owens Corning)" },
+    { id: "mineral_wool", name: "Laine de roche", rsiPerMm: 0.0276, description: "Laine de roche (Roxul Cavity Rock)" },
+    
+    // Polystyrène
+    { id: "polystyrene_type1", name: "Polystyrène expansé Type 1", rsiPerMm: 0.026, description: "Polystyrène expansé Type 1" },
+    { id: "polystyrene_type2", name: "Polystyrène expansé Type 2", rsiPerMm: 0.028, description: "Polystyrène expansé Type 2" },
+    { id: "polystyrene_type3", name: "Polystyrène expansé Type 3", rsiPerMm: 0.030, description: "Polystyrène expansé Type 3" },
+    { id: "polystyrene_type4", name: "Polystyrène expansé Type 4", rsiPerMm: 0.0347, description: "Polystyrène expansé Type 4" },
+    { id: "extruded_polystyrene", name: "Polystyrène extrudé", rsiPerMm: 0.035, description: "Polystyrène extrudé: Types 2, 3 et 4" },
+    
+    // Polyisocyanurate
+    { id: "polyiso_permeable", name: "Polyisocyanurate revêtu perméable", rsiPerMm: 0.03818, description: "Polyisocyanurate ou polyuréthane, revêtus, types 1, 2 et 3, surface perméable" },
+    { id: "polyiso_impermeable", name: "Polyisocyanurate revêtu imperméable", rsiPerMm: 0.03937, description: "Polyisocyanurate ou polyuréthane, revêtus, types 1, 2 et 3, surface imperméable" },
+    { id: "polyiso", name: "Panneau rigide de polyisocyanurate", rsiPerMm: 0.042, description: "Panneau rigide de polyisocyanurate (Sopra-Iso de Soprema)" },
+    
+    // Isolants en vrac
+    { id: "cellulose_blown", name: "Fibre cellulosique épandue (combles)", rsiPerMm: 0.025, description: "Cellulose en vrac pour combles" },
+    { id: "mineral_blown_attic", name: "Fibre minérale épandue (combles)", rsiPerMm: 0.01875, description: "Fibre minérale en vrac pour combles (112mm à 565mm)" },
+    { id: "mineral_injected_89mm", name: "Fibre minérale injectée (murs), 89mm", rsi: 2.55, description: "Fibre minérale injectée (murs), 89mm", rsiPerMm: 0.02865, thickness: 89 },
+    { id: "mineral_injected_140mm", name: "Fibre minérale injectée (murs), 140mm", rsi: 4.05, description: "Fibre minérale injectée (murs), 140mm", rsiPerMm: 0.0289, thickness: 140 },
+    { id: "mineral_injected_152mm", name: "Fibre minérale injectée (murs), 152mm", rsi: 4.23, description: "Fibre minérale injectée (murs), 152mm (6'')", thickness: 152 }
+  ],
+  
+  // Revêtements d'ossature
+  sheathing: [
+    { id: "plywood", name: "Contreplaqué de bois tendre", rsiPerMm: 0.0087, description: "Contreplaqué de bois tendre" },
+    { id: "plywood_douglas_fir", name: "Contreplaqué de sapin de Douglas", rsiPerMm: 0.0111, description: "Contreplaqué de sapin de Douglas" },
+    { id: "particleboard", name: "Panneau de particules", rsiPerMm: 0.0077, description: "Panneau de particules" },
+    { id: "osb", name: "Panneaux de copeaux (OSB)", rsiPerMm: 0.0098, description: "Panneaux de copeaux orientés (OSB)" },
+    { id: "fiberboard_asphalt", name: "Revêtement en carton-fibre asphalté", rsiPerMm: 0.0165, description: "Revêtement en carton-fibre asphalté" },
+    { id: "gypsum", name: "Revêtement en plaque de plâtre (gypse)", rsiPerMm: 0.0063, description: "Revêtement en plaque de plâtre (panneaux de gypse)" },
+    { id: "reflective_fiberboard", name: "Panneau de fibre de bois avec pellicule réfléchissante", rsiPerMm: 0.0194, description: "Panneau de fibre de bois avec pellicule réfléchissante" }
+  ],
+
+  // Parements de bois
+  woodCladding: [
+    { id: "wood_shingle_190mm", name: "Bardeau de bois 400mm, pureau de 190mm", rsi: 0.15, description: "Bardeau de bois 400mm, pureau de 190mm", thickness: 10 },
+    { id: "wood_shingle_300mm", name: "Bardeau de bois 400mm, pureau double de 300mm", rsi: 0.21, description: "Bardeau de bois 400mm, pureau double de 300mm", thickness: 15 },
+    { id: "wood_siding_200mm_13mm", name: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm", rsi: 0.14, description: "Bardage de bois à clin 200mm, joints à recouvrement, épaisseur 13mm", thickness: 13 },
+    { id: "wood_siding_250mm_20mm", name: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm", rsi: 0.18, description: "Bardage de bois à clin 250mm, joints à recouvrement, épaisseur 20mm", thickness: 20 },
+    { id: "wood_siding_200mm_20mm", name: "Bardage à mi-bois, 200mm, épaisseur 20mm", rsi: 0.14, description: "Bardage à mi-bois, 200mm, épaisseur 20mm", thickness: 20 },
+    { id: "hardboard_11mm", name: "Panneaux de fibres dures, épaisseur 11mm", rsi: 0.12, description: "Panneaux de fibres dures, épaisseur 11mm (ex. Masonite)", thickness: 11 }
+  ],
+
+  // Autres parements
+  otherCladding: [
+    { id: "brick", name: "Brique d'argile", rsiPerMm: 0.00077, description: "Brique d'argile commune" },
+    { id: "stone", name: "Pierre naturelle", rsiPerMm: 0.00083, description: "Pierre naturelle (calcaire, grès)" },
+    { id: "vinyl_siding", name: "Revêtement en vinyle", rsi: 0.062, description: "Revêtement extérieur en vinyle", thickness: 1 },
+    { id: "aluminum_siding", name: "Revêtement en aluminium", rsi: 0.062, description: "Revêtement extérieur en aluminium", thickness: 1 },
+    { id: "stucco", name: "Crépi ou stuc", rsiPerMm: 0.00128, description: "Crépi ou stuc sur treillis métallique" }
+  ],
+
+  // Matériaux de finition intérieure
+  interiorFinish: [
+    { id: "gypsum_board", name: "Plaque de plâtre (gypse)", rsiPerMm: 0.0063, description: "Plaque de plâtre standard" },
+    { id: "plaster", name: "Plâtre sur lattes de bois", rsiPerMm: 0.0089, description: "Plâtre traditionnel sur lattes de bois" },
+    { id: "wood_paneling", name: "Lambris de bois", rsiPerMm: 0.0087, description: "Lambris de bois" },
+    { id: "ceramic_tile", name: "Carrelage céramique", rsiPerMm: 0.00103, description: "Carrelage céramique" }
+  ],
+
+  // Matériaux de toiture
+  roofingMaterials: [
+    { id: "asphalt_shingle", name: "Bardeau d'asphalte", rsi: 0.078, description: "Bardeau d'asphalte standard", thickness: 3 },
+    { id: "wood_shingle_roof", name: "Bardeau de bois (toiture)", rsi: 0.087, description: "Bardeau de bois pour toiture", thickness: 8 },
+    { id: "clay_tile", name: "Tuile d'argile", rsi: 0.052, description: "Tuile d'argile", thickness: 13 },
+    { id: "metal_roofing", name: "Toiture métallique", rsi: 0.003, description: "Tôle métallique pour toiture", thickness: 1 },
+    { id: "built_up_roofing", name: "Membrane multicouche", rsi: 0.058, description: "Membrane multicouche avec gravier", thickness: 10 }
+  ]
+};
+
+// Liste des municipalités québécoises avec leurs degrés-jours
+const municipalities = [
+  // Région de Montréal
+  { id: "montreal", name: "Montréal (Hôtel de Ville)", degreeDay: 4200, zone: "< 6000" },
+  { id: "beaconsfield", name: "Beaconsfield", degreeDay: 4440, zone: "< 6000" },
+  { id: "dorval", name: "Dorval", degreeDay: 4400, zone: "< 6000" },
+  { id: "laval", name: "Laval", degreeDay: 4500, zone: "< 6000" },
+  { id: "montreal-est", name: "Montréal-Est", degreeDay: 4470, zone: "< 6000" },
+  { id: "montreal-nord", name: "Montréal-Nord", degreeDay: 4470, zone: "< 6000" },
+  { id: "outremont", name: "Outremont", degreeDay: 4300, zone: "< 6000" },
+  { id: "pierrefonds", name: "Pierrefonds", degreeDay: 4430, zone: "< 6000" },
+  { id: "st-lambert", name: "St-Lambert", degreeDay: 4400, zone: "< 6000" },
+  { id: "st-laurent", name: "St-Laurent", degreeDay: 4270, zone: "< 6000" },
+  { id: "ste-anne-de-bellevue", name: "Ste-Anne-de-Bellevue", degreeDay: 4460, zone: "< 6000" },
+  { id: "verdun", name: "Verdun", degreeDay: 4200, zone: "< 6000" },
+  
+  // Autres municipalités (moins de 6000 DJ)
+  { id: "nicolet", name: "Nicolet (Gentilly)", degreeDay: 4900, zone: "< 6000" },
+  { id: "perce", name: "Percé", degreeDay: 5400, zone: "< 6000" },
+  { id: "pincourt", name: "Pincourt", degreeDay: 4480, zone: "< 6000" },
+  { id: "plessisville", name: "Plessisville", degreeDay: 5100, zone: "< 6000" },
+  
+  // Région de Québec
+  { id: "quebec", name: "Québec", degreeDay: 5080, zone: "< 6000" },
+  { id: "ancienne-lorette", name: "Ancienne-Lorette", degreeDay: 5130, zone: "< 6000" },
+  { id: "levis", name: "Lévis", degreeDay: 5050, zone: "< 6000" },
+  { id: "sillery", name: "Sillery", degreeDay: 5070, zone: "< 6000" },
+  { id: "ste-foy", name: "Ste-Foy", degreeDay: 5100, zone: "< 6000" },
+  
+  // Autres municipalités (moins de 6000 DJ)
+  { id: "richmond", name: "Richmond", degreeDay: 4700, zone: "< 6000" },
+  { id: "rimouski", name: "Rimouski", degreeDay: 5300, zone: "< 6000" },
+  { id: "riviere-du-loup", name: "Rivière-du-Loup", degreeDay: 5380, zone: "< 6000" },
+  { id: "rock-island", name: "Rock-Island", degreeDay: 4850, zone: "< 6000" },
+  { id: "rosemere", name: "Rosemère", degreeDay: 4550, zone: "< 6000" },
+  { id: "saguenay", name: "Saguenay", degreeDay: 5700, zone: "< 6000" },
+  { id: "saguenay-bagotville", name: "Saguenay (Bagotville)", degreeDay: 5700, zone: "< 6000" },
+  { id: "saguenay-jonquiere", name: "Saguenay (Jonquière)", degreeDay: 5650, zone: "< 6000" },
+  { id: "saguenay-kenogami", name: "Saguenay (Kenogami)", degreeDay: 5650, zone: "< 6000" },
+  { id: "saint-eustache", name: "Saint-Eustache", degreeDay: 4500, zone: "< 6000" },
+  { id: "saint-jean-sur-richelieu", name: "Saint-Jean-sur-Richelieu", degreeDay: 4450, zone: "< 6000" },
+  { id: "salaberry-de-valleyfield", name: "Salaberry-de-Valleyfield", degreeDay: 4400, zone: "< 6000" },
+  { id: "shawinigan", name: "Shawinigan", degreeDay: 5050, zone: "< 6000" },
+  { id: "shawville", name: "Shawville", degreeDay: 4880, zone: "< 6000" },
+  { id: "sherbrooke", name: "Sherbrooke", degreeDay: 4700, zone: "< 6000" },
+  { id: "sorel", name: "Sorel", degreeDay: 4550, zone: "< 6000" },
+  { id: "st-georges-de-cacouna", name: "St-Georges-de-Cacouna", degreeDay: 5400, zone: "< 6000" },
+  { id: "st-hubert", name: "St-Hubert", degreeDay: 4490, zone: "< 6000" },
+  { id: "st-hyacinthe", name: "St-Hyacinthe", degreeDay: 4500, zone: "< 6000" },
+  { id: "st-jerome", name: "St-Jérôme", degreeDay: 4820, zone: "< 6000" },
+  { id: "st-jovite", name: "St-Jovite", degreeDay: 5250, zone: "< 6000" },
+  { id: "st-lazare-hudson", name: "St-Lazare-Hudson", degreeDay: 4520, zone: "< 6000" },
+  { id: "st-nicolas", name: "St-Nicolas", degreeDay: 4990, zone: "< 6000" },
+  { id: "ste-agathe-des-monts", name: "Ste-Agathe-des-Monts", degreeDay: 5390, zone: "< 6000" },
+  { id: "sutton", name: "Sutton", degreeDay: 4600, zone: "< 6000" },
+  { id: "tadoussac", name: "Tadoussac", degreeDay: 5450, zone: "< 6000" },
+  { id: "temiscaming", name: "Témiscaming", degreeDay: 5020, zone: "< 6000" },
+  { id: "terrebonne", name: "Terrebonne", degreeDay: 4500, zone: "< 6000" },
+  { id: "thetford-mines", name: "Thetford Mines", degreeDay: 5120, zone: "< 6000" },
+  { id: "thurso", name: "Thurso", degreeDay: 4820, zone: "< 6000" },
+  { id: "trois-rivieres", name: "Trois-Rivières", degreeDay: 4900, zone: "< 6000" },
+  { id: "varennes", name: "Varennes", degreeDay: 4500, zone: "< 6000" },
+  { id: "vercheres", name: "Verchères", degreeDay: 4450, zone: "< 6000" },
+  { id: "victoriaville", name: "Victoriaville", degreeDay: 4900, zone: "< 6000" },
+  { id: "wakefield", name: "Wakefield", degreeDay: 4820, zone: "< 6000" },
+  { id: "waterloo", name: "Waterloo", degreeDay: 4650, zone: "< 6000" },
+  { id: "windsor", name: "Windsor", degreeDay: 4700, zone: "< 6000" },
+  { id: "bromont", name: "Bromont", degreeDay: 4730, zone: "< 6000" },
+  { id: "brossard", name: "Brossard", degreeDay: 4420, zone: "< 6000" },
+  { id: "buckingham", name: "Buckingham", degreeDay: 4880, zone: "< 6000" },
+  { id: "chambly", name: "Chambly", degreeDay: 4450, zone: "< 6000" },
+  { id: "coaticook", name: "Coaticook", degreeDay: 4750, zone: "< 6000" },
+  { id: "contrecoeur", name: "Contrecoeur", degreeDay: 4500, zone: "< 6000" },
+  { id: "cowansville", name: "Cowansville", degreeDay: 4540, zone: "< 6000" },
+  { id: "deux-montagnes", name: "Deux-Montagnes", degreeDay: 4440, zone: "< 6000" },
+  { id: "drummondville", name: "Drummondville", degreeDay: 4700, zone: "< 6000" },
+  { id: "farnham", name: "Farnham", degreeDay: 4500, zone: "< 6000" },
+  { id: "fort-coulonge", name: "Fort-Coulonge", degreeDay: 4950, zone: "< 6000" },
+  { id: "gaspe", name: "Gaspé", degreeDay: 5500, zone: "< 6000" },
+  { id: "gatineau", name: "Gatineau", degreeDay: 4600, zone: "< 6000" },
+  { id: "gracefield", name: "Gracefield", degreeDay: 5080, zone: "< 6000" },
+  { id: "granby", name: "Granby", degreeDay: 4500, zone: "< 6000" },
+  { id: "hemmingford", name: "Hemmingford", degreeDay: 4380, zone: "< 6000" },
+  { id: "hull", name: "Hull", degreeDay: 4550, zone: "< 6000" },
+  { id: "iberville", name: "Iberville", degreeDay: 4450, zone: "< 6000" },
+  { id: "joliette", name: "Joliette", degreeDay: 4720, zone: "< 6000" },
+  { id: "la-malbaie", name: "La Malbaie", degreeDay: 5400, zone: "< 6000" },
+  { id: "la-pocatiere", name: "La Pocatière", degreeDay: 5160, zone: "< 6000" },
+  { id: "la-tuque", name: "La Tuque", degreeDay: 5500, zone: "< 6000" },
+  { id: "lac-megantic", name: "Lac-Mégantic", degreeDay: 5180, zone: "< 6000" },
+  { id: "lachute", name: "Lachute", degreeDay: 4640, zone: "< 6000" },
+  { id: "lennoxville", name: "Lennoxville", degreeDay: 4700, zone: "< 6000" },
+  { id: "lery", name: "Léry", degreeDay: 4420, zone: "< 6000" },
+  { id: "loretteville", name: "Loretteville", degreeDay: 5200, zone: "< 6000" },
+  { id: "louiseville", name: "Louiseville", degreeDay: 4900, zone: "< 6000" },
+  { id: "magog", name: "Magog", degreeDay: 4730, zone: "< 6000" },
+  { id: "maniwaki", name: "Maniwaki", degreeDay: 5280, zone: "< 6000" },
+  { id: "masson", name: "Masson", degreeDay: 4610, zone: "< 6000" },
+  { id: "matane", name: "Matane", degreeDay: 5510, zone: "< 6000" },
+  { id: "mont-joli", name: "Mont-Joli", degreeDay: 5370, zone: "< 6000" },
+  { id: "mont-laurier", name: "Mont-Laurier", degreeDay: 5320, zone: "< 6000" },
+  { id: "montmagny", name: "Montmagny", degreeDay: 5090, zone: "< 6000" },
+  
+  // Municipalités avec 6000 degrés-jours ou plus
+  { id: "alma", name: "Alma", degreeDay: 5800, zone: ">= 6000" },
+  { id: "amos", name: "Amos", degreeDay: 6160, zone: ">= 6000" },
+  { id: "baie-comeau", name: "Baie-Comeau", degreeDay: 6020, zone: ">= 6000" },
+  { id: "dolbeau", name: "Dolbeau", degreeDay: 6250, zone: ">= 6000" },
+  { id: "gagnon", name: "Gagnon", degreeDay: 7600, zone: ">= 6000" },
+  { id: "harrington-harbour", name: "Harrington-Harbour", degreeDay: 7120, zone: ">= 6000" },
+  { id: "kuujjuaq", name: "Kuujjuaq", degreeDay: 8910, zone: ">= 6000" },
+  { id: "kuujjuarapik", name: "Kuujjuarapik", degreeDay: 7870, zone: ">= 6000" },
+  { id: "lac-st-jean", name: "Lac-St-Jean", degreeDay: 6100, zone: ">= 6000" },
+  { id: "parent", name: "Parent", degreeDay: 6200, zone: ">= 6000" },
+  { id: "roberval", name: "Roberval", degreeDay: 6020, zone: ">= 6000" },
+  { id: "rouyn-noranda", name: "Rouyn-Noranda", degreeDay: 6100, zone: ">= 6000" },
+  { id: "schefferville", name: "Schefferville", degreeDay: 8260, zone: ">= 6000" },
+  { id: "sept-iles", name: "Sept-Îles", degreeDay: 6350, zone: ">= 6000" },
+  { id: "val-dor", name: "Val-d'Or", degreeDay: 6250, zone: ">= 6000" }
+];
+
+// Valeurs minimales RSI selon le Code de construction du Québec (Partie 11)
+// Pour la résistance thermique totale (RSI_T)
+const minRSITotalValues = {
+  "< 6000": {
+    "roof": 7.22,              // Toit ou plafond
+    "wall_above_grade": 4.31,  // Mur hors sol
+    "foundation_wall": 2.99,   // Mur de fondation
+    "floor": 5.20,             // Plancher séparant un espace chauffé d'un espace non chauffé
+    "garage_ceiling": 5.20,    // Plafond de garage chauffé
+    "garage_wall": 3.50        // Mur de garage chauffé
+  },
+  ">= 6000": {
+    "roof": 8.77,              // Toit ou plafond
+    "wall_above_grade": 5.46,  // Mur hors sol
+    "foundation_wall": 3.86,   // Mur de fondation
+    "floor": 6.69,             // Plancher séparant un espace chauffé d'un espace non chauffé
+    "garage_ceiling": 6.69,    // Plafond de garage chauffé
+    "garage_wall": 4.49        // Mur de garage chauffé
+  }
+};
+
+// Pour la résistance thermique effective (RSI_E)
+const minRSIEffectiveValues = {
+  "< 6000": {
+    "roof": 6.76,              // Toit ou plafond
+    "wall_above_grade": 3.87,  // Mur hors sol
+    "foundation_wall": 2.99,   // Mur de fondation (même que RSI_T)
+    "floor": 4.87,             // Plancher séparant un espace chauffé d'un espace non chauffé
+    "garage_ceiling": 4.87,    // Plafond de garage chauffé
+    "garage_wall": 3.15        // Mur de garage chauffé
+  },
+  ">= 6000": {
+    "roof": 8.21,              // Toit ou plafond
+    "wall_above_grade": 4.91,  // Mur hors sol
+    "foundation_wall": 3.86,   // Mur de fondation (même que RSI_T)
+    "floor": 6.26,             // Plancher séparant un espace chauffé d'un espace non chauffé
+    "garage_ceiling": 6.26,    // Plafond de garage chauffé
+    "garage_wall": 4.04        // Mur de garage chauffé
+  }
+};
+
+// Fonctions d'accordéon
+function toggleAccordion(sectionId) {
+  const section = document.getElementById(sectionId);
+  const icon = document.getElementById(sectionId + '-icon');
+  
+  if (!section || !icon) {
+    console.error(`Éléments d'accordéon '${sectionId}' non trouvés`);
+    return;
+  }
+  
+  if (section.classList.contains('hidden')) {
+    section.classList.remove('hidden');
+    icon.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
+  } else {
+    section.classList.add('hidden');
+    icon.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+  }
+}
+
+// Calculer le point de rosée
+function calculateDewPoint(tempC, humidityPercent) {
+  const temp = parseFloat(tempC);
+  const humidity = parseFloat(humidityPercent);
+  
+  if (isNaN(temp) || isNaN(humidity)) return null;
+  
+  // Trouver la pression de vapeur saturante à la température donnée
+  let satPressure = null;
+  for (let i = 0; i < saturationPressureTable.length - 1; i++) {
+    if (temp >= saturationPressureTable[i].temp && temp <= saturationPressureTable[i + 1].temp) {
+      const ratio = (temp - saturationPressureTable[i].temp) / 
+                   (saturationPressureTable[i + 1].temp - saturationPressureTable[i].temp);
+      satPressure = saturationPressureTable[i].pressure + 
+                   ratio * (saturationPressureTable[i + 1].pressure - saturationPressureTable[i].pressure);
+      break;
+    }
+  }
+  
+  if (satPressure === null) {
+    if (temp < saturationPressureTable[0].temp) {
+      satPressure = saturationPressureTable[0].pressure;
+    } else {
+      satPressure = saturationPressureTable[saturationPressureTable.length - 1].pressure;
+    }
+  }
+  
+  // Calculer la pression de vapeur actuelle
+  const actualVaporPressure = satPressure * (humidity / 100);
+  
+  // Trouver la température correspondante
+  for (let i = 0; i < saturationPressureTable.length - 1; i++) {
+    if (actualVaporPressure >= saturationPressureTable[i].pressure && 
+        actualVaporPressure <= saturationPressureTable[i + 1].pressure) {
+      const ratio = (actualVaporPressure - saturationPressureTable[i].pressure) / 
+                   (saturationPressureTable[i + 1].pressure - saturationPressureTable[i].pressure);
+      return saturationPressureTable[i].temp + 
+             ratio * (saturationPressureTable[i + 1].temp - saturationPressureTable[i].temp);
+    }
+  }
+  
+  if (actualVaporPressure < saturationPressureTable[0].pressure) {
+    return saturationPressureTable[0].temp;
+  } else {
+    return saturationPressureTable[saturationPressureTable.length - 1].temp;
+  }
+}
+
+// Trouver la position du point de rosée dans la composition
+function findDewPointPosition(temps, positions, dewPointTemp) {
+  let dewPointFound = false;
+  let dewPointPosition = null;
+  let dewPointMaterialIndex = -1;
+  
+  for (let i = 0; i < temps.length - 1; i++) {
+    if ((temps[i] >= dewPointTemp && temps[i+1] <= dewPointTemp) ||
+        (temps[i] <= dewPointTemp && temps[i+1] >= dewPointTemp)) {
+      dewPointFound = true;
+      dewPointMaterialIndex = i;
+      
+      // Interpolation linéaire pour trouver la position exacte
+      const ratio = Math.abs((dewPointTemp - temps[i]) / (temps[i+1] - temps[i]));
+      dewPointPosition = positions[i] + ratio * (positions[i+1] - positions[i]);
+      break;
+    }
+  }
+  
+  return {
+    found: dewPointFound,
+    position: dewPointPosition,
+    materialIndex: dewPointMaterialIndex
+  };
+}
+
+// Calculer le gradient de température
+function calculateGradient() {
+  if (layers.length === 0) return;
+  
+  const tempExt = parseFloat(document.getElementById('temp-ext').value);
+  const tempInt = parseFloat(document.getElementById('temp-int').value);
+  const humidity = parseFloat(document.getElementById('humidity').value);
+  
+  // Calculer le point de rosée
+  const dewPointTemp = calculateDewPoint(tempInt, humidity);
+  
+  const dewPointElem = document.getElementById('dew-point');
+  const rsiTotalElem = document.getElementById('rsi-total');
+  const rTotalElem = document.getElementById('r-total');
+  const uValueElem = document.getElementById('u-value');
+  
+  if (!dewPointElem || !rsiTotalElem || !rTotalElem || !uValueElem) {
+    console.error("Des éléments d'affichage du gradient n'ont pas été trouvés");
+    return;
+  }
+  
+  dewPointElem.textContent = dewPointTemp.toFixed(1);
+  
+  // Calculer la résistance thermique totale
+  const rsiTotal = layers.reduce((sum, layer) => {
+    if (layer.material && layer.material.rsi) {
+      return sum + layer.material.rsi;
+    }
+    return sum;
+  }, 0);
+  
+  rsiTotalElem.textContent = rsiTotal.toFixed(2);
+  rTotalElem.textContent = (rsiTotal * 5.678).toFixed(1);
+  uValueElem.textContent = (1/rsiTotal).toFixed(3);
+  
+  // Calculer le gradient de température
+  const tempDiff = tempInt - tempExt;
+  const positions = [0];
+  const temps = [tempExt];
+  let cumulPosition = 0;
+  let cumulTemp = tempExt;
+  
+  // Calculer la température à chaque interface
+  layers.forEach((layer) => {
+    if (!layer.material || !layer.material.rsi) return;
+    
+    const deltaT = (layer.material.rsi / rsiTotal) * tempDiff;
+    cumulTemp += deltaT;
+    cumulPosition += (layer.material.thickness || 0);
+    
+    positions.push(cumulPosition);
+    temps.push(cumulTemp);
+  });
+  
+  // Vérifier si le point de rosée tombe dans la composition
+  const dewPointInfo = findDewPointPosition(temps, positions, dewPointTemp);
+  
+  // CORRECTION 2: Aligner correctement la ligne rouge avec le point de croisement
+  let correctedDewPointPosition = null;
+  if (dewPointInfo.found) {
+    // Utiliser la position interpolée pour un alignement précis
+    correctedDewPointPosition = dewPointInfo.position;
+  }
+  
+  // Mettre à jour le graphique avec la position corrigée
+  updateChart(positions, temps, dewPointTemp, correctedDewPointPosition);
+  
+  // Mettre à jour la visualisation des matériaux
+  renderMaterialsVisualization(correctedDewPointPosition);
+  
+  // Afficher ou masquer l'avertissement
+  const warningContainer = document.getElementById('warning-container');
+  
+  if (!warningContainer) {
+    console.error("L'élément 'warning-container' n'a pas été trouvé");
+    return;
+  }
+  
+  warningContainer.innerHTML = '';
+  
+  if (dewPointInfo.found) {
+    const dewPointMaterial = layers[dewPointInfo.materialIndex].material.name;
+    
+    warningContainer.innerHTML = `
+      <div class="warning">
+        <strong>Attention:</strong> Point de rosée (${dewPointTemp.toFixed(1)}°C) détecté dans 
+        le matériau "${dewPointMaterial}".
+        Vérifiez que ce matériau est correctement protégé.
+      </div>
+    `;
+  } else {
+    const summaryTextElem = document.getElementById('summary-text');
+    
+    if (summaryTextElem) {
+      summaryTextElem.textContent = 
+        `La température de part et d'autre de la paroi passe de ${tempExt}°C à ${tempInt}°C. ` +
+        `Le point de rosée calculé est de ${dewPointTemp.toFixed(1)}°C à ${humidity}% d'humidité relative. ` +
+        `Aucun risque de condensation détecté dans cette composition.`;
+    }
+  }
+
+  // Vérifier si le point de rosée se trouve près d'une lame d'air
+  checkDewPointNearAirSpace(dewPointTemp, temps, dewPointInfo);
+}
+
+// Vérifier si le point de rosée se trouve près d'une lame d'air
+function checkDewPointNearAirSpace(dewPointTemp, temps, dewPointInfo) {
+  if (!dewPointInfo.found) return;
+
+  const warningContainer = document.getElementById('warning-container');
+  if (!warningContainer) return;
+
+  // Vérifier s'il y a des lames d'air dans la composition
+  const airSpaceLayers = layers.filter(layer => 
+    layer.type === 'airspace' || 
+    (layer.material && layer.material.name && 
+     layer.material.name.toLowerCase().includes('lame d\'air'))
+  );
+
+  if (airSpaceLayers.length === 0) return;
+
+  // Vérifier si une lame d'air est adjacente ou proche du point de rosée
+  let airSpaceNearDewPoint = false;
+  let airSpaceIndex = -1;
+
+  for (let i = 0; i < layers.length; i++) {
+    if (i === dewPointInfo.materialIndex - 1 || i === dewPointInfo.materialIndex + 1) {
+      if (layers[i].type === 'airspace' || 
+         (layers[i].material && layers[i].material.name && 
+          layers[i].material.name.toLowerCase().includes('lame d\'air'))) {
+        airSpaceNearDewPoint = true;
+        airSpaceIndex = i;
+        break;
+      }
+    }
+  }
+
+  if (airSpaceNearDewPoint) {
+    warningContainer.innerHTML += `
+      <div class="warning mt-2">
+        <strong>Avertissement - Ventilation:</strong> Le point de rosée est proche d'une lame d'air (${layers[airSpaceIndex].material.name}). 
+        Selon l'article 9.27.2.2, pour les lames d'air, une ventilation adéquate peut être nécessaire pour éviter l'accumulation d'humidité.
+        Vérifiez que cette lame d'air est drainée et mise à l'air libre.
+      </div>
+    `;
+  }
+}
+
+// Initialiser le sélecteur de municipalité
+function initializeMunicipalitySelect() {
+  const select = document.getElementById('location');
+  
+  // S'assurer que le select existe
+  if (!select) {
+    console.error("L'élément 'location' n'a pas été trouvé");
+    return;
+  }
+
+  // Vider le select d'abord pour éviter les duplications
+  select.innerHTML = '<option value="">Sélectionnez une municipalité</option>';
+  
+  // Trier les municipalités par nom
+  const sortedMunicipalities = [...municipalities].sort((a, b) => a.name.localeCompare(b.name));
+  
+  sortedMunicipalities.forEach(municipality => {
+    const option = document.createElement('option');
+    option.value = municipality.id;
+    option.textContent = `${municipality.name} (${municipality.degreeDay} degrés-jours)`;
+    select.appendChild(option);
+  });
+}
+
+// Mettre à jour les informations basées sur la municipalité
+function updateLocation() {
+  const select = document.getElementById('location');
+  
+  if (!select) {
+    console.error("L'élément 'location' n'a pas été trouvé");
+    return;
+  }
+  
+  selectedLocation = select.value;
+  
+  if (selectedLocation) {
+    const municipality = municipalities.find(m => m.id === selectedLocation);
+    if (municipality) {
+      const degreeDaysInput = document.getElementById('degree-days');
+      if (degreeDaysInput) {
+        degreeDaysInput.value = municipality.degreeDay;
+        degreeDays = municipality.degreeDay;
+      }
+      climaticZone = municipality.zone;
+      updateClimaticZoneDisplay();
+      updateMinRSIDisplay();
+    }
+  }
+}
+
+// Mettre à jour les informations basées sur les degrés-jours
+function updateDegreeDays() {
+  const input = document.getElementById('degree-days');
+  
+  if (!input) {
+    console.error("L'élément 'degree-days' n'a pas été trouvé");
+    return;
+  }
+  
+  degreeDays = input.value;
+  
+  if (degreeDays && !isNaN(degreeDays)) {
+    const dj = parseInt(degreeDays);
+    climaticZone = dj < 6000 ? "< 6000" : ">= 6000";
+    updateClimaticZoneDisplay();
+    updateMinRSIDisplay();
+  }
+}
+
+// Mettre à jour l'affichage de la zone climatique
+function updateClimaticZoneDisplay() {
+  const display = document.getElementById('climatic-zone-display');
+  
+  if (!display) {
+    console.error("L'élément 'climatic-zone-display' n'a pas été trouvé");
+    return;
+  }
+  
+  if (climaticZone) {
+    display.textContent = `Zone climatique: ${climaticZone === "< 6000" ? "Moins de 6000 degrés-jours" : "6000 degrés-jours ou plus"}`;
+  } else {
+    display.textContent = "";
+  }
+}
+
+// Mettre à jour l'affichage des valeurs minimales de RSI
+function updateMinRSIDisplay() {
+  const rsiTotalDisplay = document.getElementById('min-rsit-display');
+  const rsiEffectiveDisplay = document.getElementById('min-rsie-display');
+  
+  if (!rsiTotalDisplay || !rsiEffectiveDisplay) {
+    console.error("Les éléments d'affichage RSI n'ont pas été trouvés");
+    return;
+  }
+  
+  if (climaticZone && envelopeComponent) {
+    const rsiTotal = minRSITotalValues[climaticZone][envelopeComponent];
+    const rsiEffective = minRSIEffectiveValues[climaticZone][envelopeComponent];
+    
+    rsiTotalDisplay.textContent = formatRSIR(rsiTotal);
+    rsiEffectiveDisplay.textContent = formatRSIR(rsiEffective);
+  } else {
+    rsiTotalDisplay.textContent = "—";
+    rsiEffectiveDisplay.textContent = "—";
+  }
+}
+
+// Mettre à jour le type de bâtiment
+function updateBuildingType() {
+  const select = document.getElementById('building-type');
+  
+  if (!select) {
+    console.error("L'élément 'building-type' n'a pas été trouvé");
+    return;
+  }
+  
+  buildingType = select.value;
+}
+
+// Mettre à jour la version du code
+function updateCodeVersion() {
+  const select = document.getElementById('code-version');
+  
+  if (!select) {
+    console.error("L'élément 'code-version' n'a pas été trouvé");
+    return;
+  }
+  
+  codeVersion = select.value;
+}
+
+// Mettre à jour le composant d'enveloppe
+function updateEnvelopeComponent() {
+  const select = document.getElementById('envelope-component');
+  
+  if (!select) {
+    console.error("L'élément 'envelope-component' n'a pas été trouvé");
+    return;
+  }
+  
+  envelopeComponent = select.value;
+  updateMinRSIDisplay();
+}
+
+// Initialisation du graphique
+function initializeChart() {
+  const ctx = document.getElementById('chart').getContext('2d');
+  
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Température (°C)',
+        data: [],
+        borderColor: '#1e88e5',
+        backgroundColor: 'rgba(30, 136, 229, 0.1)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Position (mm)'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Température (°C)'
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          onClick: null // Désactiver l'interaction sur la légende
+        },
+        annotation: {
+          annotations: {}
+        }
+      }
+    }
+  });
+}
+
+// Ajouter un matériau
+function addLayer(type) {
+  selectedLayerType = type;
+  selectedLayerIndex = null; // CORRECTION 1: S'assurer qu'on n'est pas en mode édition
+  selectedMaterialId = null;
+  
+  // Afficher le sélecteur de matériaux
+  const materialSelector = document.getElementById('material-selector');
+  const materialSelectorTitle = document.getElementById('material-selector-title');
+  
+  if (!materialSelector || !materialSelectorTitle) {
+    console.error("Des éléments du sélecteur de matériaux n'ont pas été trouvés");
+    return;
+  }
+  
+  // Définir le titre selon le type de matériau
+  let title = "Sélectionner un matériau";
+  switch (type) {
+    case 'airfilm':
+      title = "Sélectionner un film d'air";
+      break;
+    case 'airspace':
+      title = "Sélectionner une lame d'air";
+      break;
+    case 'insulation':
+      title = "Sélectionner un isolant";
+      break;
+    case 'structural':
+      title = "Sélectionner un élément structural";
+      break;
+    case 'cladding':
+      title = "Sélectionner un parement extérieur";
+      break;
+    case 'sheathening':
+      title = "Sélectionner un revêtement intermédiaire";
+      break;
+    case 'interior':
+      title = "Sélectionner une finition intérieure";
+      break;
+    case 'roofing':
+      title = "Sélectionner un matériau de toiture";
+      break;
+  }
+  
+  materialSelectorTitle.textContent = title;
+  
+  // Générer les boutons de catégories de matériaux
+  generateMaterialCategoryButtons(type);
+  
+  // Afficher le sélecteur
+  materialSelector.classList.remove('hidden');
+  
+  // Masquer le message "aucune couche"
+  const noLayersMessage = document.getElementById('no-layers-message');
+  if (noLayersMessage) {
+    noLayersMessage.classList.add('hidden');
+  }
+}
+
+// Générer les boutons de catégories de matériaux
+function generateMaterialCategoryButtons(type) {
+  const container = document.getElementById('material-categories-selector');
+  
+  if (!container) {
+    console.error("L'élément 'material-categories-selector' n'a pas été trouvé");
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  let materialCategories = [];
+  
+  // Déterminer les catégories de matériaux à afficher selon le type
+  switch (type) {
+    case 'airfilm':
+      materialCategories.push({
+        id: 'airFilms',
+        name: "Films d'air",
+        materials: materials.airFilms
+      });
+      break;
+    case 'airspace':
+      materialCategories.push({
+        id: 'airSpaces',
+        name: "Lames d'air non réfléchissantes",
+        materials: materials.airSpaces
+      });
+      materialCategories.push({
+        id: 'reflectiveAirSpaces',
+        name: "Lames d'air réfléchissantes",
+        materials: materials.reflectiveAirSpaces
+      });
+      break;
+    case 'insulation':
+      materialCategories.push({
+        id: 'insulation',
+        name: "Matériaux isolants",
+        materials: materials.insulation
+      });
+      break;
+    case 'structural':
+      materialCategories.push({
+        id: 'wood',
+        name: "Bois",
+        materials: materials.wood
+      });
+      materialCategories.push({
+        id: 'concrete',
+        name: "Béton",
+        materials: materials.concrete
+      });
+      materialCategories.push({
+        id: 'concreteBlocks',
+        name: "Blocs de béton",
+        materials: materials.concreteBlocks
+      });
+      break;
+    case 'cladding':
+      materialCategories.push({
+        id: 'woodCladding',
+        name: "Parements en bois",
+        materials: materials.woodCladding
+      });
+      materialCategories.push({
+        id: 'otherCladding',
+        name: "Autres parements",
+        materials: materials.otherCladding
+      });
+      break;
+    case 'sheathening':
+      materialCategories.push({
+        id: 'sheathing',
+        name: "Revêtements d'ossature",
+        materials: materials.sheathing
+      });
+      break;
+    case 'interior':
+      materialCategories.push({
+        id: 'interiorFinish',
+        name: "Matériaux de finition intérieure",
+        materials: materials.interiorFinish
+      });
+      break;
+    case 'roofing':
+      materialCategories.push({
+        id: 'roofingMaterials',
+        name: "Matériaux de toiture",
+        materials: materials.roofingMaterials
+      });
+      break;
+  }
+  
+  // Créer les boutons pour chaque catégorie
+  materialCategories.forEach(category => {
+    const div = document.createElement('div');
+    div.className = 'border p-2 rounded';
+    
+    const h5 = document.createElement('h5');
+    h5.className = 'font-semibold mb-2 text-sm';
+    h5.textContent = category.name;
+    div.appendChild(h5);
+    
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.className = 'space-y-1';
+    
+    // Créer un bouton pour chaque matériau
+    category.materials.forEach(material => {
+      const button = document.createElement('button');
+      button.className = 'w-full text-left bg-blue-50 p-2 rounded text-sm hover:bg-blue-100';
+      button.textContent = material.name;
+      button.onclick = () => selectMaterial(material);
+      buttonsContainer.appendChild(button);
+    });
+    
+    div.appendChild(buttonsContainer);
+    container.appendChild(div);
+  });
+}
+
+// Sélectionner un matériau
+function selectMaterial(material) {
+  selectedMaterial = material;
+  selectedMaterialId = material.id;
+  
+  const descriptionElem = document.getElementById('material-description');
+  const thicknessSelector = document.getElementById('thickness-selector');
+  const rsiDisplay = document.getElementById('material-rsi-display');
+  const rsiValue = document.getElementById('material-rsi-value');
+  
+  if (!descriptionElem || !thicknessSelector || !rsiDisplay || !rsiValue) {
+    console.error("Des éléments de sélection de matériau n'ont pas été trouvés");
+    return;
+  }
+  
+  // Afficher la description
+  descriptionElem.textContent = material.description || '';
+  
+  // Vérifier si le matériau nécessite une épaisseur
+  if (material.rsiPerMm !== undefined) {
+    // Matériau avec RSI par mm - afficher le sélecteur d'épaisseur
+    thicknessSelector.classList.remove('hidden');
+    initializeThicknessSelector(material);
+    
+    // Calculer et afficher la RSI pour l'épaisseur par défaut
+    const rsi = material.rsiPerMm * selectedThickness;
+    rsiValue.textContent = formatRSIR(rsi);
+    rsiDisplay.classList.remove('hidden');
+  } else {
+    // Matériau avec RSI fixe
+    thicknessSelector.classList.add('hidden');
+    if (material.rsi !== undefined) {
+      rsiValue.textContent = formatRSIR(material.rsi);
+      rsiDisplay.classList.remove('hidden');
+    } else {
+      rsiDisplay.classList.add('hidden');
+    }
+  }
+}
+
+// Initialiser le sélecteur d'épaisseur
+function initializeThicknessSelector(material) {
+  const select = document.getElementById('thickness-select');
+  const customThicknessDiv = document.getElementById('custom-thickness');
+  const customThicknessInput = document.getElementById('custom-thickness-input');
+  
+  if (!select || !customThicknessDiv || !customThicknessInput) {
+    console.error("Des éléments du sélecteur d'épaisseur n'ont pas été trouvés");
+    return;
+  }
+  
+  select.innerHTML = '';
+  
+  thicknessOptions.forEach(option => {
+    const optElem = document.createElement('option');
+    optElem.value = option.value;
+    optElem.textContent = option.label;
+    select.appendChild(optElem);
+  });
+  
+  // Si le matériau a déjà une épaisseur définie, l'utiliser
+  if (material.thickness) {
+    // Trouver l'option correspondante ou mettre à "personnalisée"
+    const matchingOption = thicknessOptions.find(opt => opt.value === material.thickness);
+    select.value = matchingOption ? matchingOption.value : "custom";
+    selectedThickness = material.thickness;
+    
+    if (!matchingOption) {
+      customThicknessInput.value = material.thickness;
+      customThicknessDiv.classList.remove('hidden');
+    } else {
+      customThicknessDiv.classList.add('hidden');
+    }
+  } else {
+    select.value = 25;
+    selectedThickness = 25;
+    customThicknessDiv.classList.add('hidden');
+  }
+}
+
+// Gérer le changement d'épaisseur
+function handleThicknessChange() {
+  const select = document.getElementById('thickness-select');
+  const customThicknessDiv = document.getElementById('custom-thickness');
+  
+  if (!select || !customThicknessDiv) return;
+  
+  const value = select.value;
+  
+  if (value === "custom") {
+    customThicknessDiv.classList.remove('hidden');
+    const customInput = document.getElementById('custom-thickness-input');
+    if (customInput && customInput.value) {
+      selectedThickness = parseFloat(customInput.value);
+    }
+  } else {
+    customThicknessDiv.classList.add('hidden');
+    selectedThickness = parseFloat(value);
+  }
+  
+  updateMaterialRSIDisplay();
+}
+
+// Gérer le changement d'épaisseur personnalisée
+function handleCustomThicknessChange() {
+  const input = document.getElementById('custom-thickness-input');
+  
+  if (!input) return;
+  
+  const value = parseFloat(input.value);
+  if (!isNaN(value) && value > 0) {
+    selectedThickness = value;
+    updateMaterialRSIDisplay();
+  }
+}
+
+// Mettre à jour l'affichage RSI du matériau
+function updateMaterialRSIDisplay() {
+  if (!selectedMaterial || selectedMaterial.rsiPerMm === undefined) return;
+  
+  const rsiValueElem = document.getElementById('material-rsi-value');
+  
+  if (!rsiValueElem) {
+    console.error("L'élément 'material-rsi-value' n'a pas été trouvé");
+    return;
+  }
+  
+  const rsi = selectedMaterial.rsiPerMm * selectedThickness;
+  rsiValueElem.textContent = formatRSIR(rsi);
+}
+
+// Fonction pour convertir R en RSI
+const rToRsi = (r) => {
+  if (r === null || r === undefined || isNaN(r)) return null;
+  return r / 5.678263;
+};
+
+// Fonction pour convertir RSI en R
+const rsiToR = (rsi) => {
+  if (rsi === null || rsi === undefined || isNaN(rsi)) return null;
+  return rsi * 5.678263;
+};
+
+// Fonction pour formater les valeurs RSI et R
+const formatRSIR = (rsi) => {
+  if (rsi === null || rsi === undefined || isNaN(rsi)) return "—";
+  const r = rsiToR(rsi);
+  return `RSI ${rsi.toFixed(2)} (R ${r.toFixed(2)})`;
+};
+
+// CORRECTION 1: Nouvelle fonction pour ajouter le matériau à la liste des couches
+function addMaterialToLayers(materialObj) {
+  if (!materialObj) return;
+  
+  // Appliquer l'épaisseur sélectionnée si le matériau a une valeur RSI par mm
+  if (materialObj.rsiPerMm !== undefined) {
+    const materialCopy = {...materialObj};
+    materialCopy.thickness = selectedThickness;
+    materialCopy.rsi = materialCopy.rsiPerMm * selectedThickness;
+    materialObj = materialCopy;
+  }
+  
+  // Créer ou mettre à jour la couche
+  if (selectedLayerIndex !== null && selectedLayerIndex >= 0 && selectedLayerIndex < layers.length) {
+    // Modifier une couche existante
+    layers[selectedLayerIndex].material = materialObj;
+  } else {
+    // CORRECTION 1: Vérifier si le matériau existe déjà pour éviter les duplications
+    const existingLayerIndex = layers.findIndex(layer => 
+      layer.material && 
+      layer.material.id === materialObj.id && 
+      layer.type === selectedLayerType &&
+      (!materialObj.thickness || layer.material.thickness === materialObj.thickness)
+    );
+    
+    if (existingLayerIndex === -1) {
+      // Ajouter une nouvelle couche seulement si elle n'existe pas déjà
+      layers.push({
+        id: Date.now(),
+        type: selectedLayerType,
+        material: materialObj
+      });
+    }
+  }
+  
+  // Mettre à jour l'affichage
+  updateLayersDisplay();
+  updateMaterialsSummary();
+  
+  // Masquer le sélecteur
+  const materialSelector = document.getElementById('material-selector');
+  if (materialSelector) {
+    materialSelector.classList.add('hidden');
+  }
+  
+  // Réinitialiser les variables de sélection
+  selectedLayerType = null;
+  selectedLayerIndex = null;
+  selectedMaterialId = null;
+  selectedMaterialCategory = null;
+  selectedThickness = 25;
+  selectedMaterial = null;
+}
+
+// Ajouter le matériau sélectionné
+function addSelectedMaterial() {
+  if (selectedMaterial) {
+    addMaterialToLayers(selectedMaterial);
+  }
+}
+
+// Annuler la sélection de matériau
+function cancelMaterialSelection() {
+  const materialSelector = document.getElementById('material-selector');
+  if (materialSelector) {
+    materialSelector.classList.add('hidden');
+  }
+  
+  // Réinitialiser les variables
+  selectedLayerType = null;
+  selectedLayerIndex = null;
+  selectedMaterialId = null;
+  selectedMaterialCategory = null;
+  selectedThickness = 25;
+  selectedMaterial = null;
+  
+  // Afficher le message "aucune couche" si nécessaire
+  const noLayersMessage = document.getElementById('no-layers-message');
+  if (noLayersMessage && layers.length === 0) {
+    noLayersMessage.classList.remove('hidden');
+  }
+}
+
+// Éditer une couche
+function editLayer(index) {
+  if (index < 0 || index >= layers.length) return;
+  
+  const layer = layers[index];
+  selectedLayerIndex = index;
+  selectedLayerType = layer.type;
+  selectedMaterial = layer.material;
+  
+  if (layer.material) {
+    selectedMaterialId = layer.material.id;
+    if (layer.material.thickness) {
+      selectedThickness = layer.material.thickness;
+    }
+  }
+  
+  // Afficher le sélecteur avec les bonnes catégories
+  addLayer(layer.type);
+}
+
+// Mettre à jour l'affichage des couches
+function updateLayersDisplay() {
+  const container = document.getElementById('layers-container');
+  
+  if (!container) {
+    console.error("L'élément 'layers-container' n'a pas été trouvé");
+    return;
+  }
+  
+  // Vider le conteneur
+  container.innerHTML = '';
+  
+  // Afficher ou masquer le message "aucune couche"
+  const noLayersMessage = document.getElementById('no-layers-message');
+  
+  if (!noLayersMessage) {
+    console.error("L'élément 'no-layers-message' n'a pas été trouvé");
+    return;
+  }
+  
+  if (layers.length === 0) {
+    noLayersMessage.classList.remove('hidden');
+    return;
+  } else {
+    noLayersMessage.classList.add('hidden');
+  }
+  
+  // Afficher chaque couche
+  layers.forEach((layer, index) => {
+    const layerDiv = document.createElement('div');
+    layerDiv.className = 'flex flex-wrap items-center border p-2 rounded mb-2 relative bg-gray-50';
+    
+    // Couleur indicative selon le type de matériau
+    let indicatorColor = '#ccc';
+    switch (layer.type) {
+      case 'airfilm': indicatorColor = '#e3f2fd'; break;
+      case 'airspace': indicatorColor = '#bbdefb'; break;
+      case 'insulation': indicatorColor = '#f3e5f5'; break;
+      case 'structural': indicatorColor = '#ffe0b2'; break;
+      case 'cladding': indicatorColor = '#dcedc8'; break;
+      case 'sheathening': indicatorColor = '#c8e6c9'; break;
+      case 'interior': indicatorColor = '#e1bee7'; break;
+      case 'roofing': indicatorColor = '#d1c4e9'; break;
+    }
+    
+    const indicator = document.createElement('div');
+    indicator.className = 'mr-3 h-10 w-2 rounded';
+    indicator.style.backgroundColor = indicatorColor;
+    
+    // Ajout de la barre colorée
+    layerDiv.appendChild(indicator);
+    
+    // Informations du matériau
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'flex-grow mr-2';
+    
+    const title = document.createElement('div');
+    title.className = 'font-bold';
+    title.textContent = layer.material ? layer.material.name : 'Matériau non sélectionné';
+    
+    const description = document.createElement('div');
+    description.className = 'text-sm text-gray-600';
+    if (layer.material) {
+      const thickness = layer.material.thickness ? `${layer.material.thickness} mm` : 'N/A';
+      const rsi = layer.material.rsi ? layer.material.rsi.toFixed(3) : 'N/A';
+      const r = layer.material.rsi ? (layer.material.rsi * 5.678).toFixed(1) : 'N/A';
+      description.textContent = `Épaisseur: ${thickness} | RSI: ${rsi} (R-${r})`;
+    } else {
+      description.textContent = 'Cliquez sur le symbole loupe pour sélectionner un matériau';
+    }
+    
+    infoDiv.appendChild(title);
+    infoDiv.appendChild(description);
+    
+    layerDiv.appendChild(infoDiv);
+    
+    // Boutons d'action
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'flex space-x-1';
+    
+    // Bouton Monter
+    if (index > 0) {
+      const upButton = document.createElement('button');
+      upButton.className = 'px-2 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300';
+      upButton.innerHTML = '&#9650;';
+      upButton.title = 'Déplacer vers le haut';
+      upButton.onclick = () => moveLayerUp(index);
+      actionsDiv.appendChild(upButton);
+    }
+    
+    // Bouton Descendre
+    if (index < layers.length - 1) {
+      const downButton = document.createElement('button');
+      downButton.className = 'px-2 py-1 bg-gray-200 text-gray-800 rounded text-sm hover:bg-gray-300';
+      downButton.innerHTML = '&#9660;';
+      downButton.title = 'Déplacer vers le bas';
+      downButton.onclick = () => moveLayerDown(index);
+      actionsDiv.appendChild(downButton);
+    }
+    
+    // Bouton Modifier (loupe)
+    const editButton = document.createElement('button');
+    editButton.className = 'px-2 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 flex items-center justify-center';
+    editButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>';
+    editButton.title = 'Modifier';
+    editButton.onclick = () => {
+      editLayer(index);
+    };
+    actionsDiv.appendChild(editButton);
+    
+    // Bouton Supprimer (X)
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'px-2 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600 flex items-center justify-center';
+    deleteButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+    deleteButton.title = 'Supprimer';
+    deleteButton.onclick = () => removeLayer(index);
+    actionsDiv.appendChild(deleteButton);
+    
+    layerDiv.appendChild(actionsDiv);
+    
+    // Ajouter la couche au conteneur
+    container.appendChild(layerDiv);
+  });
+}
+
+// Déplacer une couche vers le haut
+function moveLayerUp(index) {
+  if (index <= 0 || index >= layers.length) return;
+  
+  // Échanger les couches
+  [layers[index - 1], layers[index]] = [layers[index], layers[index - 1]];
+  
+  // Mettre à jour l'affichage
+  updateLayersDisplay();
+  updateMaterialsSummary();
+}
+
+// Déplacer une couche vers le bas
+function moveLayerDown(index) {
+  if (index < 0 || index >= layers.length - 1) return;
+  
+  // Échanger les couches
+  [layers[index], layers[index + 1]] = [layers[index + 1], layers[index]];
+  
+  // Mettre à jour l'affichage
+  updateLayersDisplay();
+  updateMaterialsSummary();
+}
+
+// Supprimer une couche
+function removeLayer(index) {
+  if (index < 0 || index >= layers.length) return;
+  
+  // Supprimer la couche
+  layers.splice(index, 1);
+  
+  // Mettre à jour l'affichage
+  updateLayersDisplay();
+  updateMaterialsSummary();
+}
+
+// Mettre à jour le tableau récapitulatif des matériaux
+function updateMaterialsSummary() {
+  const tbody = document.getElementById('materials-summary-body');
+  const totalRsiElement = document.getElementById('total-rsi');
+  const totalRElement = document.getElementById('total-r');
+  
+  if (!tbody || !totalRsiElement || !totalRElement) {
+    console.error("Des éléments du tableau récapitulatif n'ont pas été trouvés");
+    return;
+  }
+  
+  // Vider le tableau
+  tbody.innerHTML = '';
+  
+  // Calculer les totaux
+  let totalRsi = 0;
+  
+  // Ajouter chaque matériau au tableau
+  layers.forEach((layer, index) => {
+    if (!layer.material) return;
+    
+    const tr = document.createElement('tr');
+    
+    // Colonne Layer
+    const layerCell = document.createElement('td');
+    layerCell.className = 'border px-4 py-2';
+    layerCell.textContent = `Couche ${index + 1}`;
+    tr.appendChild(layerCell);
+    
+    // Colonne Matériau
+    const materialCell = document.createElement('td');
+    materialCell.className = 'border px-4 py-2';
+    materialCell.textContent = layer.material.name;
+    tr.appendChild(materialCell);
+    
+    // Colonne Épaisseur
+    const thicknessCell = document.createElement('td');
+    thicknessCell.className = 'border px-4 py-2';
+    thicknessCell.textContent = layer.material.thickness || 'N/A';
+    tr.appendChild(thicknessCell);
+    
+    // Colonne RSI
+    const rsiCell = document.createElement('td');
+    rsiCell.className = 'border px-4 py-2';
+    const rsi = layer.material.rsi || 0;
+    rsiCell.textContent = rsi.toFixed(3);
+    totalRsi += rsi;
+    tr.appendChild(rsiCell);
+    
+    // Colonne R
+    const rCell = document.createElement('td');
+    rCell.className = 'border px-4 py-2';
+    rCell.textContent = (rsi * 5.678).toFixed(1);
+    tr.appendChild(rCell);
+    
+    tbody.appendChild(tr);
+  });
+  
+  // Mettre à jour les totaux
+  totalRsiElement.textContent = totalRsi.toFixed(3);
+  totalRElement.textContent = (totalRsi * 5.678).toFixed(1);
+}
+
+// Calculer les résultats
+function calculateResults() {
+  if (layers.length === 0) {
+    alert("Veuillez ajouter au moins une couche de matériau pour l'analyse.");
+    return;
+  }
+  
+  // Afficher la section des résultats
+  const summaryResults = document.getElementById('summary-results');
+  if (summaryResults) {
+    summaryResults.classList.remove('hidden');
+  }
+  
+  // Calculer le gradient de température
+  calculateGradient();
+}
+
+// Fonction pour générer une couleur à partir d'une chaîne
+function generateColorFromString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xFF;
+    color += ('00' + value.toString(16)).substr(-2);
+  }
+  
+  return color;
+}
+
+// Rendre la visualisation des matériaux
+function renderMaterialsVisualization(dewPointPosition = null) {
+  const container = document.getElementById('material-viz');
+  
+  if (!container) {
+    console.error("L'élément 'material-viz' n'a pas été trouvé");
+    return;
+  }
+  
+  container.innerHTML = '';
+  
+  if (layers.length === 0) return;
+  
+  const totalWidth = layers.reduce((sum, layer) => {
+    return sum + (layer.material && layer.material.thickness ? layer.material.thickness : 0);
+  }, 0);
+  
+  // Position cumulative pour le calcul correct des pourcentages
+  let cumulPosition = 0;
+  
+  layers.forEach(layer => {
+    if (!layer.material) return;
+    
+    const width = layer.material.thickness === 0 ? 20 : layer.material.thickness;
+    const percentage = totalWidth > 0 ? (width / totalWidth) * 100 : 0;
+    const backgroundColor = generateColorFromString(layer.material.name);
+    
+    const div = document.createElement('div');
+    div.className = 'material-segment';
+    div.style.width = `${percentage}%`;
+    div.style.minWidth = '20px';
+    div.style.backgroundColor = backgroundColor;
+    div.title = `${layer.material.name} - RSI: ${layer.material.rsi.toFixed(2)}`;
+    
+    const span = document.createElement('span');
+    span.textContent = layer.material.name;
+    div.appendChild(span);
+    
+    container.appendChild(div);
+    
+    cumulPosition += width;
+  });
+  
+  // Ajouter le marqueur du point de rosée si présent
+  if (dewPointPosition !== null) {
+    const marker = document.createElement('div');
+    marker.className = 'dewpoint-marker';
+    // CORRECTION 2: Utiliser la position exacte du point de rosée par rapport à la largeur totale
+    marker.style.left = `${(dewPointPosition / totalWidth) * 100}%`;
+    marker.title = 'Point de rosée';
+    container.appendChild(marker);
+  }
+}
+
+// Mettre à jour le graphique avec les nouvelles données
+function updateChart(positions, temperatures, dewPoint, dewPointPosition) {
+  chart.data.labels = positions;
+  chart.data.datasets[0].data = temperatures;
+  
+  // Ajouter la ligne horizontale pour le point de rosée
+  chart.options.plugins.annotation = {
+    annotations: {}
+  };
+  
+  if (dewPoint !== null) {
+    chart.options.plugins.annotation.annotations.dewPointLine = {
+      type: 'line',
+      yMin: dewPoint,
+      yMax: dewPoint,
+      borderColor: 'red',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      label: {
+        content: `Point de rosée (${dewPoint.toFixed(1)}°C)`,
+        position: 'right',
+        color: 'red',
+        enabled: true
+      }
+    };
+  }
+  
+  // CORRECTION 2: Aligner correctement la ligne verticale rouge avec le point de croisement
+  if (dewPointPosition !== null) {
+    chart.options.plugins.annotation.annotations.dewPointPosition = {
+      type: 'line',
+      xMin: dewPointPosition,
+      xMax: dewPointPosition,
+      borderColor: 'red',
+      borderWidth: 2,
+      borderDash: [5, 5]
+    };
+  }
+  
+  chart.update();
+}
+
+// Vérifier la conformité au code
+function checkCompliance(rsi, component, zone, isEffective = false) {
+  if (!zone || !component) return { compliant: false, minRSI: 0 };
+  
+  const minRSI = isEffective ? 
+    minRSIEffectiveValues[zone][component] : 
+    minRSITotalValues[zone][component];
+  
+  return {
+    compliant: rsi >= minRSI,
+    minRSI
+  };
+}
+
+// Obtenir un indicateur visuel de conformité
+function getComplianceIndicator(isCompliant) {
+  return isCompliant ?
+    '<span class="text-green-600 font-bold">✓ Conforme</span>' :
+    '<span class="text-red-600 font-bold">✗ Non conforme</span>';
+}
+
+// Initialisation de l'application
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser les sélecteurs
+  initializeMunicipalitySelect();
+  
+  // Initialiser le graphique
+  initializeChart();
+  
+  // Mettre à jour les affichages
+  updateLayersDisplay();
+  updateMaterialsSummary();
+  
+  // Événements du sélecteur d'épaisseur
+  const thicknessSelect = document.getElementById('thickness-select');
+  const customThicknessInput = document.getElementById('custom-thickness-input');
+  
+  if (thicknessSelect) {
+    thicknessSelect.addEventListener('change', handleThicknessChange);
+  }
+  
+  if (customThicknessInput) {
+    customThicknessInput.addEventListener('change', handleCustomThicknessChange);
+  }
+});
+
+    </script>
 </body>
 </html>
